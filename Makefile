@@ -1,5 +1,8 @@
 all: report.pdf
 
+entr:
+	ls . | entr -c make all
+
 report.pdf: report.tex report.bbl
 	xelatex report.tex
 
