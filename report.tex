@@ -2,12 +2,33 @@
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 \usepackage{lmodern}
+\usepackage{amsmath}
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
-\title{Something about aspect extraction}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+
+\newcommand{\todo}{ ... }
+
+\newcommand{\loremipsum}{
+  {\color{lightgray}
+  Fruit two greater fifth over every. In female fourth good wherein herb
+  Waters yielding itself. Female greater. Hath in, second appear tree in.
+  Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
+  kind own morning green had it be fifth created, forth he unto signs is thing
+  all, great. Place night Gathering upon were forth light deep. Abundantly.
+  Kind air beginning his void seed it dry. Own and spirit may dry abundantly
+  beast good forth. The fifth beginning. Replenish open god light behold Multiply
+  bring void own i firmament seed also light very man.
+
+  }
+}
+
+
+
+\title{Something, something, something, thesis...}
 
 \subtitle{Getting a degree is hard}
-\foreigntitle{Getting a degree is hard1}
+\foreigntitle{Getting a degree is hard in swedish too}
 \author{Mattis Kancans Envall}
 \date{June 2016}
 \blurb{Master's Thesis at CSC\\Supervisor: Johan Boye\\Examiner: Viggo Kann}
@@ -23,15 +44,8 @@
   regarding the KTH thesis class file can be found in
   the package documentation.
 
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
+\loremipsum
+  
 \end{abstract}
 \clearpage
 \begin{foreignabstract}{swedish}
@@ -39,15 +53,8 @@ bring void own i firmament seed also light very man.
   Mer information om \LaTeX-mallen finns i
   dokumentationen till paketet.
 
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
+\loremipsum
+  
 \end{foreignabstract}
 \clearpage
 \tableofcontents*
@@ -55,210 +62,74 @@ bring void own i firmament seed also light very man.
 \pagestyle{newchap}
 \chapter{Introduction}
 With increased internet usage, reviews online are becoming one of the most important resources when comparing businesses, services and products.
-The increasing quantity of content makes for more reliable conclusions as more options can be taken into account, but it also proposes a problem,
-since there is a limit to what a human reader can process.
+The increasing quantity of content makes for more reliable conclusions as more opinions can be taken into account, but it also proposes a problem,
+since there is a limit to what human readers can process.
 
-Computers are obviously faster and more capable to handle big quantities of data, and thus there is potential to use computers to aid humans when
-interpreting review-like text content. The general problem of using computers and Natural Language Processing(NLP)-techniques to extract expressions
-with associated sentiments and identifying their orientation, is called \emph{sentiment analysis}, and is one of the most active fields of study in NLP.
+Computers are obviously faster and more capable to handle big quantities of data, which suggests potential for using computers as aid when
+interpreting review-like content. This general problem has been extensively studied under the name of \emph{Sentiment Analysis}, and increase in available data along with
+recent efforts to monetize this data has made this field in active study.
+
+This degree project studies describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of two problems in this process.
+
+%This general problem is called \emph{sentiment analysis}\cite{liu2012sentiment} and is widely considered a hard, non-trivial problem. 
+%sentiment analysis is one of the most active fiels of research in NLP.
+
+%The general problem of using computers and Natural Language Processing(NLP)-techniques to study opinions in text s called \emph{sentiment analysis}, and is one of the most active fields of study in NLP.
+
+%In fact, recent trends of monetizing online content, not to mention the benefit of being able to 
 
 \section{Definitions}
-\section{What is the opinion?}
-Sentiment analysis\cite{nlp_book}
+Sentiment analysis\cite{liu2012sentiment} is the s the general task of from raw text extracting and interpreting expressions with associated sentiments. This involves classifying orientation (and possibly intensity) of found sentiments, and identifying what entity, and possibly what aspect of that entity, is subject to the expressed sentiments. 
+
+\subsection{Levels of sentiment analysis}
+In general, sentiment analysis has been studied at three levels:
+
+On the \emph{document level}, one overall sentiment of an entire document is identified. This is generally of limited use, as in most contexts, documents hold many opinions. Therefore most studies at the document level in some way handle conflicting opinions, although this may be done implicitly\cite[Chapter~3]{liu2012sentiment}. In document level sentiment analysis, the problem definition itself requires generalizations, which may invite to inaccurate over-simplifications.
+
+\emph{Sentence level} sentiment analysis mitigates this risk of generalization; sentences are generally smaller than documents and thus less likely to hold conflicting opinions, so assuming there is at most one sentiment has less impact on results --- but the problem itself is not addressed. As an example, the sentence \emph{``Although the service is terrible, I still like this restaurant''} is arguably overall positive, but simply deeming it so excludes information which reduces quality of results and makes them susceptible to systematic errors.
+
+What we ideally want is something that identifies that there are two opinions in the above sentence, one \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is said to be on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambience were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket'' really implies ``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
+
+
+
+\section{Sentiment Classification}
+
+\subsection{Smoothing}
 
 
 
 
-\hspace{1cm}
+\chapter{Methodology}
+\subsection{Evaluation}
+% venn-diagram?
 
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
+A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems capacity to exclude irrelevant results, and include relevant results, respectively.
 
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
+\subsubsection{Precision}
+Precision is a measure of the fraction of retrieved results that are considered relevant, in this work this means \todo and is defined as following:
+$$Precision = \frac{\text {true positives}}{\text{true positives} + \text{false positives}}$$
+%From this definition it should be clear that precision can by excluding uncertain items from retrieved results.
 
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
+\subsubsection{Recall}
+$$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
+
+
+\loremipsum
+\loremipsum
+\loremipsum
 
 \part{Important Results}
 
 \chapter{First One}
 
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
+\loremipsum
 
 \section{Preliminaries}
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-\subsection{Remarks}
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-\subsection{Definitions}
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-\section{The Main Theorem}
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-\subsection{Problem Statement}
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-\subsection{The Proof}
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-Fruit two greater fifth over every. In female fourth good wherein herb
-Waters yielding itself. Female greater. Hath in, second appear tree in.
-Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
-kind own morning green had it be fifth created, forth he unto signs is thing
-all, great. Place night Gathering upon were forth light deep. Abundantly.
-Kind air beginning his void seed it dry. Own and spirit may dry abundantly
-beast good forth. The fifth beginning. Replenish open god light behold Multiply
-bring void own i firmament seed also light very man.
-
-
 \bibliographystyle{plain}
 \bibliography{references}
 
+\loremipsum
+\loremipsum
 
 \appendix
 \addappheadtotoc
