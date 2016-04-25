@@ -24,13 +24,18 @@ spell:
 	git apply --ignore-whitespace .spellcheck_done.patch
 	git add report.tex
 
-report.pdf: report.tex report.bbl
+report.pdf: report.tex report.bbl report.gls
 	xelatex report.tex
+
 
 report.bbl: references.bib
 	xelatex report.tex
 	bibtex report
 	xelatex report.tex
+
+report.gls:
+	xelatex report.tex
+	makeglossaries report
 
 clean:
 	git clean -fX

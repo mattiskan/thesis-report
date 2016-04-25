@@ -6,8 +6,22 @@
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage[toc]{glossaries}
+
+
+\newglossaryentry{computer}
+                 {
+                   name=computer,
+                   description={is a programmable machine that receives input,
+                     stores and manipulates data, and provides
+                     output in a useful format}
+                 }
+
 
 \newcommand{\todo}{ ... }
+
+\newcommand{\ngram}{$n$-gram }
+\newcommand{\ngrams}{$n$-grams }
 
 \newcommand{\loremipsum}{
   {\color{lightgray}
@@ -18,12 +32,12 @@
   all, great. Place night Gathering upon were forth light deep. Abundantly.
   Kind air beginning his void seed it dry. Own and spirit may dry abundantly
   beast good forth. The fifth beginning. Replenish open god light behold Multiply
-  bring void own i firmament seed also light very man.
+  bring void own i firmament seed also light very man. \gls{computer}
 
   }
 }
 
-
+\makeglossaries
 
 \title{Something, something, something, thesis...}
 
@@ -33,6 +47,9 @@
 \date{June 2016}
 \blurb{Master's Thesis at CSC\\Supervisor: Johan Boye\\Examiner: Viggo Kann}
 \trita{TRITA xxx yyyy-nn}
+
+
+
 \begin{document}
 \frontmatter
 \pagestyle{empty}
@@ -54,22 +71,27 @@
   dokumentationen till paketet.
 
 \loremipsum
-  
+
 \end{foreignabstract}
 \clearpage
 \tableofcontents*
+
+\glsaddall
+\printglossaries
+
 \mainmatter
 \pagestyle{newchap}
 \chapter{Introduction}
+% poses a problem?
 With increased internet usage, reviews online are becoming one of the most important resources when comparing businesses, services and products.
 The increasing quantity of content makes for more reliable conclusions as more opinions can be taken into account, but it also proposes a problem,
 since there is a limit to what human readers can process.
 
 Computers are obviously faster and more capable to handle big quantities of data, which suggests potential for using computers as aid when
-interpreting review-like content. This general problem has been extensively studied under the name of \emph{Sentiment Analysis}, and increase in available data along with
-recent efforts to monetize this data has made this field in active study.
+interpreting review-like content. This is studied under the name \emph{Sentiment Analysis}, and has been in very active research the last ten years
+thanks to increases in available data and recent efforts to monetize it.
 
-This degree project studies describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of two problems in this process.
+This degree project studies describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of one of the problems in this process.
 
 %This general problem is called \emph{sentiment analysis}\cite{liu2012sentiment} and is widely considered a hard, non-trivial problem. 
 %sentiment analysis is one of the most active fiels of research in NLP.
@@ -78,8 +100,8 @@ This degree project studies describes sentiment analysis with regard to mining a
 
 %In fact, recent trends of monetizing online content, not to mention the benefit of being able to 
 
-\section{Definitions}
-Sentiment analysis\cite{liu2012sentiment} is the s the general task of from raw text extracting and interpreting expressions with associated sentiments. This involves classifying orientation (and possibly intensity) of found sentiments, and identifying what entity, and possibly what aspect of that entity, is subject to the expressed sentiments. 
+\section{Sentiment analysis}
+Sentiment analysis\cite{liu2012sentiment} is the general task of from raw text extracting and interpreting expressions with associated sentiments. This involves classifying orientation (and possibly intensity) of found sentiments, and identifying what entity, and possibly what aspect of that entity, is subject to the expressed sentiments. 
 
 \subsection{Levels of sentiment analysis}
 In general, sentiment analysis has been studied at three levels:
@@ -88,33 +110,75 @@ On the \emph{document level}, one overall sentiment of an entire document is ide
 
 \emph{Sentence level} sentiment analysis mitigates this risk of generalization; sentences are generally smaller than documents and thus less likely to hold conflicting opinions, so assuming there is at most one sentiment has less impact on results --- but the problem itself is not addressed. As an example, the sentence \emph{``Although the service is terrible, I still like this restaurant''} is arguably overall positive, but simply deeming it so excludes information which reduces quality of results and makes them susceptible to systematic errors.
 
-What we ideally want is something that identifies that there are two opinions in the above sentence, one \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is said to be on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambience were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket'' really implies ``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
-
+%todo examples in table?
+Ideally two opinions should be identified in the above sentence, one about \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambience were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket''} really implies \emph{``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
 
 
 \section{Sentiment Classification}
+Sentiment classification can be either a classification problem or regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continous measure of positivty. In this report the discrete classification definition will be used unless otherwise specified.
+
+Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo}, statistical\cite{todo}, or a combination of the two.
+
+The following subsections apply to text classification in general, and thus also to sentiment classification.
+
+\section{WordNet and word relations}
+\subsection{Word senses encapsulate meaning}
+The term \emph{word} can be rather ambigous or \emph{lemma}, 
+
+
+\subsection{\ngram modeling}
+\ngram modeling is a versitile and widely used method of modeling languages. Typically all $n$-length subsequences of a longer sequence are included in the model, and then frequencies of \ngrams are used in tasks. $n$-grams of length \emph{1,2,3...} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively.
+
+As an example, the \emph{bigrams} for the sentence \emph{``Languages are fun''} are:
+\begin{quote}
+  \vspace*{0.1cm}
+  \centering
+\emph{``\$ Languages''}, \emph{``Languages are''}, \emph{``are fun''}, \emph{``fun \$''},
+\end{quote}
+where \emph{\$} is a token meaning the start/end of sentence.
+
+Although \ngram modelling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngrams consisting of words.
+
+If the probablity of a word's occurence in a sentence is known, then the probabilty of a sentence can be modeled using a \emph{unigram} model the following way thanks to the chain rule:
+$$P(s) = \prod_{w_i \in s}P(w_i)$$, where $w_i$ is the $i$th word in the sentence, and $P$ is the probability of that word (usually basic )
+
+Based on the Markov assumption, that the probability of a word's occurence only depend on previous word in the sentence, the above can be extended to \emph{bigrams}:
+
+$$\sum_{w_i}P(w_i|w_{i-1})$$
 
 \subsection{Smoothing}
+A general problem when statiscially modelling based on existing data, is how the model should handle previously unseen entries.
 
 
+\subsection{Backoff}
 
+\subsection{Yelp's sentiment analyzer}
 
 \chapter{Methodology}
-\subsection{Evaluation}
-% venn-diagram?
+\section{Evaluation}
+A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluationg the capacity to exclude irrelevant results, and include relevant results, respectively.
 
-A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems capacity to exclude irrelevant results, and include relevant results, respectively.
+\subsection{Precision}
+Precision is a measure of what fraction of retrieved results are considered relevant, in this work this means \todo.
 
-\subsubsection{Precision}
-Precision is a measure of the fraction of retrieved results that are considered relevant, in this work this means \todo and is defined as following:
+It is defined as following:
 $$Precision = \frac{\text {true positives}}{\text{true positives} + \text{false positives}}$$
 %From this definition it should be clear that precision can by excluding uncertain items from retrieved results.
 
-\subsubsection{Recall}
+\subsection{Recall}
+Similarly, recall is the fraction of relevant results that are retrieved:
 $$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
 
+The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be at the cost of lower recall.
 
-\loremipsum
+
+\section{Aspect clustering}
+\subsection{Using WordNet}
+Based on the observation that there is usually some key words with lexiographical connection to the cluster, an alternative approach to traditional classification is proposed. This is motivated since classification models need complicated smoothing techinques and big training data sets to achieve good results.
+
+
+
+
 \loremipsum
 \loremipsum
 
