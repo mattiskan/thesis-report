@@ -1,7 +1,7 @@
 all: report.pdf
 
 entr:
-	ls *.bib *.tex | entr -c make all
+	ls *.bib *.tex data/* | entr -c make all
 
 # Spellcheck
 #
@@ -24,7 +24,7 @@ spell:
 	git apply --ignore-whitespace .spellcheck_done.patch
 	git add report.tex
 
-report.pdf: report.tex report.bbl report.gls
+report.pdf: report.tex report.bbl report.gls data/*.csv
 	xelatex report.tex
 
 
@@ -36,6 +36,7 @@ report.bbl: references.bib
 report.gls:
 	xelatex report.tex
 	makeglossaries report
+
 
 clean:
 	git clean -fX

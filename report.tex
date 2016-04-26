@@ -7,7 +7,10 @@
 \usepackage{modifications}
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 \usepackage[toc]{glossaries}
+\usepackage{pgfplots}
 
+
+\pgfplotsset{width=13cm,compat=1.9}
 
 \newglossaryentry{computer}
                  {
@@ -192,6 +195,29 @@ Based on the observation that there is usually some key words with lexicographic
 
 
 % todo: accuracy / data size
+
+
+\vspace{2cm}
+\begin{tikzpicture}
+  \begin{axis}[
+      title={Mattis testing some graphs!},
+      xlabel={Data size},
+      %ylabel={},
+      xmin=0,% xmax=1,
+      ymin=0, ymax=1,
+      %xtick={0,20,40,60,80,100},
+      %ytick={0,20,40,60,80,100,120},
+      legend pos=north west,
+      ymajorgrids=true,
+      grid style=dashed,
+    ]
+    \addplot table [x=x, y=p, col sep=comma]{data/test.csv};
+    \addplot table [x=x, y=r, col sep=comma]{data/test.csv};
+    \legend{precision, recall}
+  \end{axis}
+\end{tikzpicture}
+
+
 
 \part{Important Results}
 
