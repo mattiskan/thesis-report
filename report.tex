@@ -210,8 +210,8 @@ Based on the observation that there is usually some key words with lexicographic
       ymajorgrids=true,
       grid style=dashed,
     ]
-    \addplot table [x=x, y=p, col sep=comma]{data/test.csv};
-    \addplot table [x=x, y=r, col sep=comma]{data/test.csv};
+    \addplot table [x=x, y=p]{data/test.csv};
+    \addplot table [x=x, y=r]{data/test.csv};
     \legend{precision, recall}
   \end{axis}
 \end{tikzpicture}

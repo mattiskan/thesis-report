@@ -1,7 +1,10 @@
-x,p,r
-010,0.10,0.1
-100,0.20,0.1
-200,0.20,0.1
-300,0.70,0.1
-400,0.72,0.2
-500,0.9,0.2
+# this is a comment explaining what the hell this data is
+# works with labels too:
+# x r p foo 10.2
+x       p       r
+010     0.10    0.1
+100	0.20    0.1
+200	0.50    0.1
+300	0.70    0.1
+400	0.72    0.2
+500	0.73     0.2
