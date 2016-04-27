@@ -10,7 +10,7 @@
 \usepackage{pgfplots}
 
 
-\pgfplotsset{width=13cm,compat=1.9}
+\pgfplotsset{width=12cm,compat=1.9}
 
 \newglossaryentry{computer}
                  {
@@ -28,9 +28,9 @@
 \newcommand{\ngram}{$n$-gram }
 \newcommand{\ngrams}{$n$-grams }
 
-\newif\ifhasStudiedFailures
-%\hasStudiedFailurestrue
 
+\newif\ifhasStudiedFailures
+\hasStudiedFailuresfalse
 
 \newcommand{\loremipsum}{
   {\color{lightgray}
@@ -178,11 +178,9 @@ $$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false neg
 
 The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be at the cost of lower recall.
 
-
 \section{Aspect clustering}
 \subsection{Using WordNet}
 Based on the observation that there is usually some key words with lexicographical connection to the cluster, an alternative approach to traditional classification is proposed. This is motivated since classification models need complicated smoothing techniques and big training data sets to achieve good results.
-
 
 
 \section{Experiment setup}
@@ -192,37 +190,77 @@ Based on the observation that there is usually some key words with lexicographic
 % todo: annotations interface screenshot
 % todo: num sentences table
 
-
 % todo: accuracy / data size
-
-
-\vspace{2cm}
-\begin{tikzpicture}
-  \begin{axis}[
-      title={Mattis testing some graphs!},
-      xlabel={Data size},
-      %ylabel={},
-      xmin=0,% xmax=1,
-      ymin=0, ymax=1,
-      %xtick={0,20,40,60,80,100},
-      %ytick={0,20,40,60,80,100,120},
-      legend pos=north west,
-      ymajorgrids=true,
-      grid style=dashed,
-    ]
-    \addplot table [x=x, y=p]{data/test.csv};
-    \addplot table [x=x, y=r]{data/test.csv};
-    \legend{precision, recall}
-  \end{axis}
-\end{tikzpicture}
-
 
 
 \part{Important Results}
 
 \chapter{First One}
 
-\loremipsum
+\section{Machine learning classifiers}
+
+\begin{figure}[h]
+  \centering
+
+  \begin{tikzpicture}
+    \begin{axis}[
+        %title={Classifier performance based on data size},
+        xlabel={Data size},
+        ylabel={Fraction of correctly classified},
+        %xmin=0.3, xmax=0.7,
+        %ymin=0.25, ymax=0.75,
+        %xtick={0,20,40,60,80,100},
+        %ytick={0,20,40,60,80,100,120},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+      ]
+      \addplot table [x=n, y=p]{data/data_size_unigram.csv};
+      \addplot table [x=n, y=p]{data/data_size_unigram_balanced.csv};
+      \addplot table [x=n, y=p]{data/data_size_bigram.csv};
+      \legend{biased unigram, unigram, bigram}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Sentence classification performance based on data size}
+  \label{data_size}
+\end{figure}
+
+Figure \ref {data_size} suggests
+
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Fraction of correctly classified},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/per_category_unigram.csv}{n},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram_unbalanced.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram_unbalanced.csv};
+    \legend{unigram, biased unigram, bigram, biased bigram}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Sentence classification performance per category}
+  \label{percat}
+\end{figure}
+
+\pagebreak
+Figure \ref{percat} shows multiple interesting properties; first of all, comparison between
+
+
 
 \section{Preliminaries}
 \bibliographystyle{plain}
