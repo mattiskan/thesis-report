@@ -8,8 +8,9 @@
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 \usepackage[toc]{glossaries}
 \usepackage{pgfplots}
+\usepackage{graphicx}
 
-
+\graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
 
 \newglossaryentry{computer}
@@ -161,6 +162,9 @@ A general problem when statistically modeling based on existing data, is how the
 
 \subsection{Yelp's sentiment analyzer}
 
+\subsection{Bias in data}
+\label{subsec:bias}
+
 \chapter{Methodology}
 \section{Evaluation}
 A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
@@ -193,11 +197,17 @@ Based on the observation that there is usually some key words with lexicographic
 % todo: accuracy / data size
 
 
-\part{Important Results}
+\part{Results}
 
-\chapter{First One}
+\chapter{Annotating sentences}
 
-\section{Machine learning classifiers}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=12cm]{annontate_sentence.png}
+  \caption{Sentence annontations interface}
+  \label{fig:annotate_sentence}
+\end{figure}
+
 
 \begin{figure}[h]
   \centering
@@ -205,7 +215,7 @@ Based on the observation that there is usually some key words with lexicographic
   \begin{tikzpicture}
     \begin{axis}[
         %title={Classifier performance based on data size},
-        xlabel={Data size},
+        xlabel={Training data-set size},
         ylabel={Fraction of correctly classified},
         %xmin=0.3, xmax=0.7,
         %ymin=0.25, ymax=0.75,
@@ -215,17 +225,23 @@ Based on the observation that there is usually some key words with lexicographic
         ymajorgrids=true,
         grid style=dashed,
       ]
-      \addplot table [x=n, y=p]{data/data_size_unigram.csv};
+      %\addplot table [x=n, y=p]{data/data_size_unigram.csv};
       \addplot table [x=n, y=p]{data/data_size_unigram_balanced.csv};
       \addplot table [x=n, y=p]{data/data_size_bigram.csv};
-      \legend{biased unigram, unigram, bigram}
+      \legend{
+        %biased unigram,
+        unigram,
+        bigram
+      }
     \end{axis}
   \end{tikzpicture}
-  \caption{Sentence classification performance based on data size}
-  \label{data_size}
+  \caption{Sentence classification performance based on training data size}
+  \label{fig:data_size}
 \end{figure}
 
-Figure \ref {data_size} suggests
+As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees more promising growth at the cut-off.
+
+
 
 
 \begin{figure}[h]
@@ -250,15 +266,17 @@ Figure \ref {data_size} suggests
     \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram_unbalanced.csv};
     \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram.csv};
     \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram_unbalanced.csv};
-    \legend{unigram, biased unigram, bigram, biased bigram}
+    \legend{unbalanced unigram, balanced unigram, balanced bigram, unbalanced bigram}
   \end{axis}
   \end{tikzpicture}
   \caption{Sentence classification performance per category}
-  \label{percat}
+  \label{fig:per_cat}
 \end{figure}
 
 \pagebreak
-Figure \ref{percat} shows multiple interesting properties; first of all, comparison between
+Section \ref{subsec:bias} introduced bias in data, along with some of its possible consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} shows some interesting properties.
+
+First of all, comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively agains the infrequent $value$-class.
 
 
 

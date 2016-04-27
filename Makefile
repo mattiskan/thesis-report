@@ -1,7 +1,7 @@
 all: report.pdf
 
 entr:
-	ls *.bib *.tex data/* | entr -c make all
+	ls *.bib *.tex data/* img/* | entr -c make all
 
 # Spellcheck
 #
