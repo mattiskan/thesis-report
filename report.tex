@@ -9,6 +9,7 @@
 \usepackage[toc]{glossaries}
 \usepackage{pgfplots}
 \usepackage{graphicx}
+\usepackage{pgfplotstable}
 
 \graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
@@ -26,16 +27,10 @@
   {\todo yolo}
 }
 
-
 \newcommand{\todo}{ ... }
-
 \newcommand{\numAnnotated}{12 }
-
-\newcommand{\ngram}{$n$-gram\ignorespaces}
-\newcommand{\ngrams}{$n$-grams\ignorespaces}
-
+\newcommand{\ngram}{$n$-gram}
 \newcommand{\category}{restaurant category }  % may become plural
-
 
 \newif\ifhasStudiedFailures
 \hasStudiedFailuresfalse
@@ -97,7 +92,6 @@
 
 \mainmatter
 \pagestyle{newchap}
-\part{Introduction}
 \chapter{Introduction}
 With increased internet usage, reviews online are becoming one of the most important resources when comparing businesses, services and products.
 The increasing quantity of content makes for more reliable conclusions as more opinions can be taken into account, but it also poses a problem,
@@ -141,20 +135,20 @@ The following subsections apply to text classification in general, and thus also
 \subsection{Word senses encapsulate meaning}
 A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
 
-\subsection{\ngram modeling}
-\ngram modeling is a versatile and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngrams of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngram}.
+\subsection{\ngram~modeling}
+\ngram~modeling is a versatile, robust and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngram s of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngrams}.
 
-Typically counts or frequencies of individual \ngrams are used in tasks.
+Frequencies, counts and occurences of \ngram s have been used in language modeling\cite{chen_goodman}, text categorization\cite{ngrams},
 
-As an example, the \emph{bigrams} for the sentence \emph{``Languages are fun''} are:
+As an example, the word-\emph{bigrams} for the sentence \emph{``Languages are fun''} are:
 \begin{quote}
   \vspace*{0.1cm}
   \centering
-\emph{``\$ Languages''}, \emph{``Languages are''}, \emph{``are fun''}, \emph{``fun \$''},
+\emph{``\$ Languages''}, \emph{``Languages are''}, \emph{``are fun''}, and \emph{``fun \$''}
 \end{quote}
 where \emph{\$} is a token meaning the start/end of sentence.
 
-Although \ngram modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngrams consisting of words.
+Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
 
 If the probability of a word's occurrence in a sentence is known, then the probability of a sentence can be modeled using a \emph{unigram} model the following way thanks to the chain rule:
 $$P(s) = \prod_{w_i \in s}P(w_i)$$, where $w_i$ is the $i$th word in the sentence, and $P$ is the probability of that word (usually basic )
@@ -212,18 +206,37 @@ For these experiments, Yelp reviews from the \category were manually annotated i
 \end{figure}
 
 
-
+\chapter{Results}
 
 % todo: annotations interface screenshot
 % todo: num sentences table
 
 % todo: accuracy / data size
 
+\section{Result highlights}
 
-\part{Results}
+\begin{table}[ht]
+  \centering
+  \pgfplotstabletypeset[
+    columns={method,p,r},
+    every head row/.style={after row=\midrule},
+    columns/method/.style={string type,column type=c, column name=Classifier},
+    columns/p/.style={precision=4, column type=l,column name=Precision},
+    columns/r/.style={precision=4, column type=l,column name=Recall},
+  ]{data/general_aspect.csv}
+
+  \vspace{0.4cm}\caption{Result summary}
+  \label{general_asp}
+\end{table}
+
+\loremipsum
+\loremipsum
 
 
-\begin{figure}[h]
+\pagebreak
+\section{Machine learning classifiers}
+
+\begin{figure}[h!]
   \centering
 
   \begin{tikzpicture}
@@ -253,12 +266,13 @@ For these experiments, Yelp reviews from the \category were manually annotated i
   \label{fig:data_size}
 \end{figure}
 
+
 As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees more promising growth at the cut-off.
 
+\newpage
 
 
-
-\begin{figure}[h]
+\begin{figure}[t]
   \centering
   \begin{tikzpicture}
 
@@ -280,21 +294,29 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram_unbalanced.csv};
     \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram.csv};
     \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram_unbalanced.csv};
-    \legend{unbalanced unigram, balanced unigram, balanced bigram, unbalanced bigram}
+    \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
   \end{axis}
   \end{tikzpicture}
   \caption{Sentence classification performance per category}
   \label{fig:per_cat}
 \end{figure}
 
-\pagebreak
 Section \ref{subsec:bias} introduced bias in data, along with some of its possible consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} shows some interesting properties.
 
 First of all, comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
+\loremipsum
+\loremipsum
+
+
+\section{WordNet graph-search classifier}
+\loremipsum
+
+\chapter{Discussion}
+
 
 \loremipsum
 
-\section{Preliminaries}
+
 \bibliographystyle{plain}
 \bibliography{references}
 
