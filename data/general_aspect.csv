@@ -1,4 +1,4 @@
-method  p              r       f1
-unigram 0.607407407407 1       0.3
-bigram  0.1            1          0.3
-BFS     0.72791517     0.9895105 3
+method  p              r
+BFS     0.72791517     0.98951
+unigram 0.607407407407 1
+bigram  0.503703703703 1

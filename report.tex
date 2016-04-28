@@ -28,9 +28,10 @@
 }
 
 \newcommand{\todo}{ ... }
-\newcommand{\numAnnotated}{12 }
 \newcommand{\ngram}{$n$-gram}
 \newcommand{\category}{restaurant category }  % may become plural
+\newcommand{\numAnnotated}{12}
+\newcommand{\numClassifierAproaches}{2}
 
 \newif\ifhasStudiedFailures
 \hasStudiedFailuresfalse
@@ -194,46 +195,39 @@ Based on the observation that there is usually some key words with lexicographic
 For these experiments, Yelp reviews from the \category were manually annotated in various ways.
 
 
-\numAnnotated sentences were manually annotated on the sentence level and divided into three parts: Training, testing and evaluation. During development the first two parts of the data-set were made available, whereas the evaluation set of sentences was kept separately to ensure reliable results. To ensure impartialness of methods and increase reliability of results, the only output allowed from the evaluation data set was strictly restricted to summaries of results (i.e. no individual results were presented with their outcome)\ifhasStudiedFailures, except for when failing instances were explicitly studied after method development was finished\fi.
+\numAnnotated~sentences were manually annotated on the sentence level and divided into three parts: Training, testing and evaluation. During development the first two parts of the data-set were made available, whereas the evaluation set of sentences was kept separately to ensure reliable results. To ensure impartialness of methods and increase reliability of results, the only output allowed from the evaluation data set was strictly restricted to summaries of results (i.e. no individual results were presented with their outcome)\ifhasStudiedFailures, except for when failing instances were explicitly studied after method development was finished\fi.
 
 \subsection{Getting data}
-
-\begin{figure}[h]
+\begin{figure}[b]
   \centering
-  \fbox{\includegraphics[width=12cm]{annontate_sentence.png}}
-  \caption{Sentence annotations interface}
+  \fbox{\includegraphics[width=12cm]{annotate_sentence.png}}
+  \caption{Sentence level annotation interface}
   \label{fig:annotate_sentence}
 \end{figure}
+\loremipsum
+
+\begin{figure}[b]
+  \centering
+  \fbox{\includegraphics[width=12cm]{annotate_aspect.png}}
+  \caption{Aspect level annotation interface}
+  \label{fig:annotate_aspect}
+\end{figure}
+\loremipsum
+\loremipsum
 
 
 \chapter{Results}
+
+This chapter is layed out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to
+
+
+
 
 % todo: annotations interface screenshot
 % todo: num sentences table
 
 % todo: accuracy / data size
 
-\section{Result highlights}
-
-\begin{table}[ht]
-  \centering
-  \pgfplotstabletypeset[
-    columns={method,p,r},
-    every head row/.style={after row=\midrule},
-    columns/method/.style={string type,column type=c, column name=Classifier},
-    columns/p/.style={precision=4, column type=l,column name=Precision},
-    columns/r/.style={precision=4, column type=l,column name=Recall},
-  ]{data/general_aspect.csv}
-
-  \vspace{0.4cm}\caption{Result summary}
-  \label{general_asp}
-\end{table}
-
-\loremipsum
-\loremipsum
-
-
-\pagebreak
 \section{Machine learning classifiers}
 
 \begin{figure}[h!]
@@ -297,19 +291,42 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Sentence classification performance per category}
+  \caption{Balanced vs. unbalanced classifier comparison}
   \label{fig:per_cat}
 \end{figure}
 
-Section \ref{subsec:bias} introduced bias in data, along with some of its possible consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} shows some interesting properties.
+Section \ref{subsec:bias} introduced bias in data, along with some of its possible consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how the balanced
 
 First of all, comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 \loremipsum
 \loremipsum
 
 
-\section{WordNet graph-search classifier}
+\section{Graph-search classifier}
 \loremipsum
+
+
+\section{Comparison of classifiers}
+
+\begin{table}[ht]
+  \centering
+  \pgfplotstabletypeset[
+    columns={method,p,r},
+    every head row/.style={after row=\midrule},
+    columns/method/.style={string type,column type=c, column name=Classifier},
+    columns/p/.style={precision=3, column type=l, zerofill, column name=Precision},
+    columns/r/.style={precision=4, column type=l, column name=Recall},
+  ]{data/general_aspect.csv}
+
+  \vspace{0.4cm}\caption{Result summary}
+  \label{general_asp}
+\end{table}
+
+\loremipsum
+\loremipsum
+
+\pagebreak
+
 
 \chapter{Discussion}
 
