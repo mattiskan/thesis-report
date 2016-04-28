@@ -25,7 +25,7 @@ spell:
 	git add report.tex
 
 report.pdf: report.tex report.bbl report.gls data/*.csv
-	xelatex report.tex
+	xelatex -interaction=nonstopmode report.tex
 
 
 report.bbl: references.bib
