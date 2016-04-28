@@ -13,21 +13,28 @@
 \graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
 
-\newglossaryentry{computer}
-                 {
-                   name=computer,
-                   description={is a programmable machine that receives input,
-                     stores and manipulates data, and provides
-                     output in a useful format}
-                 }
+\newglossaryentry{computer}{
+  name=computer,
+  description=
+  {is a programmable machine that receives input,
+    stores and manipulates data, and provides
+    output in a useful format}
+}
+\newglossaryentry{MLE}{
+  name=Most Likelihood Estimate,
+  description=
+  {\todo yolo}
+}
 
 
 \newcommand{\todo}{ ... }
 
 \newcommand{\numAnnotated}{12 }
 
-\newcommand{\ngram}{$n$-gram }
-\newcommand{\ngrams}{$n$-grams }
+\newcommand{\ngram}{$n$-gram\ignorespaces}
+\newcommand{\ngrams}{$n$-grams\ignorespaces}
+
+\newcommand{\category}{restaurant category }  % may become plural
 
 
 \newif\ifhasStudiedFailures
@@ -135,7 +142,9 @@ The following subsections apply to text classification in general, and thus also
 A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
 
 \subsection{\ngram modeling}
-\ngram modeling is a versatile and widely used method of modeling languages. Typically all $n$-length sub-sequences of a longer sequence are included in the model, and then frequencies of \ngrams are used in tasks. $n$-grams of length \emph{1,2,3...} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively.
+\ngram modeling is a versatile and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngrams of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngram}.
+
+Typically counts or frequencies of individual \ngrams are used in tasks.
 
 As an example, the \emph{bigrams} for the sentence \emph{``Languages are fun''} are:
 \begin{quote}
@@ -155,7 +164,7 @@ Based on the Markov assumption, that the probability of a word's occurrence only
 $$\sum_{w_i}P(w_i|w_{i-1})$$
 
 \subsection{Smoothing}
-A general problem when statistically modeling based on existing data, is how the model should handle previously unseen entries.
+A general problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. A naive \gls{MLE} would per definition assign a zero probability, since unseen would imply impossible. Since human language is virtually infinite even the reasonable sentences are innumerable, which means that no training data
 
 
 \subsection{Back-off}
@@ -180,7 +189,7 @@ $$Precision = \frac{\text {true positives}}{\text{true positives} + \text{false 
 Similarly, recall is the fraction of relevant results that are retrieved:
 $$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
 
-The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be at the cost of lower recall.
+The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall.
 
 \section{Aspect clustering}
 \subsection{Using WordNet}
@@ -188,7 +197,21 @@ Based on the observation that there is usually some key words with lexicographic
 
 
 \section{Experiment setup}
+For these experiments, Yelp reviews from the \category were manually annotated in various ways.
+
+
 \numAnnotated sentences were manually annotated on the sentence level and divided into three parts: Training, testing and evaluation. During development the first two parts of the data-set were made available, whereas the evaluation set of sentences was kept separately to ensure reliable results. To ensure impartialness of methods and increase reliability of results, the only output allowed from the evaluation data set was strictly restricted to summaries of results (i.e. no individual results were presented with their outcome)\ifhasStudiedFailures, except for when failing instances were explicitly studied after method development was finished\fi.
+
+\subsection{Getting data}
+
+\begin{figure}[h]
+  \centering
+  \fbox{\includegraphics[width=12cm]{annontate_sentence.png}}
+  \caption{Sentence annotations interface}
+  \label{fig:annotate_sentence}
+\end{figure}
+
+
 
 
 % todo: annotations interface screenshot
@@ -198,15 +221,6 @@ Based on the observation that there is usually some key words with lexicographic
 
 
 \part{Results}
-
-\chapter{Annotating sentences}
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=12cm]{annontate_sentence.png}
-  \caption{Sentence annontations interface}
-  \label{fig:annotate_sentence}
-\end{figure}
 
 
 \begin{figure}[h]
@@ -276,9 +290,9 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 \pagebreak
 Section \ref{subsec:bias} introduced bias in data, along with some of its possible consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} shows some interesting properties.
 
-First of all, comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively agains the infrequent $value$-class.
+First of all, comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
-
+\loremipsum
 
 \section{Preliminaries}
 \bibliographystyle{plain}
