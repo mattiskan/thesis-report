@@ -161,25 +161,6 @@ P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w)}
 
 Here the number of occurences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurences where $w_{i-1}$ is followed by any word $w$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
 
-
-
-\section{Evaluation}
-A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
-
-\subsection{Precision}
-Precision is a measure of what fraction of retrieved results are considered relevant, see individual parts for exact definions.
-
-It is defined as following:
-$$Precision = \frac{\text {true positives}}{\text{true positives} + \text{false positives}}$$
-%From this definition it should be clear that precision can by excluding uncertain items from retrieved results.
-
-\subsection{Recall}
-Similarly, recall is the fraction of relevant results that are retrieved:
-$$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
-
-The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall.
-
-\section{Difficult data properties}
 \subsection{Smoothing language models}
 A general problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus that is a reqiurement for good performance.
 
@@ -191,12 +172,34 @@ P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w
 \end{equation}
 where $0 < \alpha \leq 1$ is commonly used.
 
+\section{Evaluation}
+A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
+
+\subsection{Precision}
+Precision is a measure of what fraction of retrieved results are considered relevant, see individual parts for exact definions.
+
+It is defined as following:
+\begin{equation} \label{eq:precision}
+Precision = \frac{\text {true positives}}{\text{true positives} + \text{false positives}}
+\end{equation}
+%From this definition it should be clear that precision can by excluding uncertain items from retrieved results.
+
+\subsection{Recall}
+Similarly, recall is the fraction of relevant results that are retrieved:
+$$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
+The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall; or in other words that there is a tradeoff between precision and recall to be made.
+
+
+
 \subsection{Scewed data}
 \label{subsec:bias}
-Another problem when dealing with real world data, it is also very possbile that some classes in classification problems are more common than others. This has been shown to have consequences both in Bayesian classsifers\cite{rennie2003bias} and Support Vector Machines\cite{svm_bias}, where both have been shown to favour majority classes\cite{rennie2003bias, svm_bias}.
+When dealing with real world data, it is also very possbile that some classes in classification problems are more common than others. This has been shown to have consequences both in Bayesian classsifers\cite{rennie2003bias} and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority classes\cite{rennie2003bias, svm_bias}.
 
-Let's also think about about what happens with precision measures for scewed data.
+Not only classification methods, but also precision measures are affected by scewed data. In binary classification with evenly distributed classes, a classifier that favors one class to the extreme that it always choses the same class, still achieves around 0.5 precision since the number of true positives would equal the proportion of the favored class\footnote{This is in fact be the worst possible result in the binary case, since any classifier performing consistently worse could be modified to return the opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between precision of biased classifiers and distribution of classes in test data.
 
+The simplest way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution. This could pose a problem if data is very scewed, as this means that the required amount of data is effectiely mutliplied by the fraction of the least common class. However, in this work the data was not scewed enough to consider more sophisticated other approaches.
+
+Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more compareable, it also reduces the amount of entries used for evalutaion, which makes evaluations less informed. In this work, evaluation will therefore be done on unscaled data once classifiers have been verified to be unbiased.
 
 
 \part{Sentiment classification}
