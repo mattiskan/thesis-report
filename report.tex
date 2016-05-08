@@ -124,11 +124,10 @@ On the \emph{document level}, one overall sentiment of an entire document is ide
 %todo examples in table?
 Ideally two opinions should be identified in the above sentence, one about \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambiance were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket''} really implies \emph{``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
 
-\section{Word senses encapsulate meaning}
-A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
+%\section{Word senses encapsulate meaning}
+%A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
 
 \section{Language modeling}
-A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
 
 \subsection{\ngram s}
 \ngram~modeling is a versatile, robust and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngram s of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngrams}.
@@ -266,7 +265,15 @@ This chapter is layed out as follows: First the individual results for each of t
 
 \section{Aspect clustering}
 \subsection{Using WordNet}
-Based on the observation that there is usually some key words with lexicographical connection to the cluster, an alternative approach to traditional classification is proposed. This is motivated since classification models need complicated smoothing techniques and big training data sets to achieve good results.
+Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results.
+
+\begin{figure}[t]
+  \centering
+  \fbox{\includegraphics[width=10cm]{img/baklava_lex.png}}
+  \caption{Example showing that ``baklava'' is lexicographically closer to category ``product'' than ``establishment''. Elipses represent word senses, rectangles the relations between senses, and diamonds predefined categories with a set of associated senses.}
+  \label{fig:baklava_lex}
+\end{figure}
+
 
 
 
