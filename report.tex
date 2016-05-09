@@ -26,6 +26,10 @@
   description=
   {\todo yolo}
 }
+\newglossaryentry{BFS}{
+  name=Breadth First Search,
+  description={Basic search algorithm where each previously unexamined connecting neighbor of a node is examined in a iteration, and the queued to be subject for the next iteration.}
+}
 
 \newcommand{\todo}{ ... }
 \newcommand{\ngram}{$n$-gram}
@@ -99,7 +103,7 @@ Computers are obviously faster and more capable to handle big quantities of data
 interpreting review-like content. This is studied under the name \emph{Sentiment Analysis}, and has been in very active research the last ten years
 thanks to increases in available data and recent efforts to monetize it.
 
-This degree project studies describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of some of the problems in this process; identifying opinons, classifying their sentiment, and categorizing what the opinion to enable summarizatiion.
+This degree project studies describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of some of the problems in this process; identifying opinions, classifying their sentiment, and categorizing what the opinion to enable summarization.
 
 It is layed out the following way: First there is a common introductory section with shared background for all of the three \todo
 
@@ -132,7 +136,7 @@ Ideally two opinions should be identified in the above sentence, one about \emph
 \subsection{\ngram s}
 \ngram~modeling is a versatile, robust and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngram s of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngrams}.
 
-Frequencies, counts and occurences of \ngram s have been used in language modeling\cite{chen_goodman}, text categorization\cite{ngrams}, \todo
+Frequencies, counts and occurrences of \ngram s have been used in language modeling\cite{chen_goodman}, text categorization\cite{ngrams}, \todo
 
 As an example, the word-\emph{bigrams} for the sentence \emph{``Languages are fun''} are:
 \begin{quote}
@@ -151,21 +155,21 @@ If the probability of a word's occurrence in a sentence is known (e.g. estimated
 \begin{equation} \label{eq:bigram_chain_prob}
 P(s) = P(w_2 | w_1)P\times (w_3 | w_2) \times \dots \times P(w_n | w_{n-1}) = \sum_{w_i \in s}P(w_i|w_{i-1})
 \end{equation}
-Where $P(w_b | w_a)$ is some probablity estimate of a word being $w_b$ provided that the previous word was $w_a$. It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
+Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$ provided that the previous word was $w_a$. It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
 
 A naive \gls{MLE} of a sentence $s$ could be defined something like this:
 \begin{equation} \label{eq:bigram_mle}
 P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w)}
 \end{equation}
 
-Here the number of occurences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurences where $w_{i-1}$ is followed by any word $w$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
+Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
 
 \subsection{Smoothing language models}
-A general problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus that is a reqiurement for good performance.
+A general problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus that is a requirement for good performance.
 
-As can be seen in equation \ref{eq:bigram_mle}, this would per definition assign a zero probability to entities unseen in training data, which in turn makes the \gls{MLE} model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probablity to the entire sentence\cite{chen_goodman}.
+As can be seen in equation \ref{eq:bigram_mle}, this would per definition assign a zero probability to entities unseen in training data, which in turn makes the \gls{MLE} model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
 
-Smoothing is a means of improving this. One of the most basic smoothing techniques called \emph{Lidstone Smooohting} or \emph{additive smoothing} addresses this by introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
+Smoothing is a means of improving this. One of the most basic smoothing techniques called \emph{Lidstone Smoothing} or \emph{additive smoothing} addresses this by introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
 \begin{equation} \label{eq:additive_smoothing}
 P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w)\cdot\alpha\big]}
 \end{equation}
@@ -175,7 +179,7 @@ where $0 < \alpha \leq 1$ is commonly used.
 A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
 
 \subsection{Precision}
-Precision is a measure of what fraction of retrieved results are considered relevant, see individual parts for exact definions.
+Precision is a measure of what fraction of retrieved results are considered relevant, see individual parts for exact definitions.
 
 It is defined as following:
 \begin{equation} \label{eq:precision}
@@ -186,19 +190,19 @@ Precision = \frac{\text {true positives}}{\text{true positives} + \text{false po
 \subsection{Recall}
 Similarly, recall is the fraction of relevant results that are retrieved:
 $$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
-The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall; or in other words that there is a tradeoff between precision and recall to be made.
+The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall; or in other words that there is a trade-off between precision and recall to be made.
 
 
 
-\subsection{Scewed data}
+\subsection{Skewed data}
 \label{subsec:bias}
-When dealing with real world data, it is also very possbile that some classes in classification problems are more common than others. This has been shown to have consequences both in Bayesian classsifers\cite{rennie2003bias} and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority classes\cite{rennie2003bias, svm_bias}.
+When dealing with real world data, it is also very possible that some classes in classification problems are more common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias} and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority classes\cite{rennie2003bias, svm_bias}.
 
-Not only classification methods, but also precision measures are affected by scewed data. In binary classification with evenly distributed classes, a classifier that favors one class to the extreme that it always choses the same class, still achieves around 0.5 precision since the number of true positives would equal the proportion of the favored class\footnote{This is in fact be the worst possible result in the binary case, since any classifier performing consistently worse could be modified to return the opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between precision of biased classifiers and distribution of classes in test data.
+Not only classification methods, but also precision measures are affected by skewed data. In binary classification with evenly distributed classes, a classifier that favors one class to the extreme that it always chooses the same class, still achieves around 0.5 precision since the number of true positives would equal the proportion of the favored class\footnote{This is in fact be the worst possible result in the binary case, since any classifier performing consistently worse could be modified to return the opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between precision of biased classifiers and distribution of classes in test data.
 
-The simplest way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution. This could pose a problem if data is very scewed, as this means that the required amount of data is effectiely mutliplied by the fraction of the least common class. However, in this work the data was not scewed enough to consider more sophisticated other approaches.
+The simplest way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
 
-Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more compareable, it also reduces the amount of entries used for evalutaion, which makes evaluations less informed. In this work, evaluation will therefore be done on unscaled data once classifiers have been verified to be unbiased.
+Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. In this work, evaluation will therefore be done on unscaled data once classifiers have been verified to be unbiased.
 
 
 \part{Sentiment classification}
@@ -220,7 +224,7 @@ Various approaches to sentiment classification exist, where approaches can gener
 
 
 \section{Experiment setup}
-\numClassifiationReviews~reviews, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected from all business categories. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reveiwes were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative reivews.
+\numClassifiationReviews~reviews, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected from all business categories. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative Reeves.
 
 
 
@@ -265,12 +269,32 @@ This chapter is layed out as follows: First the individual results for each of t
 
 \section{Aspect clustering}
 \subsection{Using WordNet}
-Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results.
+Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The general idea is that using a lexicon of known word relations, one could find a path from a word in a sentence to one of a few labeled word senses, and assign the source word the same label. Figure~\ref{fig:baklava} shows an example of this premise in action.
+
+\subsection{Making it queryable}
+A \gls{BFS} was conducted from the initially defined category terms, defined in table \ref{cat_words}.
+
+\subsection{A basic algorithm}
+\loremipsum
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c |}
+    \hline
+    \textbf{Category} & \textbf{Predefined keywords}\\ \hline
+    Establishment & \emph{Furniture, view, music, loud, appearance, clean, location}\\ \hline
+    Product & \emph{food, taste, edible}\\ \hline
+    Value & \emph{Cheap, price, dollar, buck, lots, happy hour}\\ \hline
+    Service & \emph{Service, quick, attentive}\\ \hline
+  \end{tabular}
+  \caption{Categories with their pre-associated key words.}
+  \label{cat_words}
+\end{table}
 
 \begin{figure}[t]
   \centering
   \fbox{\includegraphics[width=10cm]{img/baklava_lex.png}}
-  \caption{Example showing that ``baklava'' is lexicographically closer to category ``product'' than ``establishment''. Elipses represent word senses, rectangles the relations between senses, and diamonds predefined categories with a set of associated senses.}
+  \caption{Example showing how ``baklava'' could be lexicographically closer to category ``product'' than ``establishment''. Ellipses represent word senses, rectangles the relations between senses, and diamonds predefined categories with a few associated senses (in this case \emph{food} and \emph{location}).}
   \label{fig:baklava_lex}
 \end{figure}
 
@@ -382,7 +406,7 @@ First of all, comparison between the balanced/unbalanced versions of the classif
 \end{figure}
 
 
-Figure \ref{fig:pr_curve} shows the precision recall tradeoff for the aspect cluster classifiers.
+Figure \ref{fig:pr_curve} shows the precision recall trade-off for the aspect cluster classifiers.
 \loremipsum
 \loremipsum
 
