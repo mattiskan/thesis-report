@@ -193,14 +193,13 @@ $$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false neg
 The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall; or in other words that there is a trade-off between precision and recall to be made.
 
 
-
 \subsection{Skewed data}
 \label{subsec:bias}
 When dealing with real world data, it is also very possible that some classes in classification problems are more common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias} and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority classes\cite{rennie2003bias, svm_bias}.
 
 Not only classification methods, but also precision measures are affected by skewed data. In binary classification with evenly distributed classes, a classifier that favors one class to the extreme that it always chooses the same class, still achieves around 0.5 precision since the number of true positives would equal the proportion of the favored class\footnote{This is in fact be the worst possible result in the binary case, since any classifier performing consistently worse could be modified to return the opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between precision of biased classifiers and distribution of classes in test data.
 
-The simplest way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
+A commonly employed and simple way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution, also sometimes referred to as \emph{down-sampling}\cite{provost2000machine}. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
 
 Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. In this work, evaluation will therefore be done on unscaled data once classifiers have been verified to be unbiased.
 
@@ -222,17 +221,45 @@ Various approaches to sentiment classification exist, where approaches can gener
 
 \chapter{Methodology}
 
-
 \section{Experiment setup}
 \numClassifiationReviews~reviews, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected from all business categories. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative Reeves.
 
 
 
-
 \part{Aspect extraction}
 \chapter{Aspect extraction}
+
+\section{Problem definition}
+Aspect extraction outputs sentiment carrying expressions with identified \emph{targets}. A target is either some aspect of the entity that is subject to the sentiment, or the entity in its entirety. E.g. in the sentence \emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},  there are two opinions with one (highlighted) target each; the entity itself, and the service-aspect of the entity.
+
+Aspect extraction then is a rather typical information retrieval task, and thus methods (including evaluation) can be recognized from data mining- and other information retrieval tasks \cite[chapter 5.3]{liu2012sentiment}.
+
+
+\subsection{Explicit vs. implicit aspects}
 \loremipsum
+
+\subsection{Approaches}
 \loremipsum
+
+\section{Related Work}
+
+Aspect extraction has been studied extensively, and the four general approaches are \cite[chapter 5.3]{liu2012sentiment}:
+
+\begin{enumerate}
+\item Extraction based on frequent nouns and noun phrases
+\item Extraction by exploiting opinion and target relations
+\item Extraction using supervised learning
+\item Extraction using topic modeling
+\end{enumerate}
+However, in this work even a simple implementation of the first kind was found sufficiently effective to motivate focusing on other problems than aspect extraction, and thus this work will solely cover the first out of the four.
+
+Following are highlights from previous work deemed relevant to this work and its implementation.
+
+\subsubsection{H. Potter et al. (2002)}
+Found the chamber of secrets using methods othewise generally referred to as magical.
+
+
+
 
 \part{Aspect clustering}
 
@@ -261,21 +288,15 @@ For these experiments, Yelp reviews from the \category were manually annotated i
 \loremipsum
 
 
-\chapter{Results}
-
-This chapter is layed out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to
-
-
-
 \section{Aspect clustering}
 \subsection{Using WordNet}
 Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The general idea is that using a lexicon of known word relations, one could find a path from a word in a sentence to one of a few labeled word senses, and assign the source word the same label. Figure~\ref{fig:baklava} shows an example of this premise in action.
 
-\subsection{Making it queryable}
-A \gls{BFS} was conducted from the initially defined category terms, defined in table \ref{cat_words}.
+\subsection{Basic algorithm}
+A \gls{BFS} is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are aquired using word relations defined by JAWS (section \ref{subseq:jaws}). Each word sense is also mapped in this process to its source category for future lookups.
 
-\subsection{A basic algorithm}
-\loremipsum
+Once this ``training phase'' is done, each word in a query sentence is inspected.
+
 
 \begin{table}[t]
   \centering
@@ -304,7 +325,11 @@ A \gls{BFS} was conducted from the initially defined category terms, defined in 
 % todo: annotations interface screenshot
 % todo: num sentences table
 
-% todo: accuracy / data size
+
+\chapter{Results}
+
+This chapter is layed out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
+
 
 \section{Machine learning classifiers}
 
@@ -416,6 +441,7 @@ Figure \ref{fig:pr_curve} shows the precision recall trade-off for the aspect cl
 
 
 \section{Comparison of classifiers}
+\label{sec:comparison}
 
 \begin{table}[ht]
   \centering
