@@ -30,6 +30,21 @@
   name=Breadth First Search,
   description={Basic search algorithm where each previously unexamined connecting neighbor of a node is examined in a iteration, and the queued to be subject for the next iteration.}
 }
+\newglossaryentry{wordnet}{
+  name=WordNet,
+  description={WordNet\cite{wordnet} is a lexical database for English. WordNet has nouns, verbs, adjectives and adverbs grouped into sets of cognitive synonyms (synsets), each expressing a distinct concept. These synsets are interlinked by means of conceptual-semantic and lexical relations.}
+}
+\newglossaryentry{jaws}{
+  name=JAWS,
+  description={JAWS\cite{jaws} is a library providing API methods for accessing synset relations in \gls{wordnet}}
+}
+
+\newglossaryentry{superword}{
+  name=hypernym,
+  description={A word relation implying less specific meaning. For example, \emph{color} is a hypernym of \emph{red}.}
+}
+
+
 
 \newcommand{\todo}{ ... }
 \newcommand{\ngram}{$n$-gram}
@@ -229,6 +244,8 @@ Various approaches to sentiment classification exist, where approaches can gener
 \part{Aspect extraction}
 \chapter{Aspect extraction}
 
+The previous parts of this work have introduced methodology to extract
+
 \section{Problem definition}
 Aspect extraction outputs sentiment carrying expressions with identified \emph{targets}. A target is either some aspect of the entity that is subject to the sentiment, or the entity in its entirety. E.g. in the sentence \emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},  there are two opinions with one (highlighted) target each; the entity itself, and the service-aspect of the entity.
 
@@ -261,39 +278,59 @@ Found the chamber of secrets using methods othewise generally referred to as mag
 
 
 
-\part{Aspect clustering}
+\part{Aspect Clustering}
+
+\section{Aspect Clustering}
+So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which in turn introduces a new problem: How can these aspects with known sentiments be combined into an adequate summary?
+
+The first and most important observation is that even if we find a statement and accurately identify it as a positive mention on something, it is not enough to be the ground for a conclusion. Opinions are per definition subjective, and should individually be considered unreliable. However, as the number of processed opinons increase, so does confidence in conclusions that are based on them.
+
+As a consequence, four positive mentions of ``steak'' may not be enough for a conclusion, but in combination with positive mentions on ``chicken'', ``turkey'',  and ``meatballs'' one may be able to conclude positive the common \gls{superword} \emph{meats}. Or if more confidence is required, ``salads'' may be included under the \gls{superword} \emph{food}, ``cappuccino'' could be included to conclude about \emph{product}, and so on.
+
+This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
+
+\subsection{Explicit vs. implicit aspects}
+\loremipsum
+
+\subsection{Dynamic vs. static aspects}
+\loremipsum
+
+
 
 \section{Experiment setup}
 For these experiments, Yelp reviews from the \category were manually annotated in various ways.
 
-
 \numAnnotated~sentences were manually annotated on the sentence level and divided into three parts: Training, testing and evaluation. During development the first two parts of the data-set were made available, whereas the evaluation set of sentences was kept separately to ensure reliable results. To ensure impartialness of methods and increase reliability of results, the only output allowed from the evaluation data set was strictly restricted to summaries of results (i.e. no individual results were presented with their outcome)\ifhasStudiedFailures, except for when failing instances were explicitly studied after method development was finished\fi.
 
+\newpage
 \subsection{Getting data}
-\begin{figure}[b]
+\begin{figure}[h]
   \centering
-  \fbox{\includegraphics[width=12cm]{annotate_sentence.png}}
+  \fbox{\includegraphics[width=10cm]{annotate_sentence.png}}
   \caption{Sentence level annotation interface}
   \label{fig:annotate_sentence}
 \end{figure}
-\loremipsum
 
-\begin{figure}[b]
+\begin{figure}[h]
   \centering
-  \fbox{\includegraphics[width=12cm]{annotate_aspect.png}}
-  \caption{Aspect level annotation interface}
+  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
+  \caption{Aspect level annotation interface. Allowing selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
   \label{fig:annotate_aspect}
 \end{figure}
-\loremipsum
-\loremipsum
+
+Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the interface that was developed to annotate on the \emph{sentence level} and \emph{aspect level} respectively. This simple web-interface was served by a local web server and could be accessed by multiple users simoultaneously.
+
+\newpage
+
+
 
 
 \section{Aspect clustering}
-\subsection{Using WordNet}
+\subsection{Using graph search}
 Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The general idea is that using a lexicon of known word relations, one could find a path from a word in a sentence to one of a few labeled word senses, and assign the source word the same label. Figure~\ref{fig:baklava} shows an example of this premise in action.
 
 \subsection{Basic algorithm}
-A \gls{BFS} is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are aquired using word relations defined by JAWS (section \ref{subseq:jaws}). Each word sense is also mapped in this process to its source category for future lookups.
+A \gls{BFS} is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are aquired using word relations defined by \gls{jaws}). Each word sense is also mapped in this process to its source category for future lookups.
 
 Once this ``training phase'' is done, each word in a query sentence is inspected.
 
@@ -368,7 +405,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 
 \newpage
 
-
+\subsection{Per class classification}
 \begin{figure}[t]
   \centering
   \begin{tikzpicture}
@@ -394,16 +431,20 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Balanced vs. unbalanced classifier comparison}
+  \caption{Balanced vs. unbalanced classifier comparison. No confidence theshold was set in this experiment: recall was 1.}
   \label{fig:per_cat}
 \end{figure}
 
-Section \ref{subsec:bias} introduced bias in data, along with some of its possible consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how the balanced
+Section \ref{subsec:bias} introduced bias in data, along with some of its consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perfom much more consistent between classes.
 
-First of all, comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
+Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
+It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
 
-\begin{figure}[h!]
+\newpage
+
+\subsection{Introducing confidence thresholds}
+\begin{figure}[t]
   \centering
   \begin{tikzpicture}
     \begin{axis}[
@@ -431,9 +472,9 @@ First of all, comparison between the balanced/unbalanced versions of the classif
 \end{figure}
 
 
-Figure \ref{fig:pr_curve} shows the precision recall trade-off for the aspect cluster classifiers.
-\loremipsum
-\loremipsum
+Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
+
+\newpage
 
 
 \section{Graph-search classifier}
