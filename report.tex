@@ -163,12 +163,17 @@ where \emph{\$} is a token meaning the start/end of sentence.
 
 Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
 
+\newpage
 \subsection{\ngram~ language modeling}
-If the probability of a word's occurrence in a sentence is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way based on the Markov assumption (that the probability of a word's occurrence only depend on previous word(s) in the sentence):
+If the probability of a word's occurrence in a sentence $P$ is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way with \emph{unigrams}:
 
+\begin{equation} \label{eq:unigram_chain_prob}
+P(s) = P(w_1) P(w_2) \dots P(w_n) =\prod_{w_i \in s}P(w_i)
+\end{equation}
+or similarly, if modeled with \emph{bigrams} based on the Markov assumption (the probability of a word's occurrence only depends on previous word(s) in the sentence):
 
 \begin{equation} \label{eq:bigram_chain_prob}
-P(s) = P(w_2 | w_1)P\times (w_3 | w_2) \times \dots \times P(w_n | w_{n-1}) = \sum_{w_i \in s}P(w_i|w_{i-1})
+P(s) = P(w_2 | w_1)P\times (w_3 | w_2) \times \dots \times P(w_n | w_{n-1}) = \prod_{w_i \in s}P(w_i|w_{i-1})
 \end{equation}
 Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$ provided that the previous word was $w_a$. It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
 
@@ -189,6 +194,14 @@ Smoothing is a means of improving this. One of the most basic smoothing techniqu
 P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w)\cdot\alpha\big]}
 \end{equation}
 where $0 < \alpha \leq 1$ is commonly used.
+
+\section{Classification methods}
+The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurencies are assumed independent.)
+
+\subsection{Scikit-learn and other classification methods}
+\loremipsum\cite{scikit-learn}
+
+
 
 \section{Evaluation}
 A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
@@ -216,7 +229,7 @@ Not only classification methods, but also precision measures are affected by ske
 
 A commonly employed and simple way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution, also sometimes referred to as \emph{down-sampling}\cite{provost2000machine}. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
 
-Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. In this work, evaluation will therefore be done on unscaled data once classifiers have been verified to be unbiased.
+Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this repport will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
 
 
 \part{Sentiment classification}
@@ -233,11 +246,43 @@ Various approaches to sentiment classification exist, where approaches can gener
 
 \subsection{Yelp's sentiment analyzer}
 
-
 \chapter{Methodology}
 
 \section{Experiment setup}
 \numClassifiationReviews~reviews, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected from all business categories. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative Reeves.
+
+
+
+\chapter{Results}
+
+\subsection{Introducing confidence thresholds}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Recall},
+        ylabel={Precision},
+        %xmin=0.5, xmax=1,
+        %ymin=0.4, ymax=1,
+        %xtick={0,20,40,60,80,100},
+        %ytick={0,20,40,60,80,100,120},
+        legend pos=south west,
+        ymajorgrids=true,
+        grid style=dashed,
+      ]
+      \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_bigram_pr.csv};
+      \legend{
+        Modifier Kneyser-Rey,
+        Unigram ensemble,
+        Bigram ensamble,
+      }
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Sentiment analyzers' precision vs. recall}
+  \label{fig:pr_curve}
+\end{figure}
 
 
 
@@ -322,12 +367,11 @@ Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the inter
 
 \newpage
 
-
-
-
 \section{Aspect clustering}
 \subsection{Using graph search}
-Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The general idea is that using a lexicon of known word relations, one could find a path from a word in a sentence to one of a few labeled word senses, and assign the source word the same label. Figure~\ref{fig:baklava} shows an example of this premise in action.
+Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The general idea is that using a lexicon of known word relations, one could find a path from a word in a sentence to one of a few labeled word senses, and assign the source word the same label.
+
+Figure~\ref{fig:baklava} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
 
 \subsection{Basic algorithm}
 A \gls{BFS} is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are aquired using word relations defined by \gls{jaws}). Each word sense is also mapped in this process to its source category for future lookups.
