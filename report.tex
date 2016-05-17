@@ -190,12 +190,12 @@ If the probability of a word's occurrence in a sentence $P$ is known (e.g. estim
 \begin{equation} \label{eq:unigram_chain_prob}
 P(s) = P(w_1) P(w_2) \dots P(w_n) =\prod_{w_i \in s}P(w_i)
 \end{equation}
-or similarly, if modeled with \emph{bigrams} based on the Markov assumption (the probability of a word's occurrence only depends on previous word(s) in the sentence):
+Similarly, if modeled with \emph{bigrams}:
 
 \begin{equation} \label{eq:bigram_chain_prob}
 P(s) = P(w_2 | w_1)P\times (w_3 | w_2) \times \dots \times P(w_n | w_{n-1}) = \prod_{w_i \in s}P(w_i|w_{i-1})
 \end{equation}
-Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$ provided that the previous word was $w_a$. It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
+Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$, provided that the previous word was $w_a$. (Modeling the probability of a word's occurrence solely on previous element(s) in the sequence is know as \emph{the Markov assumption}.) It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
 
 A naive \gls{MLE} of a sentence $s$ could be defined something like this:
 \begin{equation} \label{eq:bigram_mle}
@@ -218,8 +218,29 @@ where $0 < \alpha \leq 1$ is commonly used.
 \section{Classification methods}
 The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurencies are assumed independent.)
 
-\subsection{Scikit-learn and other classification methods}
-Scikit-learn\cite{scikit-learn} is a colleciton of machine learning tools, ready to use ``out of the box''.
+%\subsection{Scikit-learn and other classification methods}
+%Scikit-learn\cite{scikit-learn} is a colleciton of machine learning implementations in Python, ready to use ``out of the box''.
+%
+%\The following methods were employed in this work:
+%\
+%\
+%\\begin{table}[h]
+%\  \centering
+%\  \begin{tabular}{| c | c |}
+%\    \hline
+%\    \textbf{Module name} & \textbf{Explanation}\\ \hline
+%\    GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\ \hline
+%\    MultinomialNB & Multinomial distributed prior Naive Bayes classifier.\\ \hline
+%\    BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\ \hline
+%\    LogisticRegression & \\ \hline
+%\    SGDClassifier & \\ \hline
+%\    SVC & \\ \hline
+%\    LinearSVC & \\ \hline
+%\    NuSVC & \\ \hline
+%\  \end{tabular}
+%\  \caption{todo}
+%\  \label{todo}
+%\\end{table}
 
 
 \section{Evaluation}
@@ -275,22 +296,24 @@ In early work, Peter Turney classified sentiment of reviews for automobiles, ban
 
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining Opinion Features in Customer Reviews'', reviews are  POS-tagged and common data mining methods are used to on to extract features(aspects).
+In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining and summarizing customer reviews'', their previous work is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for sentiment words predefined as positive or negative or their synonys/antomyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
+In ``Mining and summarizing customer reviews'', previous work by the same authors is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for \emph{sentiment words} predefined as positive or negative or their synonys/antomyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
 
-Finally a summary is produced, but this is very breifly described, and no evaluations of this process are provided.
+Finally a summary is produced, but this process is very breifly described, and is without evaluations. To my understanding, opinions are solely grouped on the lemmatized form of explicit aspects.
 
 
 \section{Experiment setup}
-\numClassifiationReviews~reviews, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected from all business categories. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative Reeves.
+\subsection{Crowdflower dataset}
+\loremipsum
+
+\subsection{Yelp academic data set}
+\numClassifiationReviews~reviews from the Yelp academic data set \footnote{https://www.yelp.com/dataset\_challenge}, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative reviews.
 
 
-
+\newpage
 \section{Results}
-
-
 
 \subsection{Introducing confidence thresholds}
 \begin{figure}[h]
@@ -326,9 +349,10 @@ Finally a summary is produced, but this is very breifly described, and no evalua
 \section{Discussion}
 
 % logical negation might clash with bi-gram model
+% introducing neutral-class
+% actually training to identify positive reviews, not positive statements
 
-
-
+\part{Aspect extraction}
 \chapter{Aspect extraction}
 
 The previous parts of this work have introduced methodology to extract
@@ -359,13 +383,20 @@ However, in this work even a simple implementation of the first kind was found s
 
 Following are highlights from previous work deemed relevant to this work and its implementation.
 
-\subsubsection{H. Potter et al. (2002)}
-Found the chamber of secrets using methods othewise generally referred to as magical.
+\subsubsection{Hu, Liu (2004)}
+In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
+
+\subsubsection{Liu, Hu and Cheng (2005)}
+In ``Opinion observer: analyzing and comparing opinions on the web'' a visualization interface for review analysis comparison is proposed.
+
+In this work, aspects are extracted by mining data for POS-patterns that indicate aspects, rather than mining aspects directly. The same rule-mining is used to find mapping for implicit aspects.
 
 
 
 
-\section{Aspect Clustering}
+
+\part{Aspect Clustering}
+\chapter{Aspect Clustering}
 So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which in turn introduces a new problem: How can these aspects with known sentiments be combined into an adequate summary?
 
 The first and most important observation is that even if we find a statement and accurately identify it as a positive mention on something, it is not enough to be the ground for a conclusion. Opinions are per definition subjective, and should individually be considered unreliable. However, as the number of processed opinons increase, so does confidence in conclusions that are based on them.
