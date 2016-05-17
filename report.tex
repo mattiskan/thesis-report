@@ -143,7 +143,27 @@ On the \emph{document level}, one overall sentiment of an entire document is ide
 %todo examples in table?
 Ideally two opinions should be identified in the above sentence, one about \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambiance were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket''} really implies \emph{``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
 
-%\section{Word senses encapsulate meaning}
+
+\section{Important definitions}
+
+\subsubsection{Opinion}
+\emph{Liu} (2012) introduces the opinions as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are used to indicate dependencies between tuple elements.}, where $e_i$ is the entity the opinion is referencing, $a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambience), $s_{ijkl}$ is the sentiment of the opinion, $h_k$ is the opinion holder and $t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
+
+In this work, Yelp reviews are used, and a few assumptions will make to simplify:
+\begin{itemize}
+\item The opnion holder $h_k$ is the user posting the review.
+\item The time $t_l$ is the time of the review.
+\item The entity $e_i$ being reviewed is the business for which the review is being posted.
+\end{itemize}
+
+%todo discuss assumption consequences?
+Thus in this report, an opinion can generally be thought of as a $(a,s)$ tuple.
+% aspects are also synonymously referred to as \emph{opinion targets}.
+
+\subsubsection{Word}
+The term ``word'' can be a bit ambigous and need a more specific definion of usage. In this report it is used to reference what is also known as \emph{word form}. That is, one specific alphabetical representation of a lemma, which can have more than one representation.
+
+\subsubsection{Word sense}
 %A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
 
 \section{Language modeling}
@@ -199,8 +219,7 @@ where $0 < \alpha \leq 1$ is commonly used.
 The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurencies are assumed independent.)
 
 \subsection{Scikit-learn and other classification methods}
-\loremipsum\cite{scikit-learn}
-
+Scikit-learn\cite{scikit-learn} is a colleciton of machine learning tools, ready to use ``out of the box''.
 
 
 \section{Evaluation}
@@ -232,8 +251,7 @@ A commonly employed and simple way to solve problems with disproportionate data 
 Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this repport will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
 
 
-\part{Sentiment classification}
-
+\part{Sentiment Classification}
 \chapter{Sentiment Classification}
 Sentiment classification is the problem of deciding whether sentiment in a sentence is positive, negative or neutral\cite{nlp_book}. Being a central part of sentiment analysis it can also done on the same three levels: Document level, sentence level and aspect level.
 
@@ -242,21 +260,41 @@ Sentiment classification can be a classification- or regression analysis problem
 Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo}, statistical\cite{todo}, or various combinations of the two.
 
 
+
+
 \subsection{Back-off smoothing}
 
 \subsection{Yelp's sentiment analyzer}
 
-\chapter{Methodology}
+
+
+\section{Related work}
+
+\subsubsection{Turney (2002)}
+In early work, Peter Turney classified sentiment of reviews for automobiles, banks, movies and travel destinations with ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
+
+
+\subsubsection{Hu, Liu (2004)}
+In ``Mining Opinion Features in Customer Reviews'', reviews are  POS-tagged and common data mining methods are used to on to extract features(aspects).
+
+\subsubsection{Hu, Liu (2004)}
+In ``Mining and summarizing customer reviews'', their previous work is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for sentiment words predefined as positive or negative or their synonys/antomyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
+
+Finally a summary is produced, but this is very breifly described, and no evaluations of this process are provided.
+
 
 \section{Experiment setup}
 \numClassifiationReviews~reviews, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected from all business categories. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative Reeves.
 
 
 
-\chapter{Results}
+\section{Results}
+
+
 
 \subsection{Introducing confidence thresholds}
 \begin{figure}[h]
+  %numpos 3216 numneg 1271
   \centering
   \begin{tikzpicture}
     \begin{axis}[
@@ -285,8 +323,12 @@ Various approaches to sentiment classification exist, where approaches can gener
 \end{figure}
 
 
+\section{Discussion}
 
-\part{Aspect extraction}
+% logical negation might clash with bi-gram model
+
+
+
 \chapter{Aspect extraction}
 
 The previous parts of this work have introduced methodology to extract
@@ -322,8 +364,6 @@ Found the chamber of secrets using methods othewise generally referred to as mag
 
 
 
-
-\part{Aspect Clustering}
 
 \section{Aspect Clustering}
 So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which in turn introduces a new problem: How can these aspects with known sentiments be combined into an adequate summary?
