@@ -53,12 +53,14 @@
 \newcommand{\numClassifierAproaches}{2}
 \newcommand{\numClassifiationReviews}{2}
 
+\newcommand{\yelpSentClassifier}{Modified Kneyser-Rey classifier}
+
 \newif\ifhasStudiedFailures
 \hasStudiedFailuresfalse
 
 \newcommand{\loremipsum}{
   {\color{lightgray}
-  Fruit two greater fifth over every. In female fourth good wherein herb
+  PLACEHOLDER: Fruit two greater fifth over every. In female fourth good wherein herb
   Waters yielding itself. Female greater. Hath in, second appear tree in.
   Him, it seasons. Upon. Good you're. Winged green. To creeps abundantly
   kind own morning green had it be fifth created, forth he unto signs is thing
@@ -133,38 +135,50 @@ It is layed out the following way: First there is a common introductory section 
 \section{Sentiment analysis}
 Sentiment analysis\cite{liu2012sentiment} is the general task of from raw text extracting and interpreting expressions with associated sentiments. This involves classifying orientation (and possibly intensity) of found sentiments, and identifying what entity, and possibly what aspect of that entity, is subject to the expressed sentiments.
 
+Although sentiment analysis has been studied extensively, it is a domain specific, context dependent, and hard problem. Human language is by its nature ambiguous and has complications like metaphors, implicit references and sarcasm, all of which makes problems in NLP hard.
+
 \subsection{Levels of sentiment analysis}
-In general, sentiment analysis has been studied at three levels:
+Sentiment analysis is generally studied at one of three levels:
 
 On the \emph{document level}, one overall sentiment of an entire document is identified. This is generally of limited use, as in most contexts, documents hold many opinions. Therefore most studies at the document level in some way handle conflicting opinions, although this may be done implicitly\cite[Chapter~3]{liu2012sentiment}. In document level sentiment analysis, the problem definition itself requires generalizations, which may invite to inaccurate over-simplifications.
 
-\emph{Sentence level} sentiment analysis mitigates this risk of generalization; sentences are generally smaller than documents and thus less likely to hold conflicting opinions, so assuming there is at most one sentiment has less impact on results --- but the problem itself is not addressed. As an example, the sentence \emph{``Although the service is terrible, I still like this restaurant''} is arguably overall positive, but simply deeming it so excludes information which reduces quality of results and makes them susceptible to systematic errors.
+\emph{Sentence level} sentiment analysis mitigates this risk of generalization; sentences can be considered small documents and are thus less likely to hold conflicting opinions, which is why assuming that at most one sentiment has less impact on results --- but the problem itself is not addressed. As an example, the sentence \emph{``Although the service is terrible, I still like this restaurant''} is arguably overall positive, but simply deeming it so excludes information which reduces quality of results and makes them susceptible to systematic errors.
 
 %todo examples in table?
-Ideally two opinions should be identified in the above sentence, one about \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambiance were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket''} really implies \emph{``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
+Ideally both opinions should be identified in the above sentence, one about \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is said to be on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambiance were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket''} really implies \emph{``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
 
 
 \section{Important definitions}
 
+\subsubsection{Entity and its Aspects}
+In this work, and often in sentiment analysis, \emph{entity} is used to mean the entity under review. But reviews are typically more detailed
+and describe \emph{what} about an entity causes sentiment. An aspect of an entity, is used to mean \emph{what} about an entity is referenced.
+
+E.g. in the sentence \emph{``my camera is very reliable''} the reviewed entity is \emph{camera} and the reviewed aspect is its \emph{reliability}.
+
+Readers should be aware that older literture may refer to aspects as \emph{features}, which was changed with increased application of machine learning in sentiment analysis, to aviod confusion with \emph{features} in machine learning contexts.
+
 \subsubsection{Opinion}
 \emph{Liu} (2012) introduces the opinions as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are used to indicate dependencies between tuple elements.}, where $e_i$ is the entity the opinion is referencing, $a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambience), $s_{ijkl}$ is the sentiment of the opinion, $h_k$ is the opinion holder and $t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
 
-In this work, Yelp reviews are used, and a few assumptions will make to simplify:
+In this work, Yelp reviews are used, which enables a few assumptions that can simplify:
 \begin{itemize}
-\item The opnion holder $h_k$ is the user posting the review.
-\item The time $t_l$ is the time of the review.
+\item The opnion holder $h_k$ is the Yelp user posting the review.
+\item The time $t_l$ is the time the review was posted.
 \item The entity $e_i$ being reviewed is the business for which the review is being posted.
 \end{itemize}
 
 %todo discuss assumption consequences?
-Thus in this report, an opinion can generally be thought of as a $(a,s)$ tuple.
+Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutural)sentiment.
 % aspects are also synonymously referred to as \emph{opinion targets}.
 
 \subsubsection{Word}
-The term ``word'' can be a bit ambigous and need a more specific definion of usage. In this report it is used to reference what is also known as \emph{word form}. That is, one specific alphabetical representation of a lemma, which can have more than one representation.
+In this report the term ``word'' is used to reference \emph{word form}, which is, a specific alphabetical representation of a lemma.
+
+E.g. \emph{``running''}, \emph{``ran''} and \emph{``sprinted''} are all words prepresenting the same lemma.
 
 \subsubsection{Word sense}
-%A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlpbook}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
+%A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlp_book}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
 
 \section{Language modeling}
 
@@ -184,7 +198,7 @@ where \emph{\$} is a token meaning the start/end of sentence.
 Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
 
 \newpage
-\subsection{\ngram~ language modeling}
+\subsection{\ngram~language modeling}
 If the probability of a word's occurrence in a sentence $P$ is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way with \emph{unigrams}:
 
 \begin{equation} \label{eq:unigram_chain_prob}
@@ -199,49 +213,78 @@ Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$, provide
 
 A naive \gls{MLE} of a sentence $s$ could be defined something like this:
 \begin{equation} \label{eq:bigram_mle}
-P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w)}
+P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w_*)}
 \end{equation}
 
-Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
+Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
 
-\subsection{Smoothing language models}
-A general problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus that is a requirement for good performance.
+\subsection{Choosing model complexity}
+\loremipsum
 
-As can be seen in equation \ref{eq:bigram_mle}, this would per definition assign a zero probability to entities unseen in training data, which in turn makes the \gls{MLE} model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
+\section{Smoothing language models}
+A common problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus that is a requirement for good performance.
 
-Smoothing is a means of improving this. One of the most basic smoothing techniques called \emph{Lidstone Smoothing} or \emph{additive smoothing} addresses this by introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
+As can be seen in equation \ref{eq:bigram_mle}, entites unseen in training data would per definition be assigned a zero probability, which in turn makes the \gls{MLE} model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
+
+Smoothing is a means of \todo
+
+\subsection{Additive smoothing}
+One of the most basic smoothing techniques called \emph{Lidstone Smoothing} or \emph{additive smoothing} addresses this by introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
 \begin{equation} \label{eq:additive_smoothing}
-P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w)\cdot\alpha\big]}
+P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w_*)+\alpha\big]}
 \end{equation}
-where $0 < \alpha \leq 1$ is commonly used.
+where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also called \emph{Lapace smoothing}\cite{nlp_book}.
+
+
+\subsection{Interpolated smoothing}
+Additive smoothing addresses unseen data, but there are more efficient models.
+
+\emph{Interpolated smoothing} is ways of combining models of various complexities, in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
+Below is an example of what most interpolated smoothing approaches look like for bigrams:
+\begin{equation}
+  P_{inter}(w_i|w_{i-1}) =
+    \lambda_2 P(w_i|w_{i-1}) + \lambda_1 P(w_i)
+\end{equation}
+
+where the weights dividing influence between models are $\lambda_1, \lambda_2$, and $\lambda_1 + \lambda_2 = 1$. Typically higher order methods are assigned more confidence.
+
+Interpolated smoothing techniques mitigate the trade-off between complex models with higher accuracy and simpler models that generalize well. If a queried bigram does not exist in training data at all, the first term will effectively equal zero, and the estimate will be the one of a individual unigram model times a reducing factor.
+
+The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
+
+\subsection{Modified Kneser-Ney smoothing}
+One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing}, or \emph{Modified Kneser-Ney smoothing},\cite{nlp_book}, which is based on two additional intuitions.
+
+First, features with really few counts are unreliable, since higher order models are weighed higher than low order models, few occurences may lead to overestimations  %todo
+
+The first one is that common features with high counts already have high probabilites, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurence count it is penalizing.
+
+The second intuition is that just as lower order models are given higher influence when the higher models have less confidence,
 
 \section{Classification methods}
 The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurencies are assumed independent.)
 
-%\subsection{Scikit-learn and other classification methods}
-%Scikit-learn\cite{scikit-learn} is a colleciton of machine learning implementations in Python, ready to use ``out of the box''.
-%
-%\The following methods were employed in this work:
-%\
-%\
-%\\begin{table}[h]
-%\  \centering
-%\  \begin{tabular}{| c | c |}
-%\    \hline
-%\    \textbf{Module name} & \textbf{Explanation}\\ \hline
-%\    GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\ \hline
-%\    MultinomialNB & Multinomial distributed prior Naive Bayes classifier.\\ \hline
-%\    BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\ \hline
-%\    LogisticRegression & \\ \hline
-%\    SGDClassifier & \\ \hline
-%\    SVC & \\ \hline
-%\    LinearSVC & \\ \hline
-%\    NuSVC & \\ \hline
-%\  \end{tabular}
-%\  \caption{todo}
-%\  \label{todo}
-%\\end{table}
+\subsection{Scikit-learn and other classification methods}
+Scikit-learn\cite{scikit-learn} is a colleciton of machine learning implementations in Python, ready to use ``out of the box''.
 
+The following methods were employed in this work:
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{ r l }
+    \textbf{Module name} & \textbf{Explanation}\\
+    GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\
+    MultinomialNB & Multinomial distributed prior Naive Bayes classifier.\\
+    BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\
+    LogisticRegression & \\
+    SGDClassifier & \\
+    SVC & \\
+    LinearSVC & \\
+    NuSVC & \\
+  \end{tabular}
+  \caption{todo}
+  \label{todo}
+\end{table}
 
 \section{Evaluation}
 A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
@@ -278,25 +321,23 @@ Sentiment classification is the problem of deciding whether sentiment in a sente
 
 Sentiment classification can be a classification- or regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
 
-Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo}, statistical\cite{todo}, or various combinations of the two.
+\subsection{Subjective and objective sentiments}
+Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
+
+Sentiment can also be derived from objective sentences: \emph{``the toilet seat was broken''} clearly implies negative sentiment as \emph{broken} is an unquestionably negative property for a toilet. Most sentences are somewhere in between subjective and objective, e.g. the sentence ``the portion size was small'' is of objective nature, but holds a subjective definition of \emph{small portion size}.
+
+Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
 
 
-
-
-\subsection{Back-off smoothing}
-
-\subsection{Yelp's sentiment analyzer}
-
-
-
+\newpage
 \section{Related work}
+Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo} or statistical\cite{todo}. This sections aims to give some insight into what has been previously done in the field.
 
 \subsubsection{Turney (2002)}
-In early work, Peter Turney classified sentiment of reviews for automobiles, banks, movies and travel destinations with ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
-
+In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
+In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
 
 \subsubsection{Hu, Liu (2004)}
 In ``Mining and summarizing customer reviews'', previous work by the same authors is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for \emph{sentiment words} predefined as positive or negative or their synonys/antomyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
@@ -305,7 +346,11 @@ Finally a summary is produced, but this process is very breifly described, and i
 
 
 \section{Experiment setup}
-\subsection{Crowdflower dataset}
+To examine the improvements of smoothing, a few variants of machine learning sentiment classifiers were developed.
+
+
+
+\subsection{Sentiment labeled sentences}
 \loremipsum
 
 \subsection{Yelp academic data set}
@@ -335,7 +380,7 @@ Finally a summary is produced, but this process is very breifly described, and i
       \addplot table [x=r, y=p]{data/sent_unigram_pr.csv};
       \addplot table [x=r, y=p]{data/sent_bigram_pr.csv};
       \legend{
-        Modifier Kneyser-Rey,
+        \yelpSentClassifier,
         Unigram ensemble,
         Bigram ensamble,
       }
@@ -345,8 +390,14 @@ Finally a summary is produced, but this process is very breifly described, and i
   \label{fig:pr_curve}
 \end{figure}
 
-
 \section{Discussion}
+
+Results show a few key results:
+\begin{itemize}
+  \item
+\end{itemize}
+
+It should be obvious from the precision/recall curve in figure \ref{fig:pr_curve} that the \yelpSentClassifier~is better than any of the other.
 
 % logical negation might clash with bi-gram model
 % introducing neutral-class
@@ -355,23 +406,10 @@ Finally a summary is produced, but this process is very breifly described, and i
 \part{Aspect extraction}
 \chapter{Aspect extraction}
 
-The previous parts of this work have introduced methodology to extract
-
 \section{Problem definition}
 Aspect extraction outputs sentiment carrying expressions with identified \emph{targets}. A target is either some aspect of the entity that is subject to the sentiment, or the entity in its entirety. E.g. in the sentence \emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},  there are two opinions with one (highlighted) target each; the entity itself, and the service-aspect of the entity.
 
-Aspect extraction then is a rather typical information retrieval task, and thus methods (including evaluation) can be recognized from data mining- and other information retrieval tasks \cite[chapter 5.3]{liu2012sentiment}.
-
-
-\subsection{Explicit vs. implicit aspects}
-\loremipsum
-
-\subsection{Approaches}
-\loremipsum
-
-\section{Related Work}
-
-Aspect extraction has been studied extensively, and the four general approaches are \cite[chapter 5.3]{liu2012sentiment}:
+Aspect extraction then is a rather typical information retrieval task, and thus methods (including evaluation) can be recognized from data mining- and other information retrieval tasks. In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu2012sentiment}:
 
 \begin{enumerate}
 \item Extraction based on frequent nouns and noun phrases
@@ -379,12 +417,29 @@ Aspect extraction has been studied extensively, and the four general approaches 
 \item Extraction using supervised learning
 \item Extraction using topic modeling
 \end{enumerate}
-However, in this work even a simple implementation of the first kind was found sufficiently effective to motivate focusing on other problems than aspect extraction, and thus this work will solely cover the first out of the four.
+However, in this work, as the results will show, even a simple implementation of the first kind was found sufficiently effective to motivate focusing on other problems than aspect extraction, and thus this work will solely cover the first out of the four.
 
-Following are highlights from previous work deemed relevant to this work and its implementation.
+\subsection{Aspect extraction is data-dependent}
+Like other data extraction tasks, aspect extraction is largely dependent on the data aspects are being extracted from.
+In the case of online reviews, techinques may vary in effectiveness depending on domain of reviewed entites, demographics of review authors, language used in the review and countless other factors. Furthermore, within the same dataset, these factors may correlate differently on a per-entity basis. E.g. one could imagine that there would be systematic differences between reviews written for a sugreon's instrument compared to reviews for a toy car.
+
+It is therefore crucial that in the process of aspect extraction, like in other extraction tasks, think about what correlations may exist and how they may affect usage of the extracted data.
+
+\subsection{Candidate extraction vs. pruning}
+There are two important definitions in this section, which together make up the method used in this work:
+
+\emph{Candidate identification} is the task of finding potential aspects in unstructured text. \emph{Pruning} is the task of excluding irrelelvant candidates that from the candidate identification result set.
+
+The reason why these usually are done separately in sequence is that some pruning techinques may require the full candidate set, such as \emph{idf}-scores or occurency thresholds.
+
+
+\section{Related Work}
+
+\subsubsection{Turney (2002)}
+In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
+In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
 
 \subsubsection{Liu, Hu and Cheng (2005)}
 In ``Opinion observer: analyzing and comparing opinions on the web'' a visualization interface for review analysis comparison is proposed.
@@ -392,6 +447,11 @@ In ``Opinion observer: analyzing and comparing opinions on the web'' a visualiza
 In this work, aspects are extracted by mining data for POS-patterns that indicate aspects, rather than mining aspects directly. The same rule-mining is used to find mapping for implicit aspects.
 
 
+\section{Extracting aspects}
+In this work, a simple POS-tagger pattern was employed to extract aspects.
+
+
+\section{}
 
 
 
@@ -430,7 +490,7 @@ For these experiments, Yelp reviews from the \category were manually annotated i
 \begin{figure}[h]
   \centering
   \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
-  \caption{Aspect level annotation interface. Allowing selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
+  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
   \label{fig:annotate_aspect}
 \end{figure}
 
@@ -440,9 +500,13 @@ Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the inter
 
 \section{Aspect clustering}
 \subsection{Using graph search}
-Based on the observation that there is usually some key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The general idea is that using a lexicon of known word relations, one could find a path from a word in a sentence to one of a few labeled word senses, and assign the source word the same label.
+Based on the observation that there are usually key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
 
-Figure~\ref{fig:baklava} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
+Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
+
+This method to categorize individual words, can then be extended to categorize full sentences using some heuristic.
+% todo heuristics
+
 
 \subsection{Basic algorithm}
 A \gls{BFS} is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are aquired using word relations defined by \gls{jaws}). Each word sense is also mapped in this process to its source category for future lookups.
@@ -457,7 +521,7 @@ Once this ``training phase'' is done, each word in a query sentence is inspected
     \textbf{Category} & \textbf{Predefined keywords}\\ \hline
     Establishment & \emph{Furniture, view, music, loud, appearance, clean, location}\\ \hline
     Product & \emph{food, taste, edible}\\ \hline
-    Value & \emph{Cheap, price, dollar, buck, lots, happy hour}\\ \hline
+    Value & \emph{Cheap, price, dollar, buck, lots, bargain}\\ \hline
     Service & \emph{Service, quick, attentive}\\ \hline
   \end{tabular}
   \caption{Categories with their pre-associated key words.}
@@ -470,7 +534,6 @@ Once this ``training phase'' is done, each word in a query sentence is inspected
   \caption{Example showing how ``baklava'' could be lexicographically closer to category ``product'' than ``establishment''. Ellipses represent word senses, rectangles the relations between senses, and diamonds predefined categories with a few associated senses (in this case \emph{food} and \emph{location}).}
   \label{fig:baklava_lex}
 \end{figure}
-
 
 
 
@@ -516,7 +579,7 @@ This chapter is layed out as follows: First the individual results for each of t
 \end{figure}
 
 
-As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees more promising growth at the cut-off.
+As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees very steady increment.
 
 \newpage
 
@@ -549,6 +612,34 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
   \caption{Balanced vs. unbalanced classifier comparison. No confidence theshold was set in this experiment: recall was 1.}
   \label{fig:per_cat}
 \end{figure}
+
+
+%\begin{figure}[t]
+%  \centering
+%  \begin{tikzpicture}
+%
+%  \begin{axis}[
+%      %title={Classifier performance per category},
+%      %xlabel={Categories},
+%      ylabel={Fraction of correctly classified},
+%      ybar, ymin=0,
+%      %bar width=20pt,
+%      xtick=data,
+%      x tick label style={rotate=45,anchor=east},
+%      xticklabels from table={data/per_category_unigram.csv}{n},
+%      xticklabel style={text height=1.5ex},
+%      ymajorgrids=true,
+%      grid style=dashed,
+%      legend pos=north east,
+%    ]
+%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_unigram.csv};
+%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_bigram.csv};
+%    \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
+%  \end{axis}
+%  \end{tikzpicture}
+%  \caption{Percat2}
+%  \label{fig:per_cat}
+%\end{figure}
 
 Section \ref{subsec:bias} introduced bias in data, along with some of its consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perfom much more consistent between classes.
 
@@ -620,10 +711,30 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 \pagebreak
 
 
-\chapter{Discussion}
+\chapter{Conclusion}
+
+As the results show, it is in fact possible to categorize aspects using a lexical database. There are however a few reasons why the results should be interpreted with caution:
+
+I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
+
+%todo reasons:
+% small data-set, might be overfitted?
 
 
-\loremipsum
+
+% becomes easier with aspect-word only?
+
+
+\section{Lessons learned}
+\subsection{Data annotation}
+A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected due to the desicion of doing it on the aspect level. As an example, in the sentence' \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence, annotated as both \emph{service} and \emph{product}?
+
+
+After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
+
+However, this proccess of finding out how to annotate sentences took a few tries befeore a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
+
+% todo: what I learned
 
 
 \bibliographystyle{plain}
