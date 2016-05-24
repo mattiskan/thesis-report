@@ -253,9 +253,12 @@ Interpolated smoothing techniques mitigate the trade-off between complex models 
 The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
 
 \subsection{Modified Kneser-Ney smoothing}
+\emph{TODO: This is the last smoothing section. This is where things start to get a little complicated. rewrite better and finish this section}
+\\
+\\
 One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing}, or \emph{Modified Kneser-Ney smoothing},\cite{nlp_book}, which is based on two additional intuitions.
 
-First, features with really few counts are unreliable, since higher order models are weighed higher than low order models, few occurences may lead to overestimations  %todo
+%First, features with really few counts are unreliable, since higher order models are weighed higher than low order models, few occurences may lead to overestimations  %todo
 
 The first one is that common features with high counts already have high probabilites, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurence count it is penalizing.
 
@@ -287,12 +290,12 @@ The following methods were employed in this work:
 \end{table}
 
 \section{Evaluation}
-A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems quality, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
+A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively. In this work they are also used in combination with confidence thresholds to examine wether better results can be achieved by letting classifers answer \texttt{UNKNOWN} when confidence is below threshold (which leaves precision unaffected, at cost of recall).
 
 \subsection{Precision}
-Precision is a measure of what fraction of retrieved results are considered relevant, see individual parts for exact definitions.
+Precision is a measure of what fraction of retrieved results are considered relevant.
 
-It is defined as following:
+It is defined as follows:
 \begin{equation} \label{eq:precision}
 Precision = \frac{\text {true positives}}{\text{true positives} + \text{false positives}}
 \end{equation}
@@ -301,6 +304,7 @@ Precision = \frac{\text {true positives}}{\text{true positives} + \text{false po
 \subsection{Recall}
 Similarly, recall is the fraction of relevant results that are retrieved:
 $$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
+
 The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall; or in other words that there is a trade-off between precision and recall to be made.
 
 
@@ -346,7 +350,9 @@ Finally a summary is produced, but this process is very breifly described, and i
 
 
 \section{Experiment setup}
-To examine the improvements of smoothing, a few variants of machine learning sentiment classifiers were developed.
+To examine the effects of smoothing, a few different classifiers were developed.
+
+
 
 
 
@@ -358,7 +364,7 @@ To examine the improvements of smoothing, a few variants of machine learning sen
 
 
 \newpage
-\section{Results}
+\chapter{Results}
 
 \subsection{Introducing confidence thresholds}
 \begin{figure}[h]
@@ -421,7 +427,7 @@ However, in this work, as the results will show, even a simple implementation of
 
 \subsection{Aspect extraction is data-dependent}
 Like other data extraction tasks, aspect extraction is largely dependent on the data aspects are being extracted from.
-In the case of online reviews, techinques may vary in effectiveness depending on domain of reviewed entites, demographics of review authors, language used in the review and countless other factors. Furthermore, within the same dataset, these factors may correlate differently on a per-entity basis. E.g. one could imagine that there would be systematic differences between reviews written for a sugreon's instrument compared to reviews for a toy car.
+In the case of online reviews, techinques may vary in effectiveness depending on domain of reviewed entites, demographics of review authors, language used in the review and countless other factors. Furthermore, within the same dataset, these factors may correlate differently on a per-entity basis. E.g. one could imagine that there would be systematic differences between reviews written for a surgeon's instrument compared to reviews for a toy car.
 
 It is therefore crucial that in the process of aspect extraction, like in other extraction tasks, think about what correlations may exist and how they may affect usage of the extracted data.
 
@@ -446,12 +452,87 @@ In ``Opinion observer: analyzing and comparing opinions on the web'' a visualiza
 
 In this work, aspects are extracted by mining data for POS-patterns that indicate aspects, rather than mining aspects directly. The same rule-mining is used to find mapping for implicit aspects.
 
-
+\newpage
 \section{Extracting aspects}
-In this work, a simple POS-tagger pattern was employed to extract aspects.
+A simple aspect extractor was developed. Given a review, the extractor used the POS-tagger in nltk\cite{nltk} and compared the text to a series of predefined patterns.
+\newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
+\newcommand{\ExtrPatTwo}{\texttt{<NNS?>+<VB.?>+<JJ.?>+<NN.?>+}}
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| l | l |}
+    \hline
+    \textbf{Pattern} & \textbf{Matching sample sentence}\\ \hline
+    \ExtrPatOne & \emph{}\\
+    \ExtrPatTwo & \emph{}\\ \hline
+  \end{tabular}
+  \caption{Patterns used in entity extraction}
+  \label{sample_pos}
+\end{table}
+
+\section{Results}
 
 
-\section{}
+
+
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      xlabel={Found aspects},
+      ylabel={No. reviews},
+      ybar, ymin=0, %3ymax=9999,
+      %bar width=20pt,
+      xtick=data,
+      %x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/extraction_counts.csv}{found},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=count]{data/extraction_count1.csv};
+    \addplot table [x expr=\coordindex, y=count]{data/extraction_count2.csv};
+    \addplot table [x expr=\coordindex, y=count]{data/extraction_count_both.csv};
+    \legend{
+      \ExtrPatTwo,
+      \ExtrPatOne,
+      Both patterns,
+      }
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Distribution of number of extracted aspects per review}
+  \label{fig:extr_count}
+\end{figure}
+
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| l | l |}
+    \hline
+    \textbf{Pattern} & \textbf{>0}\\ \hline
+    \ExtrPatOne & 8582\\
+    \ExtrPatTwo & \emph{}\\ \hline
+    both & 0\\ \hline
+  \end{tabular}
+  \caption{Patterns used in entity extraction}
+  \label{tot}
+\end{table}
+
+
+
+Out of 10'000 reviews, in total 12'246 aspects were found, which works out to an average of 1.22 aspects per review. Figure \ref{fig:extr_count} shows the distribution of reviews and the number of found aspects.
+
+\section{Discussion}
+
+On average, jsut above ne aspect per review is found, which may not sound like a lot, but for entities with lots of reviews it may be enough. Later in this work when we study aspect clustering, figure \ref{fig:cat_count} will show that the least common category, \emph{value}, represents around 10\% of the aspects, for a reviewed entity with 300 reviews then, around 35 opinions can be expected, which should be enough for a conclusion. In practice, review comparisons would liekly be done for business chains which can easily have 10'000 reviews, which is why in this work this simple method was deemed sufficient.
+
+To make conclusions more impartial, it might be a good idea to only allow one opinion per aspect from each review. Arguably one reviewer mentioning a bad service experience ten times should not be valued the same as positive mentions from ten reviewers. Ideally, some average of all sentiments for  each aspect in one review should probably be used when summarizing results, but the aspect extraction task may know what category found aspects belong to. If this is a concern a definite lower bound can still be estimated by allowing at most one aspect per review, which effectively would eliminate this risk at the cost of about half of all found aspects.
+
+Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundam
+entally different methods in combination, such as including a supervised learner.
 
 
 
@@ -495,6 +576,33 @@ For these experiments, Yelp reviews from the \category were manually annotated i
 \end{figure}
 
 Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the interface that was developed to annotate on the \emph{sentence level} and \emph{aspect level} respectively. This simple web-interface was served by a local web server and could be accessed by multiple users simoultaneously.
+
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Number of aspects},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/category_distribution.csv}{category},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Number of annontated sentences per category}
+  \label{fig:cat_count}
+\end{figure}
+
 
 \newpage
 
@@ -641,7 +749,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 %  \label{fig:per_cat}
 %\end{figure}
 
-Section \ref{subsec:bias} introduced bias in data, along with some of its consequences. This motivates a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perfom much more consistent between classes.
+Section \ref{subsec:bias} introduced bias in data, along with some of its consequences, which motivated a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perfom much more consistent between classes.
 
 Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
@@ -711,7 +819,7 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 \pagebreak
 
 
-\chapter{Conclusion}
+\chapter{Conclusions}
 
 As the results show, it is in fact possible to categorize aspects using a lexical database. There are however a few reasons why the results should be interpreted with caution:
 
@@ -720,9 +828,9 @@ I believe my limited amount of data to have much influence over my results. As f
 %todo reasons:
 % small data-set, might be overfitted?
 
-
-
 % becomes easier with aspect-word only?
+
+% indata probably works for you
 
 
 \section{Lessons learned}
