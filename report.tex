@@ -353,10 +353,8 @@ Finally a summary is produced, but this process is very breifly described, and i
 To examine the effects of smoothing, a few different classifiers were developed.
 
 
-
-
-
 \subsection{Sentiment labeled sentences}
+Yelp has a dataset of around 7000 sentences labeled depending on their sentiment towards the the business in general.
 \loremipsum
 
 \subsection{Yelp academic data set}
@@ -403,7 +401,7 @@ Results show a few key results:
   \item
 \end{itemize}
 
-It should be obvious from the precision/recall curve in figure \ref{fig:pr_curve} that the \yelpSentClassifier~is better than any of the other.
+From the precision/recall curve in figure \ref{fig:pr_curve} we can read that the \yelpSentClassifier~is better
 
 % logical negation might clash with bi-gram model
 % introducing neutral-class
@@ -508,22 +506,8 @@ A simple aspect extractor was developed. Given a review, the extractor used the 
 \end{figure}
 
 
-\begin{table}[t]
-  \centering
-  \begin{tabular}{| l | l |}
-    \hline
-    \textbf{Pattern} & \textbf{>0}\\ \hline
-    \ExtrPatOne & 8582\\
-    \ExtrPatTwo & \emph{}\\ \hline
-    both & 0\\ \hline
-  \end{tabular}
-  \caption{Patterns used in entity extraction}
-  \label{tot}
-\end{table}
 
-
-
-Out of 10'000 reviews, in total 12'246 aspects were found, which works out to an average of 1.22 aspects per review. Figure \ref{fig:extr_count} shows the distribution of reviews and the number of found aspects.
+Out of 10'000 reviews, in total 12'246 aspects were found, which works out to an average of around 1.2 aspects per review. Figure \ref{fig:extr_count} shows the distribution of reviews and the number of found aspects. Note that the graph does not show how many aspects were found, but in how many reviews a certain number of were found.
 
 \section{Discussion}
 
@@ -533,7 +517,6 @@ To make conclusions more impartial, it might be a good idea to only allow one op
 
 Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundam
 entally different methods in combination, such as including a supervised learner.
-
 
 
 \part{Aspect Clustering}
@@ -551,7 +534,6 @@ This is task is defined as \emph{aspect clustering}, or in some work \emph{aspec
 
 \subsection{Dynamic vs. static aspects}
 \loremipsum
-
 
 
 \section{Experiment setup}
