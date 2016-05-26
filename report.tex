@@ -45,7 +45,6 @@
 }
 
 
-
 \newcommand{\todo}{ ... }
 \newcommand{\ngram}{$n$-gram}
 \newcommand{\category}{restaurant category }  % may become plural
@@ -53,7 +52,7 @@
 \newcommand{\numClassifierAproaches}{2}
 \newcommand{\numClassifiationReviews}{2}
 
-\newcommand{\yelpSentClassifier}{Modified Kneyser-Rey classifier}
+\newcommand{\ysc}{Modified Kneser-Ney classifier}
 
 \newif\ifhasStudiedFailures
 \hasStudiedFailuresfalse
@@ -74,10 +73,10 @@
 
 \makeglossaries
 
-\title{Something, something, something, thesis...}
+\title{Opinion mining local business reviews:\\ A technical walk through.}
 
-\subtitle{Getting a degree is hard}
-\foreigntitle{Getting a degree is hard in swedish too}
+\subtitle{Getting that degree would be nice before I go work full time}
+\foreigntitle{This is the Swedish title}
 \author{Mattis Kancans Envall}
 \date{June 2016}
 \blurb{Master's Thesis at CSC\\Supervisor: Johan Boye\\Examiner: Viggo Kann}
@@ -117,12 +116,12 @@ The increasing quantity of content makes for more reliable conclusions as more o
 since there is a limit to what human readers can process.
 
 Computers are obviously faster and more capable to handle big quantities of data, which suggests potential for using computers as aid when
-interpreting review-like content. This is studied under the name \emph{Sentiment Analysis}, and has been in very active research the last ten years
-thanks to increases in available data and recent efforts to monetize it.
+interpreting review-like content. This is studied in a field called \emph{Sentiment Analysis}, which has been in very active research the last ten
+years thanks to increases in available data and recent efforts to monetize it.
 
-This degree project studies describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of some of the problems in this process; identifying opinions, classifying their sentiment, and categorizing what the opinion to enable summarization.
+This degree project describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of some of the problems in this process; identifying opinions, classifying their sentiment, and categorizing what the opinion to enable summarization.
 
-It is layed out the following way: First there is a common introductory section with shared background for all of the three \todo
+It is laid out the following way: First there is a common introductory section with shared background for all of the three \todo
 
 
 %This general problem is called \emph{sentiment analysis}\cite{liu2012sentiment} and is widely considered a hard, non-trivial problem.
@@ -156,26 +155,26 @@ and describe \emph{what} about an entity causes sentiment. An aspect of an entit
 
 E.g. in the sentence \emph{``my camera is very reliable''} the reviewed entity is \emph{camera} and the reviewed aspect is its \emph{reliability}.
 
-Readers should be aware that older literture may refer to aspects as \emph{features}, which was changed with increased application of machine learning in sentiment analysis, to aviod confusion with \emph{features} in machine learning contexts.
+Readers should be aware that older literature may refer to aspects as \emph{features}, which was changed with increased application of machine learning in sentiment analysis, to avoid confusion with \emph{features} in machine learning contexts.
 
 \subsubsection{Opinion}
-\emph{Liu} (2012) introduces the opinions as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are used to indicate dependencies between tuple elements.}, where $e_i$ is the entity the opinion is referencing, $a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambience), $s_{ijkl}$ is the sentiment of the opinion, $h_k$ is the opinion holder and $t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
+\emph{Liu} (2012) introduces the opinions as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are used to indicate dependencies between tuple elements.}, where $e_i$ is the entity the opinion is referencing, $a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambiance), $s_{ijkl}$ is the sentiment of the opinion, $h_k$ is the opinion holder and $t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
 
 In this work, Yelp reviews are used, which enables a few assumptions that can simplify:
 \begin{itemize}
-\item The opnion holder $h_k$ is the Yelp user posting the review.
+\item The opinion holder $h_k$ is the Yelp user posting the review.
 \item The time $t_l$ is the time the review was posted.
 \item The entity $e_i$ being reviewed is the business for which the review is being posted.
 \end{itemize}
 
 %todo discuss assumption consequences?
-Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutural)sentiment.
+Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutral)sentiment.
 % aspects are also synonymously referred to as \emph{opinion targets}.
 
 \subsubsection{Word}
 In this report the term ``word'' is used to reference \emph{word form}, which is, a specific alphabetical representation of a lemma.
 
-E.g. \emph{``running''}, \emph{``ran''} and \emph{``sprinted''} are all words prepresenting the same lemma.
+E.g. \emph{``running''}, \emph{``ran''} and \emph{``sprinted''} are all words representing the same lemma.
 
 \subsubsection{Word sense}
 %A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlp_book}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
@@ -197,17 +196,16 @@ where \emph{\$} is a token meaning the start/end of sentence.
 
 Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
 
-\newpage
 \subsection{\ngram~language modeling}
 If the probability of a word's occurrence in a sentence $P$ is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way with \emph{unigrams}:
 
 \begin{equation} \label{eq:unigram_chain_prob}
-P(s) = P(w_1) P(w_2) \dots P(w_n) =\prod_{w_i \in s}P(w_i)
+P(s) \approx P(w_1) P(w_2) \dots P(w_n) =\prod_{w_i \in s}P(w_i)
 \end{equation}
 Similarly, if modeled with \emph{bigrams}:
 
 \begin{equation} \label{eq:bigram_chain_prob}
-P(s) = P(w_2 | w_1)P\times (w_3 | w_2) \times \dots \times P(w_n | w_{n-1}) = \prod_{w_i \in s}P(w_i|w_{i-1})
+P(s) \approx P(w_2 | w_1)P(w_3 | w_2) \dots P(w_n | w_{n-1}) = \prod_{w_i \in s}P(w_i|w_{i-1})
 \end{equation}
 Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$, provided that the previous word was $w_a$. (Modeling the probability of a word's occurrence solely on previous element(s) in the sequence is know as \emph{the Markov assumption}.) It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
 
@@ -219,25 +217,26 @@ P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w_*)}
 Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
 
 \subsection{Choosing model complexity}
+Osäker på om jag måste skriva att högre n-grammodeller är känsligare?
 \loremipsum
 
 \section{Smoothing language models}
-A common problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus that is a requirement for good performance.
+A common problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus handling unseen data is a requirement for good performance.
 
-As can be seen in equation \ref{eq:bigram_mle}, entites unseen in training data would per definition be assigned a zero probability, which in turn makes the \gls{MLE} model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
+As can be seen in equation \ref{eq:bigram_mle}, the \gls{MLE} of entities unseen in training data would per definition be assigned a zero probability, which in turn makes the chain model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
 
-Smoothing is a means of \todo
+Smoothing is a means of improving models with limited data samples. It can mitigate the problem of unseen data, but also make for better estimations of rare entities.
 
 \subsection{Additive smoothing}
-One of the most basic smoothing techniques called \emph{Lidstone Smoothing} or \emph{additive smoothing} addresses this by introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
+One of the most basic smoothing techniques called \emph{additive smoothing}, or \emph{Lidstone Smoothing}, which introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
 \begin{equation} \label{eq:additive_smoothing}
 P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w_*)+\alpha\big]}
 \end{equation}
-where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also called \emph{Lapace smoothing}\cite{nlp_book}.
+where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also called \emph{Laplace smoothing}\cite{nlp_book}.
 
 
 \subsection{Interpolated smoothing}
-Additive smoothing addresses unseen data, but there are more efficient models.
+Additive smoothing addresses unseen data, but there are other models that give more accurate estimations.
 
 \emph{Interpolated smoothing} is ways of combining models of various complexities, in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
 Below is an example of what most interpolated smoothing approaches look like for bigrams:
@@ -253,22 +252,22 @@ Interpolated smoothing techniques mitigate the trade-off between complex models 
 The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
 
 \subsection{Modified Kneser-Ney smoothing}
-\emph{TODO: This is the last smoothing section. This is where things start to get a little complicated. rewrite better and finish this section}
+\emph{TODO: This is the last smoothing subsection. This is where things start to get a little complicated. Rewrite better and finish this section}
 \\
 \\
 One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing}, or \emph{Modified Kneser-Ney smoothing},\cite{nlp_book}, which is based on two additional intuitions.
 
 %First, features with really few counts are unreliable, since higher order models are weighed higher than low order models, few occurences may lead to overestimations  %todo
 
-The first one is that common features with high counts already have high probabilites, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurence count it is penalizing.
+The first one is that common features with high counts already have high probabilities, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurrence count it is penalizing.
 
-The second intuition is that just as lower order models are given higher influence when the higher models have less confidence,
+The second intuition is that just as lower order models are given higher influence when the higher models have less confidence, lower order models should not be consulted when higher order models estimate well. \emph{TODO: Example: With many occurrences of  ``San Francisco'', where ``Francisco'' only occurs after ``San'', the unigram model will overestimate the sentence ``In the park I got bitten by a Francisco''}.
 
 \section{Classification methods}
-The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurencies are assumed independent.)
+The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurrences are assumed independent.)
 
 \subsection{Scikit-learn and other classification methods}
-Scikit-learn\cite{scikit-learn} is a colleciton of machine learning implementations in Python, ready to use ``out of the box''.
+Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
 
 The following methods were employed in this work:
 
@@ -277,8 +276,11 @@ The following methods were employed in this work:
   \begin{tabular}{ r l }
     \textbf{Module name} & \textbf{Explanation}\\
     GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\
-    MultinomialNB & Multinomial distributed prior Naive Bayes classifier.\\
+         & No smoothing (Gaussian prior).\\
+    MultinomialNB & Multinomial distributed prior Naive Bayes classifier. \\
+         & Additive smoothing.\\
     BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\
+         & Additive smoothing.\\
     LogisticRegression & \\
     SGDClassifier & \\
     SVC & \\
@@ -290,7 +292,7 @@ The following methods were employed in this work:
 \end{table}
 
 \section{Evaluation}
-A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively. In this work they are also used in combination with confidence thresholds to examine wether better results can be achieved by letting classifers answer \texttt{UNKNOWN} when confidence is below threshold (which leaves precision unaffected, at cost of recall).
+A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively. In this work they are also used in combination with confidence thresholds to examine whether better results can be achieved by letting classifiers answer \texttt{UNKNOWN} when confidence is below threshold (which leaves precision unaffected, at cost of recall).
 
 \subsection{Precision}
 Precision is a measure of what fraction of retrieved results are considered relevant.
@@ -316,102 +318,13 @@ Not only classification methods, but also precision measures are affected by ske
 
 A commonly employed and simple way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution, also sometimes referred to as \emph{down-sampling}\cite{provost2000machine}. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
 
-Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this repport will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
+Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this report will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
 
 
-\part{Sentiment Classification}
-\chapter{Sentiment Classification}
-Sentiment classification is the problem of deciding whether sentiment in a sentence is positive, negative or neutral\cite{nlp_book}. Being a central part of sentiment analysis it can also done on the same three levels: Document level, sentence level and aspect level.
-
-Sentiment classification can be a classification- or regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
-
-\subsection{Subjective and objective sentiments}
-Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
-
-Sentiment can also be derived from objective sentences: \emph{``the toilet seat was broken''} clearly implies negative sentiment as \emph{broken} is an unquestionably negative property for a toilet. Most sentences are somewhere in between subjective and objective, e.g. the sentence ``the portion size was small'' is of objective nature, but holds a subjective definition of \emph{small portion size}.
-
-Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
-
-
-\newpage
-\section{Related work}
-Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo} or statistical\cite{todo}. This sections aims to give some insight into what has been previously done in the field.
-
-\subsubsection{Turney (2002)}
-In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
-
-\subsubsection{Hu, Liu (2004)}
-In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
-
-\subsubsection{Hu, Liu (2004)}
-In ``Mining and summarizing customer reviews'', previous work by the same authors is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for \emph{sentiment words} predefined as positive or negative or their synonys/antomyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
-
-Finally a summary is produced, but this process is very breifly described, and is without evaluations. To my understanding, opinions are solely grouped on the lemmatized form of explicit aspects.
-
-
-\section{Experiment setup}
-To examine the effects of smoothing, a few different classifiers were developed.
-
-
-\subsection{Sentiment labeled sentences}
-Yelp has a dataset of around 7000 sentences labeled depending on their sentiment towards the the business in general.
-\loremipsum
-
-\subsection{Yelp academic data set}
-\numClassifiationReviews~reviews from the Yelp academic data set \footnote{https://www.yelp.com/dataset\_challenge}, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating. These reviews were then divided into two equal parts, one training set and one testing set, both with equal parts positive and negative reviews.
-
-
-\newpage
-\chapter{Results}
-
-\subsection{Introducing confidence thresholds}
-\begin{figure}[h]
-  %numpos 3216 numneg 1271
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Recall},
-        ylabel={Precision},
-        %xmin=0.5, xmax=1,
-        %ymin=0.4, ymax=1,
-        %xtick={0,20,40,60,80,100},
-        %ytick={0,20,40,60,80,100,120},
-        legend pos=south west,
-        ymajorgrids=true,
-        grid style=dashed,
-      ]
-      \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_unigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_bigram_pr.csv};
-      \legend{
-        \yelpSentClassifier,
-        Unigram ensemble,
-        Bigram ensamble,
-      }
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Sentiment analyzers' precision vs. recall}
-  \label{fig:pr_curve}
-\end{figure}
-
-\section{Discussion}
-
-Results show a few key results:
-\begin{itemize}
-  \item
-\end{itemize}
-
-From the precision/recall curve in figure \ref{fig:pr_curve} we can read that the \yelpSentClassifier~is better
-
-% logical negation might clash with bi-gram model
-% introducing neutral-class
-% actually training to identify positive reviews, not positive statements
-
-\part{Aspect extraction}
 \chapter{Aspect extraction}
 
 \section{Problem definition}
-Aspect extraction outputs sentiment carrying expressions with identified \emph{targets}. A target is either some aspect of the entity that is subject to the sentiment, or the entity in its entirety. E.g. in the sentence \emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},  there are two opinions with one (highlighted) target each; the entity itself, and the service-aspect of the entity.
+Aspect extraction is the task of finding and outputting sentiment carrying expressions with identified \emph{targets}. A target is either some aspect of the entity that is subject to the sentiment, or the entity in its entirety. E.g. in the sentence \emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},  there are two opinions with one (highlighted) target each; the entity itself, and the service-aspect of the entity.
 
 Aspect extraction then is a rather typical information retrieval task, and thus methods (including evaluation) can be recognized from data mining- and other information retrieval tasks. In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu2012sentiment}:
 
@@ -423,24 +336,24 @@ Aspect extraction then is a rather typical information retrieval task, and thus 
 \end{enumerate}
 However, in this work, as the results will show, even a simple implementation of the first kind was found sufficiently effective to motivate focusing on other problems than aspect extraction, and thus this work will solely cover the first out of the four.
 
-\subsection{Aspect extraction is data-dependent}
+\subsection{A data dependent task}
 Like other data extraction tasks, aspect extraction is largely dependent on the data aspects are being extracted from.
-In the case of online reviews, techinques may vary in effectiveness depending on domain of reviewed entites, demographics of review authors, language used in the review and countless other factors. Furthermore, within the same dataset, these factors may correlate differently on a per-entity basis. E.g. one could imagine that there would be systematic differences between reviews written for a surgeon's instrument compared to reviews for a toy car.
+In the case of online reviews, techniques may vary in effectiveness depending on domain of reviewed entities, demographics of review authors, language used in the review and countless other factors. Furthermore, within the same data set, these factors may correlate differently on a per-entity basis. E.g. one could imagine that there would be systematic differences between reviews written for a surgeon's instrument compared to reviews for a toy car.
 
 It is therefore crucial that in the process of aspect extraction, like in other extraction tasks, think about what correlations may exist and how they may affect usage of the extracted data.
 
 \subsection{Candidate extraction vs. pruning}
 There are two important definitions in this section, which together make up the method used in this work:
 
-\emph{Candidate identification} is the task of finding potential aspects in unstructured text. \emph{Pruning} is the task of excluding irrelelvant candidates that from the candidate identification result set.
+\emph{Candidate identification} is the task of finding potential aspects in unstructured text. \emph{Pruning} is the task of excluding irrelevant candidates that from the candidate identification result set.
 
-The reason why these usually are done separately in sequence is that some pruning techinques may require the full candidate set, such as \emph{idf}-scores or occurency thresholds.
+The reason why these usually are done separately in sequence is that some pruning techniques may require the full candidate set, such as \emph{idf}-scores or occurrence thresholds.
 
 
 \section{Related Work}
 
 \subsubsection{Turney (2002)}
-In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
+In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
 
 \subsubsection{Hu, Liu (2004)}
 In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
@@ -452,27 +365,23 @@ In this work, aspects are extracted by mining data for POS-patterns that indicat
 
 \newpage
 \section{Extracting aspects}
-A simple aspect extractor was developed. Given a review, the extractor used the POS-tagger in nltk\cite{nltk} and compared the text to a series of predefined patterns.
+A simple aspect extractor was developed. Given a review, the extractor used the POS-tagger in nltk\cite{nltk} and compared the text to a series of predefined patterns. Table \ref{sample_pos} shows the patterns that were used along with examples of matching sentences.
 \newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
-\newcommand{\ExtrPatTwo}{\texttt{<NNS?>+<VB.?>+<JJ.?>+<NN.?>+}}
+\newcommand{\ExtrPatTwo}{\texttt{<NNS?><VB.?>+<RB.?><JJ.?>}}
 
 \begin{table}[t]
   \centering
   \begin{tabular}{| l | l |}
     \hline
     \textbf{Pattern} & \textbf{Matching sample sentence}\\ \hline
-    \ExtrPatOne & \emph{}\\
-    \ExtrPatTwo & \emph{}\\ \hline
+    \ExtrPatOne & \emph{``personnel seemed unsympathetic''}\\
+    \ExtrPatTwo & \emph{``hotel seemed fairly clean''}\\ \hline
   \end{tabular}
   \caption{Patterns used in entity extraction}
   \label{sample_pos}
 \end{table}
 
 \section{Results}
-
-
-
-
 
 \begin{figure}[h]
   \centering
@@ -511,29 +420,149 @@ Out of 10'000 reviews, in total 12'246 aspects were found, which works out to an
 
 \section{Discussion}
 
-On average, jsut above ne aspect per review is found, which may not sound like a lot, but for entities with lots of reviews it may be enough. Later in this work when we study aspect clustering, figure \ref{fig:cat_count} will show that the least common category, \emph{value}, represents around 10\% of the aspects, for a reviewed entity with 300 reviews then, around 35 opinions can be expected, which should be enough for a conclusion. In practice, review comparisons would liekly be done for business chains which can easily have 10'000 reviews, which is why in this work this simple method was deemed sufficient.
+On average, just above one aspect per review is found, which may not sound like a lot, but for entities with lots of reviews it may be enough. Later in this work when we study aspect clustering, figure \ref{fig:cat_count} will show that the least common category, \emph{value}, represents around 10\% of the aspects, for a reviewed entity with 300 reviews then, around 35 opinions can be expected, which should be enough for a conclusion. In practice, review comparisons would likely be done for business chains which can easily have 10'000 reviews, which is why in this work this simple method was deemed sufficient.
 
 To make conclusions more impartial, it might be a good idea to only allow one opinion per aspect from each review. Arguably one reviewer mentioning a bad service experience ten times should not be valued the same as positive mentions from ten reviewers. Ideally, some average of all sentiments for  each aspect in one review should probably be used when summarizing results, but the aspect extraction task may know what category found aspects belong to. If this is a concern a definite lower bound can still be estimated by allowing at most one aspect per review, which effectively would eliminate this risk at the cost of about half of all found aspects.
 
-Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundam
-entally different methods in combination, such as including a supervised learner.
+Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundamentally different methods in combination, such as including a supervised learner.
 
 
-\part{Aspect Clustering}
+
+\chapter{Sentiment Classification}
+Sentiment classification is the problem of deciding whether sentiment in a sentence is positive, negative or neutral\cite{nlp_book}. Being a central part of sentiment analysis it can also done on the same three levels: Document level, sentence level and aspect level.
+
+Sentiment classification can be a classification- or regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
+
+\subsection{Subjective and objective sentiments}
+Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
+
+Sentiment can also be derived from objective sentences: \emph{``the toilet seat was broken''} clearly implies negative sentiment as \emph{broken} is an unquestionably negative property for a toilet. Most sentences are somewhere in between subjective and objective, e.g. the sentence ``the portion size was small'' is of objective nature, but holds a subjective definition of \emph{small portion size}.
+
+Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
+
+
+\newpage
+\section{Related work}
+Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo} or statistical\cite{todo}. This sections aims to give some insight into what has been previously done in the field.
+
+\subsubsection{Turney (2002)}
+In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
+
+\subsubsection{Hu, Liu (2004)}
+In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
+
+\subsubsection{Hu, Liu (2004)}
+In ``Mining and summarizing customer reviews'', previous work by the same authors is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for \emph{sentiment words} predefined as positive or negative or their synonyms/antonyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
+
+Finally a summary is produced, but this process is very briefly described, and is without evaluations. To my understanding, opinions are solely grouped on the lemmatized form of explicit aspects.
+
+
+\section{Experiment setup}
+To examine the effects of smoothing, a few different classifiers were developed.
+
+Data was divided into two equal parts, one training set and one testing set, both with equal parts positive and negative reviews.
+
+\subsection{Sentiment labeled sentences}
+Yelp has a data set with 3216 positive and 1271 negative sentences labeled depending on their sentiment towards the the business in general.
+
+This data was ultimately used to evaluate the sentiment classifiers.
+
+
+\subsection{Yelp academic data set}
+\numClassifiationReviews~reviews from the Yelp academic data set \footnote{https://www.yelp.com/dataset\_challenge}, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating and used to train my unigram and bigram models.
+
+\newpage
+\section{Results}
+
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Recall},
+        ylabel={Precision},
+        %xmin=0.5, xmax=1,
+        %ymin=0.4, ymax=1,
+        %xtick={0,20,40,60,80,100},
+        %ytick={0,20,40,60,80,100,120},
+        legend pos=south west,
+        ymajorgrids=true,
+        grid style=dashed,
+      ]
+      \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_bigram_pr.csv};
+      \legend{
+        \ysc,
+        Unigram ensemble,
+        Bigram ensemble,
+      }
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Sentiment classifier precision vs. recall. Each dot represents a 10\% increase in confidence threshold (starting with 0 at the right).}
+  \label{fig:sent_pr_curve}
+\end{figure}
+
+\subsection{Introducing confidence thresholds}
+Figure \ref{fig:sent_pr_curve} shows how the Modified Kneser-Ney classifier has consistently better performance, and
+that that the more complex bigram model slightly outperforms the unigram model when high (around 80\%) confidence thresholds are set.
+
+\newpage
+
+\subsection{Per class classification}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Fraction of correctly classified},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/sent_unigram.csv}{l},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=south east,
+    ]
+    \addplot table [x expr=\coordindex, y=p]{data/sent_yelp.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/sent_unigram.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/sent_bigram.csv};
+    \legend{\ysc, unigram, bigram}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Balanced vs. unbalanced classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
+  \label{fig:sent_per_cat}
+\end{figure}
+
+Figure \ref{fig:sent_per_cat}
+
+\subsection{Notable examples}`
+TODO: Table with number of failures per classifier.
+
+Examples of where \ysc succeeds but my classifiers fail, use to speculate about smoothing.
+
+
+\newpage
+\section{Discussion}
+
+
+% logical negation might clash with bi-gram model
+% introducing neutral-class
+% actually training to identify positive reviews, not positive statements
+
+
 \chapter{Aspect Clustering}
-So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which in turn introduces a new problem: How can these aspects with known sentiments be combined into an adequate summary?
+So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which introduces a new problem: How can these aspects with known sentiments be combined into an adequate summary?
 
-The first and most important observation is that even if we find a statement and accurately identify it as a positive mention on something, it is not enough to be the ground for a conclusion. Opinions are per definition subjective, and should individually be considered unreliable. However, as the number of processed opinons increase, so does confidence in conclusions that are based on them.
+The first and most important observation is that even if we find a statement and accurately identify it as a positive mention on something, it is not enough to merit a conclusion. Opinions are per definition subjective, and should individually be considered unreliable. However, as the number of processed opinions increase, so does confidence in conclusions that are based on them.
 
-As a consequence, four positive mentions of ``steak'' may not be enough for a conclusion, but in combination with positive mentions on ``chicken'', ``turkey'',  and ``meatballs'' one may be able to conclude positive the common \gls{superword} \emph{meats}. Or if more confidence is required, ``salads'' may be included under the \gls{superword} \emph{food}, ``cappuccino'' could be included to conclude about \emph{product}, and so on.
+As a consequence, four positive mentions of ``steak'' may not be enough for a conclusion, but in combination with positive mentions on ``chicken'', ``turkey'',  and ``meatballs'' one may be able to conclude positive the common \gls{superword} \emph{meats}. Or if more confidence is required, ``salads'' may be included under the \gls{superword} \emph{food}, and so on.
 
 This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
-
-\subsection{Explicit vs. implicit aspects}
-\loremipsum
-
-\subsection{Dynamic vs. static aspects}
-\loremipsum
 
 
 \section{Experiment setup}
@@ -557,7 +586,7 @@ For these experiments, Yelp reviews from the \category were manually annotated i
   \label{fig:annotate_aspect}
 \end{figure}
 
-Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the interface that was developed to annotate on the \emph{sentence level} and \emph{aspect level} respectively. This simple web-interface was served by a local web server and could be accessed by multiple users simoultaneously.
+Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the interface that was developed to annotate on the \emph{sentence level} and \emph{aspect level} respectively. This simple web-interface was served by a local web server and could be accessed by multiple users simultaneously.
 
 
 \begin{figure}[t]
@@ -581,7 +610,7 @@ Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the inter
     \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
   \end{axis}
   \end{tikzpicture}
-  \caption{Number of annontated sentences per category}
+  \caption{Number of annotated sentences per category}
   \label{fig:cat_count}
 \end{figure}
 
@@ -594,14 +623,33 @@ Based on the observation that there are usually key words in a sentence with lex
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
 
-This method to categorize individual words, can then be extended to categorize full sentences using some heuristic.
-% todo heuristics
+\subsubsection{The algorithm}
+A \gls{BFS}(BFS) is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are acquired using word relations defined by \gls{jaws}). Each word sense is also mapped to its source category in this process to allow for quick look-ups.
 
+This method to categorize individual words, can then be extended to categorize full sentences using heuristics.
 
-\subsection{Basic algorithm}
-A \gls{BFS} is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are aquired using word relations defined by \gls{jaws}). Each word sense is also mapped in this process to its source category for future lookups.
+\subsubsection{Voting heuristic}
+The heuristic is given a sentence, and is supposed to decide on a cluster for the entire sentence. To do this, it can use the above described setup to query for the category of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches the sentence word senses, decreasing in length, starting with the assumption that the full sentence is one word begin.
 
-Once this ``training phase'' is done, each word in a query sentence is inspected.
+Next, the map built using the word relation search was queried for the category of each word sense. The result of each query is not only which category, but also the distance $d$ from the word sense to the category. This was then combined into one score using the following scheme:
+
+\begin{equation} \label{eq:heruistic}
+  category(s) =
+  \underset{k}{\text{argmax}}
+  \sum_{w \in s} categoryScore(w, k)
+\end{equation}
+
+\begin{equation} \label{eq:heruistic_d}
+  categoryScore(w, k) =
+  \begin{cases}
+    max(d_*) - d_k(w) + 1, & \text{if}\ d_k(w) < d_{\,!k}(w)\\
+    0, & \text{otherwise}
+  \end{cases}
+\end{equation}
+
+where $d_k(w)$ is the distance from the word sense $w$ to its nearest category and $d_*$ is the biggest distance for any word to its nearest category.
+
+This way, a three word sentence with distances $d_A(w_1)=4$, $d_A(w_2)=6$ and $d_B(w_3)=3$, will receive the scores $A=3+1$ and $B=4$, and thus category $A$ would be selected.
 
 
 \begin{table}[t]
@@ -631,9 +679,9 @@ Once this ``training phase'' is done, each word in a query sentence is inspected
 % todo: num sentences table
 
 
-\chapter{Results}
+\section{Results}
 
-This chapter is layed out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
+This chapter is laid out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
 
 
 \section{Machine learning classifiers}
@@ -671,7 +719,6 @@ This chapter is layed out as follows: First the individual results for each of t
 
 As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees very steady increment.
 
-\newpage
 
 \subsection{Per class classification}
 \begin{figure}[t]
@@ -699,7 +746,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Balanced vs. unbalanced classifier comparison. No confidence theshold was set in this experiment: recall was 1.}
+  \caption{Balanced vs. unbalanced classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
   \label{fig:per_cat}
 \end{figure}
 
@@ -731,13 +778,12 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 %  \label{fig:per_cat}
 %\end{figure}
 
-Section \ref{subsec:bias} introduced bias in data, along with some of its consequences, which motivated a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perfom much more consistent between classes.
+Section \ref{subsec:bias} introduced bias in data, along with some of its consequences, which motivated a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perform much more consistent between classes.
 
 Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
 It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
 
-\newpage
 
 \subsection{Introducing confidence thresholds}
 \begin{figure}[t]
@@ -770,8 +816,6 @@ It can also be seen that the bigram model is performing poorly for all labels ex
 
 Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
 
-\newpage
-
 
 \section{Graph-search classifier}
 \loremipsum
@@ -780,7 +824,7 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 \section{Comparison of classifiers}
 \label{sec:comparison}
 
-\begin{table}[ht]
+\begin{table}[h]
   \centering
   \pgfplotstabletypeset[
     columns={method,p,r},
@@ -795,17 +839,13 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
   \label{general_asp}
 \end{table}
 
-\loremipsum
-\loremipsum
 
-\pagebreak
-
-
-\chapter{Conclusions}
-
+\section{Discussion}
 As the results show, it is in fact possible to categorize aspects using a lexical database. There are however a few reasons why the results should be interpreted with caution:
 
 I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
+
+
 
 %todo reasons:
 % small data-set, might be overfitted?
@@ -815,14 +855,20 @@ I believe my limited amount of data to have much influence over my results. As f
 % indata probably works for you
 
 
-\section{Lessons learned}
-\subsection{Data annotation}
-A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected due to the desicion of doing it on the aspect level. As an example, in the sentence' \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence, annotated as both \emph{service} and \emph{product}?
 
+
+%\chapter{Conclusions}
+%\section{Aspect clustering}
+
+\chapter{Lessons learned}
+\section{Data annotation}
+A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected.
+
+First of all, deciding to do it on the on the aspect level introduced some confusion as to how annotation should be done. As an example, in the sentence \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence annotated as both \emph{service} and \emph{product}?
 
 After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
 
-However, this proccess of finding out how to annotate sentences took a few tries befeore a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
+However, this process of finding out how to annotate sentences took a few tries before a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
 
 % todo: what I learned
 
