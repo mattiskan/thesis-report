@@ -10,6 +10,7 @@
 \usepackage{pgfplots}
 \usepackage{graphicx}
 \usepackage{pgfplotstable}
+\usepackage{afterpage}
 
 \graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
@@ -73,7 +74,7 @@
 
 \makeglossaries
 
-\title{Opinion mining local business reviews:\\ A technical walk through.}
+\title{Mining opinions from local business reviews:\\ A technical walk through.}
 
 \subtitle{Getting that degree would be nice before I go work full time}
 \foreigntitle{This is the Swedish title}
@@ -292,22 +293,22 @@ The following methods were employed in this work:
 \end{table}
 
 \section{Evaluation}
-A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively. In this work they are also used in combination with confidence thresholds to examine whether better results can be achieved by letting classifiers answer \texttt{UNKNOWN} when confidence is below threshold (which leaves precision unaffected, at cost of recall).
+A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
 
 \subsection{Precision}
-Precision is a measure of what fraction of retrieved results are considered relevant.
+Precision is a measure of what fraction of retrieved results are considered relevant or correct.
 
 It is defined as follows:
 \begin{equation} \label{eq:precision}
-Precision = \frac{\text {true positives}}{\text{true positives} + \text{false positives}}
+Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
 \end{equation}
-%From this definition it should be clear that precision can by excluding uncertain items from retrieved results.
 
 \subsection{Recall}
-Similarly, recall is the fraction of relevant results that are retrieved:
-$$Recall = \frac{\text {true positives}}{\text{true positives} + \text{false negatives}}$$
+In this work, confidence thresholds are used to examine whether better results can be achieved by allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in the precision denominator. Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
 
-The reader may note from these definitions that more hesitance when including results would mean fewer false positives, but more false negatives, which implies that higher precision can be achieved at the cost of lower recall; or in other words that there is a trade-off between precision and recall to be made.
+\begin{equation} \label{eq:recall}
+Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
+\end{equation}
 
 
 \subsection{Skewed data}
@@ -534,25 +535,34 @@ that that the more complex bigram model slightly outperforms the unigram model w
     \legend{\ysc, unigram, bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Balanced vs. unbalanced classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
+  \caption{Perfomance of classifiers per class.}
   \label{fig:sent_per_cat}
 \end{figure}
 
-Figure \ref{fig:sent_per_cat}
 
-\subsection{Notable examples}`
+\subsection{Notable examples}
 TODO: Table with number of failures per classifier.
 
-Examples of where \ysc succeeds but my classifiers fail, use to speculate about smoothing.
+Examples of where \ysc~succeeds but my classifiers fail, use to speculate about smoothing.
 
 
 \newpage
 \section{Discussion}
 
+One of the most imporant results shown in Figure \ref{fig:sent_pr_curve} is that feature selection is not in itself deteriming performance. The fact that the unigram model performs better than the bigram model at full recall, but that the bigram model is better at confidence $>80\%$, indicates that the unigram model generalizes better, but that the bigram model has higher confidence in results that align well with the model. This confirms predictions made in literature.
+
+The comparison between \ysc and the other two models is somewhat unfair, since \ysc~has been trained on slightly more data and has been rigurously tested and reviewed, but it is still included to give perspective on performance of the simpler models.
+
+Figure \ref{fig:sent_per_cat} shows all classifiers have a slight bias towards the positive class, despite down-sampling training data to be equal. This could arguably be desired since real data has an (even larger) positive bias.
+
 
 % logical negation might clash with bi-gram model
 % introducing neutral-class
 % actually training to identify positive reviews, not positive statements
+
+
+% =========================================================================================================
+
 
 
 \chapter{Aspect Clustering}
@@ -673,7 +683,7 @@ This way, a three word sentence with distances $d_A(w_1)=4$, $d_A(w_2)=6$ and $d
   \label{fig:baklava_lex}
 \end{figure}
 
-
+\clearpage
 
 % todo: annotations interface screenshot
 % todo: num sentences table
@@ -684,9 +694,9 @@ This way, a three word sentence with distances $d_A(w_1)=4$, $d_A(w_2)=6$ and $d
 This chapter is laid out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
 
 
-\section{Machine learning classifiers}
+\subsection{Machine learning classifiers}
 
-\begin{figure}[h!]
+\begin{figure}[h]
   \centering
 
   \begin{tikzpicture}
@@ -719,9 +729,10 @@ This chapter is laid out as follows: First the individual results for each of th
 
 As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees very steady increment.
 
+\pagebreak
 
 \subsection{Per class classification}
-\begin{figure}[t]
+\begin{figure}[h]
   \centering
   \begin{tikzpicture}
 
@@ -751,7 +762,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 \end{figure}
 
 
-%\begin{figure}[t]
+%\begin{figure}[h]
 %  \centering
 %  \begin{tikzpicture}
 %
@@ -784,9 +795,10 @@ Comparison between the balanced/unbalanced versions of the classifier models sho
 
 It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
 
+\newpage
 
 \subsection{Introducing confidence thresholds}
-\begin{figure}[t]
+\begin{figure}[h]
   \centering
   \begin{tikzpicture}
     \begin{axis}[
@@ -816,6 +828,7 @@ It can also be seen that the bigram model is performing poorly for all labels ex
 
 Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
 
+\newpage
 
 \section{Graph-search classifier}
 \loremipsum
@@ -841,11 +854,14 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 
 
 \section{Discussion}
-As the results show, it is in fact possible to categorize aspects using a lexical database. There are however a few reasons why the results should be interpreted with caution:
+As the results show, it is in fact possible to categorize aspects using a lexical database. What is particularly interesting about this result is that the heuristic is unsupervised.
+
+
+There are however a few reasons why the results should be interpreted with caution:
 
 I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
 
-
+Another important aspect to keep in mind about my results are that with such a small data-set, there is risk of methods becoming too specific toward the training data. This is often discussed in statstical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heurisic perform better than it would in general.
 
 %todo reasons:
 % small data-set, might be overfitted?
@@ -860,8 +876,16 @@ I believe my limited amount of data to have much influence over my results. As f
 %\chapter{Conclusions}
 %\section{Aspect clustering}
 
+\chapter{Conclusions}
+This report has introduced problems and basic approaches known to work for opinon mining.
+
+\subsection{Sentiment classification is not only about feature selection}
+\loremipsum
+\subsection{}
+
+
 \chapter{Lessons learned}
-\section{Data annotation}
+\subsection{Data annotation}
 A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected.
 
 First of all, deciding to do it on the on the aspect level introduced some confusion as to how annotation should be done. As an example, in the sentence \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence annotated as both \emph{service} and \emph{product}?
@@ -869,6 +893,10 @@ First of all, deciding to do it on the on the aspect level introduced some confu
 After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
 
 However, this process of finding out how to annotate sentences took a few tries before a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
+
+\subsection{Know your data}
+
+\subsection{It is not all about feature selection}
 
 % todo: what I learned
 
