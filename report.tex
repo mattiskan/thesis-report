@@ -49,9 +49,9 @@
 \newcommand{\todo}{ ... }
 \newcommand{\ngram}{$n$-gram}
 \newcommand{\category}{restaurant category }  % may become plural
-\newcommand{\numAnnotated}{12}
+\newcommand{\numAnnotated}{XX}
 \newcommand{\numClassifierAproaches}{2}
-\newcommand{\numClassifiationReviews}{2}
+\newcommand{\numBigramFeatures}{XX}
 
 \newcommand{\ysc}{Modified Kneser-Ney classifier}
 
@@ -74,9 +74,9 @@
 
 \makeglossaries
 
-\title{Mining opinions from local business reviews:\\ A technical walk through.}
+\title{Mining opinions from local business reviews:\\ A technical walkthrough.}
 
-\subtitle{Getting that degree would be nice before I go work full time}
+\subtitle{Getting that degree would be nice1 before I go work full time}
 \foreigntitle{This is the Swedish title}
 \author{Mattis Kancans Envall}
 \date{June 2016}
@@ -91,13 +91,19 @@
 \maketitle
 \selectlanguage{english}
 \begin{abstract}
-  This is a skeleton for KTH theses. More documentation
-  regarding the KTH thesis class file can be found in
-  the package documentation.
+With increased internet usage, reviews online are becoming one of the most important resources when comparing businesses, services and products.
+The increasing quantity of content makes for more reliable conclusions as more opinions can be taken into account, but it also poses a problem,
+since there is a limit to what human readers can process.
 
-\loremipsum
+Computers are obviously faster and more capable to handle big quantities of data, which suggests potential for using computers as aid when
+interpreting review-like content.
 
+This report introduces required theory, describes on a technical level how to develop a system that
+mines opinions and produces comparable summaries, and prodives detailed studies of a few key concepts required
+to provide accurate and reliable results.
 \end{abstract}
+
+
 \clearpage
 \begin{foreignabstract}{swedish}
 \loremipsum
@@ -107,46 +113,71 @@
 \tableofcontents*
 
 \glsaddall
-\printglossaries
+%\printglossaries
 
 \mainmatter
 \pagestyle{newchap}
 \chapter{Introduction}
-With increased internet usage, reviews online are becoming one of the most important resources when comparing businesses, services and products.
-The increasing quantity of content makes for more reliable conclusions as more opinions can be taken into account, but it also poses a problem,
-since there is a limit to what human readers can process.
+Imagine being in charge of improving the quality of a big business chain. How would you know what to change?
 
-Computers are obviously faster and more capable to handle big quantities of data, which suggests potential for using computers as aid when
-interpreting review-like content. This is studied in a field called \emph{Sentiment Analysis}, which has been in very active research the last ten
-years thanks to increases in available data and recent efforts to monetize it.
+Customer feedback could certainly help this decision, but traditional methods such as surveys or interviews
+require planning and resources. With increased internet usage, it is likely that the answers you need already
+are available online, but for big business chains there could easily be tens of thousands of reviews ---
+far more than a human reader can process. There is thus incentive to use computers as aid.
 
-This degree project describes sentiment analysis with regard to mining and summarizing opinions in reviews, and provides a detailed study of some of the problems in this process; identifying opinions, classifying their sentiment, and categorizing what the opinion to enable summarization.
+This report introduces required theory, describes on a technical level how to develop a system that
+mines opinions and produces comparable summaries, and prodives detailed studies of a two concepts
+required to provide accurate and reliable results; \emph{smoothing} and \emph{down-sampling}.
 
-It is laid out the following way: First there is a common introductory section with shared background for all of the three \todo
+
+\section{System overview}
+A system will now be introduced, which given a set of opinion-rich documents produces a summary of these
+opinions, grouped by their \emph{opinion target} (the subject of the opionion)
+and their \emph{semantic orientation} (positive or negative).
+
+The produced summary then contains everything required to give the user a graphical overview of the opinions.
+
+To acomplish this, four problems are introduced; the rest of this section will describe them individually, and figure \ref{fig:overview} shows
+how they relate to eachother.
 
 
-%This general problem is called \emph{sentiment analysis}\cite{liu2012sentiment} and is widely considered a hard, non-trivial problem.
-%sentiment analysis is one of the most active fiels of research in NLP.
+\subsection{Aspect extraction}
+Before anyhting else can be done, opinions need to be found and extracted from documents.
+This is studied in section \ref{sec:aspect_extraction}, where the problem is described in more detail,
+and a simple solution is introduced.
 
-%The general problem of using computers and Natural Language Processing(NLP)-techniques to study opinions in text s called \emph{sentiment analysis}, and is one of the most active fields of study in NLP.
+The introduced solution is shown to achieve somewhat mediocre results, but estimates indicate
+that results may be sufficient for big data sets.
 
-%In fact, recent trends of monetizing online content, not to mention the benefit of being able to
+Finally consequences of using a simple method are discussed, and a few improvements suggested in literature
+to use in case data is limited are introduced.
 
-\section{Sentiment analysis}
-Sentiment analysis\cite{liu2012sentiment} is the general task of from raw text extracting and interpreting expressions with associated sentiments. This involves classifying orientation (and possibly intensity) of found sentiments, and identifying what entity, and possibly what aspect of that entity, is subject to the expressed sentiments.
 
-Although sentiment analysis has been studied extensively, it is a domain specific, context dependent, and hard problem. Human language is by its nature ambiguous and has complications like metaphors, implicit references and sarcasm, all of which makes problems in NLP hard.
+\subsection{Sentiment classification}
+Sentiment classification is the problem of deciding whether sentiment in text is positive, negative or neutral.
 
-\subsection{Levels of sentiment analysis}
-Sentiment analysis is generally studied at one of three levels:
+Section \ref{sec:sentiment_classification} introduces \ngram~language models and how to classify sentiments.
+Feature selection and \emph{smoothing} are studied in this section, it is shown that even quite simple methods can
+achieve decent results, and that smoothing can significantly increase language model preformance.
 
-On the \emph{document level}, one overall sentiment of an entire document is identified. This is generally of limited use, as in most contexts, documents hold many opinions. Therefore most studies at the document level in some way handle conflicting opinions, although this may be done implicitly\cite[Chapter~3]{liu2012sentiment}. In document level sentiment analysis, the problem definition itself requires generalizations, which may invite to inaccurate over-simplifications.
+This section relies somewhat on conclusions from section \ref{sec:aspect_grouping} about classifier bias.
 
-\emph{Sentence level} sentiment analysis mitigates this risk of generalization; sentences can be considered small documents and are thus less likely to hold conflicting opinions, which is why assuming that at most one sentiment has less impact on results --- but the problem itself is not addressed. As an example, the sentence \emph{``Although the service is terrible, I still like this restaurant''} is arguably overall positive, but simply deeming it so excludes information which reduces quality of results and makes them susceptible to systematic errors.
+\subsection{Aspect grouping}
+In this work, aspects are grouped to enable comparisons between businesses that may not have exactly the same aspects ---
+for example it is perfectly reasonable to compare a taco restaurant with a burger joint using the aspect group \emph{food}
+if opinions on various tacos and burgers are assigned that gruop.
 
-%todo examples in table?
-Ideally both opinions should be identified in the above sentence, one about \emph{service} and one about the reviewed entity in general. Sentiment analysis this fine grained is said to be on the \emph{aspect level}. The goal is to find and classify individual opinions, which may  dealing with things like surjective opinions \emph{``food, service and ambiance were all great''}, conjunctions \emph{``tasty but expensive''}, implicit references \emph{``Easy to fit in my pocket''} really implies \emph{``good size''}, and implicit references \emph{``I had pasta. It was great''}'. As such, sentiment analysis on the aspect level is commonly referred to as the most complicated, as it consists of several sub-problems\cite[chapter 1]{liu2012sentiment}.
+Section \ref{sec:aspect_grouping} introduces two methods, one supervised and one unsupervised, of grouping aspects into
+predefined groups. In this section, data bias and its consequences are studied more carefully, and results confirm that
+machine learning classifiers are indeed susceptible to data bias.
 
+Results also show that the algorithmic classifier outperforms machine learning methods, but it is shown that the machine
+learning methods are likely to benefit from more training data, and in the discussion several other concerns with the
+algorithmic method are raised, which leads to the conclusion that the recommended method is the supervised machine
+learning method, possibly in some combination with the algorithmic method.
+
+
+\pagebreak
 
 \section{Important definitions}
 
@@ -156,10 +187,16 @@ and describe \emph{what} about an entity causes sentiment. An aspect of an entit
 
 E.g. in the sentence \emph{``my camera is very reliable''} the reviewed entity is \emph{camera} and the reviewed aspect is its \emph{reliability}.
 
-Readers should be aware that older literature may refer to aspects as \emph{features}, which was changed with increased application of machine learning in sentiment analysis, to avoid confusion with \emph{features} in machine learning contexts.
+Readers should be aware that older literature may refer to aspects as \emph{features}, which was changed with increased application of machine learning methods in sentiment analysis, to avoid confusion with \emph{features} in machine learning contexts.
 
 \subsubsection{Opinion}
-\emph{Liu} (2012) introduces the opinions as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are used to indicate dependencies between tuple elements.}, where $e_i$ is the entity the opinion is referencing, $a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambiance), $s_{ijkl}$ is the sentiment of the opinion, $h_k$ is the opinion holder and $t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
+\emph{Liu} (2012) introduces \emph{opinion} as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are
+  used to indicate dependencies between tuple elements.},
+where $e_i$ is the entity the opinion is referencing,
+$a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambiance),
+$s_{ijkl}$ is the sentiment of the opinion,
+$h_k$ is the opinion holder and
+$t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
 
 In this work, Yelp reviews are used, which enables a few assumptions that can simplify:
 \begin{itemize}
@@ -172,126 +209,7 @@ In this work, Yelp reviews are used, which enables a few assumptions that can si
 Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutral)sentiment.
 % aspects are also synonymously referred to as \emph{opinion targets}.
 
-\subsubsection{Word}
-In this report the term ``word'' is used to reference \emph{word form}, which is, a specific alphabetical representation of a lemma.
-
-E.g. \emph{``running''}, \emph{``ran''} and \emph{``sprinted''} are all words representing the same lemma.
-
-\subsubsection{Word sense}
-%A few terms in linguistics are rather ambiguous and require definitions of usage. In this report it is used synonymously with the term \emph{lemma}, as defined by D. Jurafsky and J.H. Martin\cite{nlp_book}. Similarly, the definition of \emph{word sense} from the same source will be used to reference single meaning of a word; e.g. \textbf{bank$^1$} (``financial institution'') and \textbf{bank$^2$} (``sloping mound'') are different \emph{word senses} even though they share one \emph{word form}.
-
-\section{Language modeling}
-
-\subsection{\ngram s}
-\ngram~modeling is a versatile, robust and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngram s of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngrams}.
-
-Frequencies, counts and occurrences of \ngram s have been used in language modeling\cite{chen_goodman}, text categorization\cite{ngrams}, \todo
-
-As an example, the word-\emph{bigrams} for the sentence \emph{``Languages are fun''} are:
-\begin{quote}
-  \vspace*{0.1cm}
-  \centering
-\emph{``\$ Languages''}, \emph{``Languages are''}, \emph{``are fun''}, and \emph{``fun \$''}
-\end{quote}
-where \emph{\$} is a token meaning the start/end of sentence.
-
-Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
-
-\subsection{\ngram~language modeling}
-If the probability of a word's occurrence in a sentence $P$ is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way with \emph{unigrams}:
-
-\begin{equation} \label{eq:unigram_chain_prob}
-P(s) \approx P(w_1) P(w_2) \dots P(w_n) =\prod_{w_i \in s}P(w_i)
-\end{equation}
-Similarly, if modeled with \emph{bigrams}:
-
-\begin{equation} \label{eq:bigram_chain_prob}
-P(s) \approx P(w_2 | w_1)P(w_3 | w_2) \dots P(w_n | w_{n-1}) = \prod_{w_i \in s}P(w_i|w_{i-1})
-\end{equation}
-Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$, provided that the previous word was $w_a$. (Modeling the probability of a word's occurrence solely on previous element(s) in the sequence is know as \emph{the Markov assumption}.) It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
-
-A naive \gls{MLE} of a sentence $s$ could be defined something like this:
-\begin{equation} \label{eq:bigram_mle}
-P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w_*)}
-\end{equation}
-
-Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
-
-\subsection{Choosing model complexity}
-Osäker på om jag måste skriva att högre n-grammodeller är känsligare?
-\loremipsum
-
-\section{Smoothing language models}
-A common problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus handling unseen data is a requirement for good performance.
-
-As can be seen in equation \ref{eq:bigram_mle}, the \gls{MLE} of entities unseen in training data would per definition be assigned a zero probability, which in turn makes the chain model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
-
-Smoothing is a means of improving models with limited data samples. It can mitigate the problem of unseen data, but also make for better estimations of rare entities.
-
-\subsection{Additive smoothing}
-One of the most basic smoothing techniques called \emph{additive smoothing}, or \emph{Lidstone Smoothing}, which introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
-\begin{equation} \label{eq:additive_smoothing}
-P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w_*)+\alpha\big]}
-\end{equation}
-where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also called \emph{Laplace smoothing}\cite{nlp_book}.
-
-
-\subsection{Interpolated smoothing}
-Additive smoothing addresses unseen data, but there are other models that give more accurate estimations.
-
-\emph{Interpolated smoothing} is ways of combining models of various complexities, in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
-Below is an example of what most interpolated smoothing approaches look like for bigrams:
-\begin{equation}
-  P_{inter}(w_i|w_{i-1}) =
-    \lambda_2 P(w_i|w_{i-1}) + \lambda_1 P(w_i)
-\end{equation}
-
-where the weights dividing influence between models are $\lambda_1, \lambda_2$, and $\lambda_1 + \lambda_2 = 1$. Typically higher order methods are assigned more confidence.
-
-Interpolated smoothing techniques mitigate the trade-off between complex models with higher accuracy and simpler models that generalize well. If a queried bigram does not exist in training data at all, the first term will effectively equal zero, and the estimate will be the one of a individual unigram model times a reducing factor.
-
-The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
-
-\subsection{Modified Kneser-Ney smoothing}
-\emph{TODO: This is the last smoothing subsection. This is where things start to get a little complicated. Rewrite better and finish this section}
-\\
-\\
-One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing}, or \emph{Modified Kneser-Ney smoothing},\cite{nlp_book}, which is based on two additional intuitions.
-
-%First, features with really few counts are unreliable, since higher order models are weighed higher than low order models, few occurences may lead to overestimations  %todo
-
-The first one is that common features with high counts already have high probabilities, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurrence count it is penalizing.
-
-The second intuition is that just as lower order models are given higher influence when the higher models have less confidence, lower order models should not be consulted when higher order models estimate well. \emph{TODO: Example: With many occurrences of  ``San Francisco'', where ``Francisco'' only occurs after ``San'', the unigram model will overestimate the sentence ``In the park I got bitten by a Francisco''}.
-
-\section{Classification methods}
-The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurrences are assumed independent.)
-
-\subsection{Scikit-learn and other classification methods}
-Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
-
-The following methods were employed in this work:
-
-\begin{table}[h]
-  \centering
-  \begin{tabular}{ r l }
-    \textbf{Module name} & \textbf{Explanation}\\
-    GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\
-         & No smoothing (Gaussian prior).\\
-    MultinomialNB & Multinomial distributed prior Naive Bayes classifier. \\
-         & Additive smoothing.\\
-    BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\
-         & Additive smoothing.\\
-    LogisticRegression & \\
-    SGDClassifier & \\
-    SVC & \\
-    LinearSVC & \\
-    NuSVC & \\
-  \end{tabular}
-  \caption{todo}
-  \label{todo}
-\end{table}
-
+\newpage
 \section{Evaluation}
 A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
 
@@ -428,18 +346,119 @@ To make conclusions more impartial, it might be a good idea to only allow one op
 Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundamentally different methods in combination, such as including a supervised learner.
 
 
-
 \chapter{Sentiment Classification}
 Sentiment classification is the problem of deciding whether sentiment in a sentence is positive, negative or neutral\cite{nlp_book}. Being a central part of sentiment analysis it can also done on the same three levels: Document level, sentence level and aspect level.
 
 Sentiment classification can be a classification- or regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
 
-\subsection{Subjective and objective sentiments}
-Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
+\section{Language modeling}
 
-Sentiment can also be derived from objective sentences: \emph{``the toilet seat was broken''} clearly implies negative sentiment as \emph{broken} is an unquestionably negative property for a toilet. Most sentences are somewhere in between subjective and objective, e.g. the sentence ``the portion size was small'' is of objective nature, but holds a subjective definition of \emph{small portion size}.
+\subsection{\ngram s}
+\ngram~modeling is a versatile, robust and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngram s of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngrams}.
 
-Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
+Frequencies, counts and occurrences of \ngram s have been used in language modeling\cite{chen_goodman}, text categorization\cite{ngrams}, \todo
+
+As an example, the word-\emph{bigrams} for the sentence \emph{``Languages are fun''} are:
+\begin{quote}
+  \vspace*{0.1cm}
+  \centering
+\emph{``\$ Languages''}, \emph{``Languages are''}, \emph{``are fun''}, and \emph{``fun \$''}
+\end{quote}
+where \emph{\$} is a token meaning the start/end of sentence.
+
+Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
+
+\subsection{\ngram~language modeling}
+If the probability of a word's occurrence in a sentence $P$ is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way with \emph{unigrams}:
+
+\begin{equation} \label{eq:unigram_chain_prob}
+P(s) \approx P(w_1) P(w_2) \dots P(w_n) =\prod_{w_i \in s}P(w_i)
+\end{equation}
+Similarly, if modeled with \emph{bigrams}:
+
+\begin{equation} \label{eq:bigram_chain_prob}
+P(s) \approx P(w_2 | w_1)P(w_3 | w_2) \dots P(w_n | w_{n-1}) = \prod_{w_i \in s}P(w_i|w_{i-1})
+\end{equation}
+Where $P(w_b | w_a)$ is some probability estimate of a word being $w_b$, provided that the previous word was $w_a$. (Modeling the probability of a word's occurrence solely on previous element(s) in the sequence is know as \emph{the Markov assumption}.) It should be clear that good \ngram~modeling then is about finding a $P$-function that estimates reality well.
+
+A naive \gls{MLE} of a sentence $s$ could be defined something like this:
+\begin{equation} \label{eq:bigram_mle}
+P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w_*)}
+\end{equation}
+
+Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
+
+\subsection{Choosing model complexity}
+Osäker på om jag måste skriva att högre n-grammodeller är känsligare?
+\loremipsum
+
+\section{Smoothing language models}
+A common problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus handling unseen data is a requirement for good performance.
+
+As can be seen in equation \ref{eq:bigram_mle}, the \gls{MLE} of entities unseen in training data would per definition be assigned a zero probability, which in turn makes the chain model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
+
+Smoothing is a means of improving models with limited data samples. It can mitigate the problem of unseen data, but also make for better estimations of rare entities.
+
+\subsection{Additive smoothing}
+One of the most basic smoothing techniques called \emph{additive smoothing}, or \emph{Lidstone Smoothing}, which introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
+\begin{equation} \label{eq:additive_smoothing}
+P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w_*)+\alpha\big]}
+\end{equation}
+where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also called \emph{Laplace smoothing}\cite{nlp_book}.
+
+
+\subsection{Interpolated smoothing}
+Additive smoothing addresses unseen data, but there are other models that give more accurate estimations.
+
+\emph{Interpolated smoothing} is ways of combining models of various complexities, in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
+Below is an example of what most interpolated smoothing approaches look like for bigrams:
+\begin{equation}\label{eq:interpolated_smoothing}
+  P_{inter}(w_i|w_{i-1}) =
+  \lambda_2 P(w_i|w_{i-1}) + \lambda_1 P(w_i)
+\end{equation}
+
+where the weights dividing influence between models are $\lambda_1, \lambda_2$, and $\lambda_1 + \lambda_2 = 1$. Typically higher order methods are assigned more confidence.
+
+Interpolated smoothing techniques mitigate the trade-off between complex models with higher accuracy and simpler models that generalize well. If a queried bigram does not exist in training data at all, the first term will effectively equal zero, and the estimate will be the one of a individual unigram model times a reducing factor.
+
+The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
+
+\subsection{Modified Kneser-Ney smoothing}
+One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing}, or \emph{Modified Kneser-Ney smoothing},\cite{nlp_book}, which is based on two additional intuitions.
+
+Firstly, since higher order models have fewer
+
+The first one is that common features with high counts already have high probabilities, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurrence count it is penalizing.
+
+The second intuition is that just as lower order models are given higher influence when the higher models have less confidence, lower order models should not be consulted when higher order models estimate well. \emph{TODO: Example: With many occurrences of  ``San Francisco'', where ``Francisco'' only occurs after ``San'', the unigram model will overestimate the sentence ``In the park I got bitten by a Francisco''}.
+
+\section{Classification methods}
+The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurrences are assumed independent.)
+
+\subsection{Scikit-learn and other classification methods}
+Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
+
+The following methods were employed in this work:
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{ r l }
+    \textbf{Module name} & \textbf{Explanation}\\
+    GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\
+         & No smoothing (Gaussian prior).\\
+    MultinomialNB & Multinomial distributed prior Naive Bayes classifier. \\
+         & Additive smoothing.\\
+    BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\
+         & Additive smoothing.\\
+    LogisticRegression & \\
+    SGDClassifier & \\
+    SVC & \\
+    LinearSVC & \\
+    NuSVC & \\
+  \end{tabular}
+  \caption{todo}
+  \label{tab:scikit_classifiers}
+\end{table}
 
 
 \newpage
@@ -458,19 +477,29 @@ In ``Mining and summarizing customer reviews'', previous work by the same author
 Finally a summary is produced, but this process is very briefly described, and is without evaluations. To my understanding, opinions are solely grouped on the lemmatized form of explicit aspects.
 
 
+\pagebreak
 \section{Experiment setup}
-To examine the effects of smoothing, a few different classifiers were developed.
 
-Data was divided into two equal parts, one training set and one testing set, both with equal parts positive and negative reviews.
-
-\subsection{Sentiment labeled sentences}
+\subsection{Available data}
+\subsubsection{Sentiment labeled sentences}
 Yelp has a data set with 3216 positive and 1271 negative sentences labeled depending on their sentiment towards the the business in general.
 
-This data was ultimately used to evaluate the sentiment classifiers.
+This was ultimately used to evaluate the sentiment classifiers.
 
 
-\subsection{Yelp academic data set}
-\numClassifiationReviews~reviews from the Yelp academic data set \footnote{https://www.yelp.com/dataset\_challenge}, half positive(rated 5/5) and half negative(rated 1/5), were randomly selected. Based on the assumption that positive reviews predominantly more positive language than negative reviews, review sentences were labeled according to their review rating and used to train my unigram and bigram models.
+\subsubsection{Yelp academic data set}
+From the Yelp academic data set\footnote{https://www.yelp.com/dataset\_challenge/}, reviews that are positive(rated 5/5) or negative(rated 1/5) were randomly selected. Based on the assumption that positive reviews consist of predominantly more positive language than negative reviews, review sentences were labeled according to the review they originate from.
+
+These reviews were used to train my classifiers.
+
+\subsection{Studied classifiers}
+To examine the effects of smoothing, a three classifiers were developed. The first two are ensambles of the classifiers in table \ref{tab:scikit_classifiers}, using \emph{unigrams} and \emph{bigrams} as features respectively. The classifiers were trained on 8000 sentences, half positive and half negative. Binary search found that 30'000 features was approperiate for the unigram model in terms of time/accuracy tradeoff, and since the bigram model never reached this cap, it used the \numBigramFeatures~bigrams it found.
+
+The third classifier combines the above classifiers, \emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing}, with
+$(\lambda_2=\lambda_1=0.5)$.
+
+Finally, for reference of what a production system can look like, Yelp's production classifier was included in results. It is based on a \emph{Modified Kneser-Ney}-smoothed language model.
+
 
 \newpage
 \section{Results}
@@ -482,7 +511,7 @@ This data was ultimately used to evaluate the sentiment classifiers.
     \begin{axis}[
         xlabel={Recall},
         ylabel={Precision},
-        %xmin=0.5, xmax=1,
+        xmin=0, xmax=1,
         %ymin=0.4, ymax=1,
         %xtick={0,20,40,60,80,100},
         %ytick={0,20,40,60,80,100,120},
@@ -493,10 +522,13 @@ This data was ultimately used to evaluate the sentiment classifiers.
       \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
       \addplot table [x=r, y=p]{data/sent_unigram_pr.csv};
       \addplot table [x=r, y=p]{data/sent_bigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_trigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_interpol3_pr.csv};
       \legend{
         \ysc,
         Unigram ensemble,
         Bigram ensemble,
+        interpolated
       }
     \end{axis}
   \end{tikzpicture}
@@ -505,8 +537,7 @@ This data was ultimately used to evaluate the sentiment classifiers.
 \end{figure}
 
 \subsection{Introducing confidence thresholds}
-Figure \ref{fig:sent_pr_curve} shows how the Modified Kneser-Ney classifier has consistently better performance, and
-that that the more complex bigram model slightly outperforms the unigram model when high (around 80\%) confidence thresholds are set.
+Figure \ref{fig:sent_pr_curve} shows how the \emph{interpolated} classifier has consistently better performance than the individual unigram and bigram classifiers. The simpler unigram model slightly outperforms the bigram model unless confidence thresholds are really high (above 80\%). Finally,
 
 \newpage
 
@@ -519,7 +550,7 @@ that that the more complex bigram model slightly outperforms the unigram model w
       %title={Classifier performance per category},
       %xlabel={Categories},
       ylabel={Fraction of correctly classified},
-      ybar, ymin=0,
+      ybar, ymin=0.5,
       %bar width=20pt,
       xtick=data,
       x tick label style={rotate=45,anchor=east},
@@ -527,15 +558,16 @@ that that the more complex bigram model slightly outperforms the unigram model w
       xticklabel style={text height=1.5ex},
       ymajorgrids=true,
       grid style=dashed,
-      legend pos=south east,
+      legend pos=south west,
     ]
     \addplot table [x expr=\coordindex, y=p]{data/sent_yelp.csv};
     \addplot table [x expr=\coordindex, y=p]{data/sent_unigram.csv};
     \addplot table [x expr=\coordindex, y=p]{data/sent_bigram.csv};
-    \legend{\ysc, unigram, bigram}
+    \addplot table [x expr=\coordindex, y=p]{data/sent_interpol.csv};
+    \legend{\ysc, unigram, bigram, interpolated}
   \end{axis}
   \end{tikzpicture}
-  \caption{Perfomance of classifiers per class.}
+  \caption{Perfomance of classifiers per class. No thresholds(recall=1)}
   \label{fig:sent_per_cat}
 \end{figure}
 
@@ -549,16 +581,32 @@ Examples of where \ysc~succeeds but my classifiers fail, use to speculate about 
 \newpage
 \section{Discussion}
 
-One of the most imporant results shown in Figure \ref{fig:sent_pr_curve} is that feature selection is not in itself deteriming performance. The fact that the unigram model performs better than the bigram model at full recall, but that the bigram model is better at confidence $>80\%$, indicates that the unigram model generalizes better, but that the bigram model has higher confidence in results that align well with the model. This confirms predictions made in literature.
+One of the most imporant results shown in Figure \ref{fig:sent_pr_curve} is that feature selection is not in itself deteriming performance.  Which can be concluded from the interpolated classifier being supperior, and from the unigram and bigram model comparison depending on recall.
 
-The comparison between \ysc and the other two models is somewhat unfair, since \ysc~has been trained on slightly more data and has been rigurously tested and reviewed, but it is still included to give perspective on performance of the simpler models.
+The fact that the unigram model performs better than the bigram model at full recall, but that the bigram model is better at confidence $>80\%$, indicates that the unigram model generalizes better and that the bigram model has higher confidence in results that align well with the model, which confirms premises that has motivated previous studies of smoothing.
 
-Figure \ref{fig:sent_per_cat} shows all classifiers have a slight bias towards the positive class, despite down-sampling training data to be equal. This could arguably be desired since real data has an (even larger) positive bias.
+It should be noted that the comparison between \ysc~and the other models is unfair, since the \ysc~has been trained on more data and has been rigurously tested and reviewed. It is solely included to give perspective on performance of the simpler models.
+
+Figure \ref{fig:sent_per_cat} shows all classifiers have a slight bias towards the positive class despite down-sampling training data to be equal. I believe that this is due to positive reviews being more expressive of sentiment. It could arguably be a desired property for real world applications as real data has an even larger positive bias, which makes statistical models align better with reality. There may also be a social benefit of this positive bias.
 
 
 % logical negation might clash with bi-gram model
 % introducing neutral-class
 % actually training to identify positive reviews, not positive statements
+
+
+
+\subsection{Difficulties}
+\subsubsection{Subjective and objective sentiments}
+Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
+
+Sentiment can also be derived from objective sentences: \emph{``the toilet seat was broken''} clearly implies negative sentiment as \emph{broken} is an unquestionably negative property for a toilet. Most sentences are somewhere in between subjective and objective, e.g. the sentence ``the portion size was small'' is of objective nature, but holds a subjective definition of \emph{small portion size}.
+
+Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
+
+
+\subsubsection{Long references}
+
 
 
 % =========================================================================================================
@@ -831,7 +879,8 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 \newpage
 
 \section{Graph-search classifier}
-\loremipsum
+The graph search found a total of 78'844 word senses.
+
 
 
 \section{Comparison of classifiers}
@@ -856,12 +905,13 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 \section{Discussion}
 As the results show, it is in fact possible to categorize aspects using a lexical database. What is particularly interesting about this result is that the heuristic is unsupervised.
 
-
 There are however a few reasons why the results should be interpreted with caution:
 
 I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
 
-Another important aspect to keep in mind about my results are that with such a small data-set, there is risk of methods becoming too specific toward the training data. This is often discussed in statstical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heurisic perform better than it would in general.
+Another important thing to keep in mind about my results are that with such a small data-set, there is a risk of methods becoming too specific toward the training data. This is often discussed in statstical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heurisic perform better than it would in general.
+
+
 
 %todo reasons:
 % small data-set, might be overfitted?
@@ -869,8 +919,6 @@ Another important aspect to keep in mind about my results are that with such a s
 % becomes easier with aspect-word only?
 
 % indata probably works for you
-
-
 
 
 %\chapter{Conclusions}
