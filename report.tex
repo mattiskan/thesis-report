@@ -123,11 +123,12 @@ Imagine being in charge of making improvements to a big business chain. How woul
 Customer feedback could certainly help with decisions, but traditional methods such as surveys or interviews
 require planning and resources. With increased internet usage, it is likely that the answers you need already
 are available online, but for big business chains there could easily be tens of thousands of reviews ---
-far more than a human reader can process. There is thus incentive to use computers as aid.
+far more than a human reader can process. Thus there is incentive to use computers as aid to organize and
+visualize large quantities of opinions.
 
 This report introduces required theory, describes on a technical level how to develop a system that
 mines opinions and produces comparable summaries, and prodives detailed studies of a two concepts
-required to provide accurate and reliable results; \emph{smoothing} and \emph{down-sampling}.
+shown to improve results; \emph{smoothing} and \emph{down-sampling}.
 
 
 \section{System overview}
@@ -135,15 +136,18 @@ A system will now be introduced, which given a set of opinion-rich documents pro
 opinions, grouped by their \emph{opinion target} (the subject of the opionion)
 and their \emph{semantic orientation} (positive or negative).
 
-The produced summary then contains everything required to give the user a graphical overview of the opinions.
+The goal is for the produced summary to contain everything required to draw conclusions about opinions
+and to enable future work to create interactive visualizations.
 
-To acomplish this, four problems are introduced; the rest of this section will describe them individually, and figure \ref{fig:overview} shows
-how they relate to eachother.
+To acomplish this, three problems are introduced; Figure \ref{fig:overview} aims to give a
+overview of how the problems relate to each other, this section will describe each problem briefly,
+and subsequent chapters will then study each problem indivudually and in more detail. The remainder
+of this chapter will introduce some definitions and theory shared by all chapters.
 
 
 \subsection{Aspect extraction}
 Before anyhting else can be done, opinions need to be found and extracted from documents.
-This is studied in section \ref{sec:aspect_extraction}, where the problem is described in more detail,
+This is studied in chapter \ref{sec:aspect_extraction}, where the problem is described in more detail,
 and a simple solution is introduced.
 
 The introduced solution is shown to achieve somewhat mediocre results, but estimates indicate
@@ -156,7 +160,7 @@ to use in case data is limited are introduced.
 \subsection{Sentiment classification}
 Sentiment classification is the problem of deciding whether sentiment in text is positive, negative or neutral.
 
-Section \ref{sec:sentiment_classification} introduces \ngram~language models and how to classify sentiments.
+Chapter \ref{sec:sentiment_classification} introduces \ngram~language models and how to classify sentiments.
 Feature selection and \emph{smoothing} are studied in this section, it is shown that even quite simple methods can
 achieve decent results, and that smoothing can significantly increase language model preformance.
 
@@ -167,7 +171,7 @@ In this work, aspects are grouped to enable comparisons between businesses that 
 for example it is perfectly reasonable to compare a taco restaurant with a burger joint using the aspect group \emph{food}
 if opinions on various tacos and burgers are assigned that gruop.
 
-Section \ref{sec:aspect_grouping} introduces two methods, one supervised and one unsupervised, of grouping aspects into
+Chapter \ref{sec:aspect_grouping} introduces two methods, one supervised and one unsupervised, of grouping aspects into
 predefined groups. In this section, data bias and its consequences are studied more carefully, and results confirm that
 machine learning classifiers are indeed susceptible to data bias.
 
@@ -175,7 +179,6 @@ Results also show that the algorithmic classifier outperforms machine learning m
 learning methods are likely to benefit from more training data, and in the discussion several other concerns with the
 algorithmic method are raised, which leads to the conclusion that the recommended method is the supervised machine
 learning method, possibly in some combination with the algorithmic method.
-
 
 
 \begin{figure}[t]
@@ -232,28 +235,31 @@ Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \t
 \end{equation}
 
 \subsection{Recall}
-In this work, confidence thresholds are used to examine whether better results can be achieved by allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in the precision denominator. Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
+In this work, confidence thresholds are used to examine whether better results can be achieved by
+allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
+the precision denominator, as they are not considered to be classified.
+Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
 
 \begin{equation} \label{eq:recall}
 Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
 \end{equation}
 
+%\subsection{Perplexity}
 
-\subsection{Skewed data}
-\label{subsec:bias}
-When dealing with real world data, it is also very possible that some classes in classification problems are more common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias} and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority classes\cite{rennie2003bias, svm_bias}.
 
-Not only classification methods, but also precision measures are affected by skewed data. In binary classification with evenly distributed classes, a classifier that favors one class to the extreme that it always chooses the same class, still achieves around 0.5 precision since the number of true positives would equal the proportion of the favored class\footnote{This is in fact be the worst possible result in the binary case, since any classifier performing consistently worse could be modified to return the opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between precision of biased classifiers and distribution of classes in test data.
 
-A commonly employed and simple way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution, also sometimes referred to as \emph{down-sampling}\cite{provost2000machine}. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
 
-Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this report will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
 
 
 \chapter{Aspect extraction}
 
 \section{Problem definition}
-Aspect extraction is the task of finding and outputting sentiment carrying expressions with identified \emph{targets}. A target is either some aspect of the entity that is subject to the sentiment, or the entity in its entirety. E.g. in the sentence \emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},  there are two opinions with one (highlighted) target each; the entity itself, and the service-aspect of the entity.
+Aspect extraction is the task of finding and outputting sentiment carrying expressions
+with identified \emph{targets}. A target is either some aspect of the entity that is
+subject to the sentiment, or the entity in its entirety. E.g. in the sentence
+\emph{``I like \textbf{this place} even though \textbf{the service} isn't great''},
+there are two opinions with one (highlighted) target each; the entity itself, and the
+service-aspect of the entity.
 
 Aspect extraction then is a rather typical information retrieval task, and thus methods (including evaluation) can be recognized from data mining- and other information retrieval tasks. In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu2012sentiment}:
 
@@ -448,27 +454,35 @@ The previous section introduces language modeling, which is used to give the pro
 \subsection{Scikit-learn and other classification methods}
 Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
 
-The following methods were employed in this work:
+The following methods were examined in this work:
 
 \begin{table}[h]
   \centering
   \begin{tabular}{ r l }
     \textbf{Module name} & \textbf{Explanation}\\
-    GaussianNB & Gaussian distributed prior Naive Bayes classifier.\\
-         & No smoothing (Gaussian prior).\\
-    MultinomialNB & Multinomial distributed prior Naive Bayes classifier. \\
-         & Additive smoothing.\\
-    BernoulliNB & Bernoulli distributed prior Naive Bayes classifier.\\
-         & Additive smoothing.\\
-    LogisticRegression & \\
-    SGDClassifier & \\
-    SVC & \\
-    LinearSVC & \\
-    NuSVC & \\
+    GaussianNB (\texttt{GNB}) & Gaussian distributed prior Naive Bayes classifier.\\
+         %& No smoothing (Gaussian prior).\\
+    MultinomialNB (\texttt{MNB}) & Multinomial distributed prior Naive Bayes classifier. \\
+         %& Additive smoothing.\\
+    BernoulliNB (\texttt{BNB})& Bernoulli distributed prior Naive Bayes classifier.\\
+         %& Additive smoothing.\\
+    LogisticRegression (\texttt{LR}) & \\
+    SGDClassifier (\texttt{SGD}) & \\
+    SVC (\texttt{SVC})& \\
+    LinearSVC (\texttt{LSVC}) & \\
+    NuSVC (\texttt{NSVC})& \\
   \end{tabular}
   \caption{todo}
   \label{tab:scikit_classifiers}
 \end{table}
+
+Section \ref{tab:clf_results} shows the individual classifier performances, and based on these results,
+\todo were selected when developing an ensamble classifier. To classify, the ensamble consulted each of
+the included classifiers individually, and selected the class with the highest probability sum(using
+$p=0.75$ \footnote{Selected using binary search between 0.5 and 1.}
+for classifiers based on other concepts than probabilty, like SVCs and Logistic Regression).
+
+%Confidence was defined as the average 
 
 
 \newpage
@@ -632,6 +646,25 @@ As a consequence, four positive mentions of ``steak'' may not be enough for a co
 
 This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
 
+
+\subsection{Skewed data}
+\label{subsec:bias}
+When dealing with real world data, it is possible that some classes in classification problems are more
+common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
+and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
+classes\cite{rennie2003bias, svm_bias}.
+
+Not only classification methods, but also precision measures are affected by skewed data. In binary
+classification with evenly distributed classes, a classifier that favors one class to the extreme that it
+always chooses the same class, still achieves around 0.5 precision since the number of true positives
+would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
+in the binary case, since any classifier performing consistently worse could be modified to return the
+opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between
+precision of biased classifiers and distribution of classes in test data.
+
+A commonly employed and simple way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution, also sometimes referred to as \emph{down-sampling}\cite{provost2000machine}. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
+
+Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this report will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
 
 \section{Experiment setup}
 For these experiments, Yelp reviews from the \category were manually annotated in various ways.
