@@ -127,23 +127,64 @@ far more than a human reader can process. Thus there is incentive to use compute
 visualize large quantities of opinions.
 
 This report introduces required theory, describes on a technical level how to develop a system that
-mines opinions and produces comparable summaries, and prodives detailed studies of a two concepts
+mines opinions to produce comparable summaries, and prodives detailed studies of a two concepts
 shown to improve results; \emph{smoothing} and \emph{down-sampling}.
 
 
 \section{System overview}
-A system will now be introduced, which given a set of opinion-rich documents produces a summary of these
+This report introduces a system, which given a set of opinion-rich documents produces a summary of these
 opinions, grouped by their \emph{opinion target} (the subject of the opionion)
 and their \emph{semantic orientation} (positive or negative).
 
-The goal is for the produced summary to contain everything required to draw conclusions about opinions
+The goal for the produced summary is to contain everything required to draw conclusions about opinions
 and to enable future work to create interactive visualizations.
 
-To acomplish this, three problems are introduced; Figure \ref{fig:overview} aims to give a
-overview of how the problems relate to each other, this section will describe each problem briefly,
-and subsequent chapters will then study each problem indivudually and in more detail. The remainder
-of this chapter will introduce some definitions and theory shared by all chapters.
+To acomplish this, three problems are introduced. This chapter will make a few definitions, and then go on to
+describe each problem briefly. Finally some shared theory will be introduced.
 
+
+
+\section{Important definitions}
+
+\subsubsection{Entity and its Aspects}
+In this work, and often in sentiment analysis, \emph{entity} is used to mean the entity under review. But reviews are typically more detailed
+and describe \emph{what} about an entity causes sentiment. An aspect of an entity, is used to mean \emph{what} about an entity is referenced.
+
+E.g. in the sentence \emph{``my camera is very reliable''} the reviewed entity is \emph{camera} and the reviewed aspect is its \emph{reliability}.
+
+Readers should be aware that older literature may refer to aspects as \emph{features}, which was changed with increased application of machine learning methods in sentiment analysis, to avoid confusion with \emph{features} in machine learning contexts.
+
+\vspace{1cm}
+
+\subsubsection{Opinion}
+\emph{Liu} (2012) introduces \emph{opinion} as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are
+  used to indicate dependencies between tuple elements.},
+where $e_i$ is the entity the opinion is referencing,
+$a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambiance),
+$s_{ijkl}$ is the sentiment of the opinion,
+$h_k$ is the opinion holder and
+$t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
+
+In this work, the reviews used enable a few simplifying assumptions:
+\begin{itemize}
+\item The opinion holder $h_k$ is the logged in user posting the review.
+\item The time $t_l$ is the time the review was posted.
+\item The entity $e_i$ is the one for which the review is being posted.
+\end{itemize}
+
+%todo discuss assumption consequences?
+Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutral)sentiment.
+\vspace{4cm}
+
+\pagebreak
+
+\section{Introduction of problems}
+Solutions to the following three problems will be the basis for our system.
+Below they are briefly introduced with the most important findings in this work and references
+to subsequent chapters, where they are studied individually and in more detail.
+
+The reader is adviced to look at figure \ref{fig:overview}; which aims to
+give an overview of how the problems relate to one another.
 
 \subsection{Aspect extraction}
 Before anyhting else can be done, opinions need to be found and extracted from documents.
@@ -160,67 +201,38 @@ to use in case data is limited are introduced.
 \subsection{Sentiment classification}
 Sentiment classification is the problem of deciding whether sentiment in text is positive, negative or neutral.
 
-Chapter \ref{sec:sentiment_classification} introduces \ngram~language models and how to classify sentiments.
-Feature selection and \emph{smoothing} are studied in this section, it is shown that even quite simple methods can
-achieve decent results, and that smoothing can significantly increase language model preformance.
+Chapter \ref{sec:sentiment_classification} introduces \ngram~language models and how they can be used
+to classify sentiment. \emph{Smoothing} is also introduced studied in depth in this section.
 
-This section relies somewhat on conclusions from section \ref{sec:aspect_grouping} about classifier bias.
+Good results are achieved, and it is shown that smoothing can significantly increase language
+model preformance.
 
 \subsection{Aspect grouping}
 In this work, aspects are grouped to enable comparisons between businesses that may not have exactly the same aspects ---
 for example it is perfectly reasonable to compare a taco restaurant with a burger joint using the aspect group \emph{food}
 if opinions on various tacos and burgers are assigned that gruop.
 
-Chapter \ref{sec:aspect_grouping} introduces two methods, one supervised and one unsupervised, of grouping aspects into
-predefined groups. In this section, data bias and its consequences are studied more carefully, and results confirm that
-machine learning classifiers are indeed susceptible to data bias.
+Chapter \ref{sec:aspect_grouping} introduces and compares two methods of grouping aspects into predefined groups;
+one supervised and one algorithmic. This chapter also studies data bias and its consequences more carefully,
+and results confirm that machine learning classifiers are indeed susceptible to data bias.
 
-Results also show that the algorithmic classifier outperforms machine learning methods, but it is shown that the machine
-learning methods are likely to benefit from more training data, and in the discussion several other concerns with the
-algorithmic method are raised, which leads to the conclusion that the recommended method is the supervised machine
-learning method, possibly in some combination with the algorithmic method.
+Results also show that the algorithmic classifier outperforms machine learning methods,
+but also that machine learning methods are very likely to benefit from more training data,
+and several concerns about the algorithmic method are raised.
+Based on that the supervised machine learning method is recommended over the algorithmic one.
 
 
 \begin{figure}[t]
   \centering
   \fbox{\includegraphics[width=12cm]{overview.png}}
-  \caption{High level system overview}
+  \caption{High level system overview. Unprocessed review texts processed by the system
+    get turned into Grouped opinions; which are partial }
   \label{fig:overview}
 \end{figure}
 
 
 
 \clearpage
-
-\section{Important definitions}
-
-\subsubsection{Entity and its Aspects}
-In this work, and often in sentiment analysis, \emph{entity} is used to mean the entity under review. But reviews are typically more detailed
-and describe \emph{what} about an entity causes sentiment. An aspect of an entity, is used to mean \emph{what} about an entity is referenced.
-
-E.g. in the sentence \emph{``my camera is very reliable''} the reviewed entity is \emph{camera} and the reviewed aspect is its \emph{reliability}.
-
-Readers should be aware that older literature may refer to aspects as \emph{features}, which was changed with increased application of machine learning methods in sentiment analysis, to avoid confusion with \emph{features} in machine learning contexts.
-
-\subsubsection{Opinion}
-\emph{Liu} (2012) introduces \emph{opinion} as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are
-  used to indicate dependencies between tuple elements.},
-where $e_i$ is the entity the opinion is referencing,
-$a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambiance),
-$s_{ijkl}$ is the sentiment of the opinion,
-$h_k$ is the opinion holder and
-$t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
-
-In this work, Yelp reviews are used, which enables a few assumptions that can simplify:
-\begin{itemize}
-\item The opinion holder $h_k$ is the Yelp user posting the review.
-\item The time $t_l$ is the time the review was posted.
-\item The entity $e_i$ being reviewed is the business for which the review is being posted.
-\end{itemize}
-
-%todo discuss assumption consequences?
-Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutral)sentiment.
-% aspects are also synonymously referred to as \emph{opinion targets}.
 
 \newpage
 \section{Evaluation}
@@ -261,7 +273,9 @@ subject to the sentiment, or the entity in its entirety. E.g. in the sentence
 there are two opinions with one (highlighted) target each; the entity itself, and the
 service-aspect of the entity.
 
-Aspect extraction then is a rather typical information retrieval task, and thus methods (including evaluation) can be recognized from data mining- and other information retrieval tasks. In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu2012sentiment}:
+Aspect extraction then is a typical information retrieval task, and thus methods
+(including evaluation) can be recognized from data mining- and other information retrieval tasks.
+In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu2012sentiment}:
 
 \begin{enumerate}
 \item Extraction based on frequent nouns and noun phrases
@@ -269,20 +283,36 @@ Aspect extraction then is a rather typical information retrieval task, and thus 
 \item Extraction using supervised learning
 \item Extraction using topic modeling
 \end{enumerate}
-However, in this work, as the results will show, even a simple implementation of the first kind was found sufficiently effective to motivate focusing on other problems than aspect extraction, and thus this work will solely cover the first out of the four.
+In this work only the first kind is employed, and results will show it sufficiently
+effective to motivate focusing on the other problems.
 
 \subsection{A data dependent task}
-Like other data extraction tasks, aspect extraction is largely dependent on the data aspects are being extracted from.
-In the case of online reviews, techniques may vary in effectiveness depending on domain of reviewed entities, demographics of review authors, language used in the review and countless other factors. Furthermore, within the same data set, these factors may correlate differently on a per-entity basis. E.g. one could imagine that there would be systematic differences between reviews written for a surgeon's instrument compared to reviews for a toy car.
+Like other data extraction tasks, aspect extraction is largely dependent on the data
+aspects are being extracted from. Techniques may vary in effectiveness depending
+on what domain they are applied to, demographics of review authors,
+contextual expectations of the reviewed entity and countless other factors.
 
-It is therefore crucial that in the process of aspect extraction, like in other extraction tasks, think about what correlations may exist and how they may affect usage of the extracted data.
+Furthermore, even within the same data set, there may be hidden properties on a
+per-entity basis. E.g. one could imagine that even on the same review sitem, there would still
+be systematic differences between reviews written for a surgeon's instrument
+compared to reviews for a toy car.
+
+It is therefore crucial that in the process of aspect extraction, like in other extraction tasks,
+to think about what correlations may exist and what bias they may introduce in the extracted data.
+
 
 \subsection{Candidate extraction vs. pruning}
-There are two important definitions in this section, which together make up the method used in this work:
+There are two important definitions in this section,
+which together make up the method used in this work:
 
-\emph{Candidate identification} is the task of finding potential aspects in unstructured text. \emph{Pruning} is the task of excluding irrelevant candidates that from the candidate identification result set.
+\emph{Candidate identification} is the task of finding potential aspects in unstructured text.
 
-The reason why these usually are done separately in sequence is that some pruning techniques may require the full candidate set, such as \emph{idf}-scores or occurrence thresholds.
+\emph{Pruning} is the task of excluding irrelevant candidates that from the candidate
+identification result set.
+
+The reason why these usually are done separately in sequence is that many common pruning
+techniques require the full candidate set when deciding whether to prune.
+(Examples are \emph{idf}-scores or plain occurrence counts.)
 
 
 \section{Related Work}
@@ -291,16 +321,26 @@ The reason why these usually are done separately in sequence is that some prunin
 In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
+In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data
+mining methods are used to on to find patterns that extract features(aspects).
+Sentiment classification is mentioned, but those results are presented in a subsequent paper.
 
 \subsubsection{Liu, Hu and Cheng (2005)}
-In ``Opinion observer: analyzing and comparing opinions on the web'' a visualization interface for review analysis comparison is proposed.
+In ``Opinion observer: analyzing and comparing opinions on the web'' a visualization interface
+for review analysis comparison is proposed.
 
-In this work, aspects are extracted by mining data for POS-patterns that indicate aspects, rather than mining aspects directly. The same rule-mining is used to find mapping for implicit aspects.
+In this work, aspects are extracted by mining data for POS-patterns that indicate aspects,
+rather than mining aspects directly. The same rule-mining is used to find mapping for implicit aspects.
 
 \newpage
 \section{Extracting aspects}
-A simple aspect extractor was developed. Given a review, the extractor used the POS-tagger in nltk\cite{nltk} and compared the text to a series of predefined patterns. Table \ref{sample_pos} shows the patterns that were used along with examples of matching sentences.
+A simple aspect extractor was developed. Given a review, the extractor used the
+POS-tagger in nltk\cite{nltk} and compared the text to a series of predefined grammatical patterns.
+
+These patterns were aquired during the annotation described in section \ref{subsec:getting_data}.
+Each annotated aspect also included its POS-pattern, so reoccuring patterns were
+examined for candidate identification. They are listed in table \ref{tab:used_pos}.
+
 \newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
 \newcommand{\ExtrPatTwo}{\texttt{<NNS?><VB.?>+<RB.?><JJ.?>}}
 
@@ -308,12 +348,13 @@ A simple aspect extractor was developed. Given a review, the extractor used the 
   \centering
   \begin{tabular}{| l | l |}
     \hline
-    \textbf{Pattern} & \textbf{Matching sample sentence}\\ \hline
-    \ExtrPatOne & \emph{``personnel seemed unsympathetic''}\\
-    \ExtrPatTwo & \emph{``hotel seemed fairly clean''}\\ \hline
+    \textbf{Pattern} & \textbf{Sample sentence}\\ \hline
+    &\\
+
+    \hline
   \end{tabular}
   \caption{Patterns used in entity extraction}
-  \label{sample_pos}
+  \label{tab:used_pos}
 \end{table}
 
 \section{Results}
@@ -360,6 +401,10 @@ On average, just above one aspect per review is found, which may not sound like 
 To make conclusions more impartial, it might be a good idea to only allow one opinion per aspect from each review. Arguably one reviewer mentioning a bad service experience ten times should not be valued the same as positive mentions from ten reviewers. Ideally, some average of all sentiments for  each aspect in one review should probably be used when summarizing results, but the aspect extraction task may know what category found aspects belong to. If this is a concern a definite lower bound can still be estimated by allowing at most one aspect per review, which effectively would eliminate this risk at the cost of about half of all found aspects.
 
 Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundamentally different methods in combination, such as including a supervised learner.
+
+%patterns by trial and error
+
+%\section{Further improvements}
 
 
 \chapter{Sentiment Classification}
@@ -409,14 +454,24 @@ Osäker på om jag måste skriva att högre n-grammodeller är känsligare?
 \loremipsum
 
 \section{Smoothing language models}
-A common problem when statistically modeling based on existing data, is how the model should handle previously unseen entities. Since human language is virtually infinite, even reasonable sentences are innumerable, and thus handling unseen data is a requirement for good performance.
+A common problem when statistically modeling based on existing data,
+is how the model should handle previously unseen entities.
+Since human language is virtually infinite, even reasonable sentences are innumerable,
+and thus handling unseen data is a requirement for good performance.
 
-As can be seen in equation \ref{eq:bigram_mle}, the \gls{MLE} of entities unseen in training data would per definition be assigned a zero probability, which in turn makes the chain model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire sentence\cite{chen_goodman}.
+As can be seen in equation \ref{eq:bigram_mle}, the \gls{MLE} of entities unseen in
+training data would per definition be assigned a zero probability, which in turn makes
+the chain model(eq.~\ref{eq:bigram_chain_prob}) assign a zero probability to the entire
+sentence\cite{chen_goodman}.
 
-Smoothing is a means of improving models with limited data samples. It can mitigate the problem of unseen data, but also make for better estimations of rare entities.
+Smoothing is a means of improving models with limited data samples.
+It can mitigate the problem of unseen data,
+but also makes for better estimations of rare entities.
 
 \subsection{Additive smoothing}
-One of the most basic smoothing techniques called \emph{additive smoothing}, or \emph{Lidstone Smoothing}, which introducing a constant $\alpha$ that ensures non-zero probabilities\cite{chen_goodman}:
+One of the most basic smoothing techniques called \emph{additive smoothing},
+or \emph{Lidstone Smoothing}, introduces a constant $\alpha$ which ensures
+non-zero probabilities\cite{chen_goodman}:
 \begin{equation} \label{eq:additive_smoothing}
 P_{add}(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)+\alpha}{\sum_{w} \big[c(w_{i-1}\, w_*)+\alpha\big]}
 \end{equation}
@@ -424,32 +479,50 @@ where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also cal
 
 
 \subsection{Interpolated smoothing}
-Additive smoothing addresses unseen data, but there are other models that give more accurate estimations.
+Additive smoothing addresses unseen data, there are other models that give more accurate estimations.
 
-\emph{Interpolated smoothing} is ways of combining models of various complexities, in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
+\emph{Interpolated smoothing} is a way of combining models of various complexities,
+in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
 Below is an example of what most interpolated smoothing approaches look like for bigrams:
 \begin{equation}\label{eq:interpolated_smoothing}
   P_{inter}(w_i|w_{i-1}) =
   \lambda_2 P(w_i|w_{i-1}) + \lambda_1 P(w_i)
 \end{equation}
 
-where the weights dividing influence between models are $\lambda_1, \lambda_2$, and $\lambda_1 + \lambda_2 = 1$. Typically higher order methods are assigned more confidence.
+where $\lambda_1, \lambda_2$ are weights dividing influence between models, and $\lambda_1 + \lambda_2 = 1$.
+In my experiments $\lambda_1 = \lambda_2 = 0.5$ yielded the best results, but this is data dependent.
 
 Interpolated smoothing techniques mitigate the trade-off between complex models with higher accuracy and simpler models that generalize well. If a queried bigram does not exist in training data at all, the first term will effectively equal zero, and the estimate will be the one of a individual unigram model times a reducing factor.
 
 The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
 
-\subsection{Modified Kneser-Ney smoothing}
-One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing}, or \emph{Modified Kneser-Ney smoothing},\cite{nlp_book}, which is based on two additional intuitions.
-
-Firstly, since higher order models have fewer
-
-The first one is that common features with high counts already have high probabilities, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurrence count it is penalizing.
-
-The second intuition is that just as lower order models are given higher influence when the higher models have less confidence, lower order models should not be consulted when higher order models estimate well. \emph{TODO: Example: With many occurrences of  ``San Francisco'', where ``Francisco'' only occurs after ``San'', the unigram model will overestimate the sentence ``In the park I got bitten by a Francisco''}.
+%\subsection{Modified Kneser-Ney smoothing}
+%One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing},
+%or \emph{Modified Kneser-Ney smoothing}\cite{nlp_book}, which incorporates two additional intuitions:
+%
+%Firstly, since higher order models have lesser total counts in the denominator,
+%even few occurences will have high probabilities compared to lower order models.
+%This is addressed by subtracting a \emph{discounting }
+%
+%
+%The first one is that common features with high counts already have high probabilities, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurrence count it is penalizing.
+%
+%The second intuition is that just as lower order models are given higher influence when the higher models have less confidence, lower order models should not be consulted when higher order models estimate well. \emph{TODO: Example: With many occurrences of  ``San Francisco'', where ``Francisco'' only occurs after ``San'', the unigram model will overestimate the sentence ``In the park I got bitten by a Francisco''}.
 
 \section{Classification methods}
-The previous section introduces language modeling, which is used to give the probability of a sentence. Classification can fairly simply be reduced to language modeling, by training one model per class and selecting the model assigning the highest probability. This is in fact what many famous classifiers do. (In fact, eq. \ref {eq:bigram_mle} could be interpreted as a Naive Bayes classifier with only one class(prior=1), and \ngram~occurrences are assumed independent.)
+The previous section introduces language modeling, which is used to give the probability of a sentence.
+Classification can without much effort be reduced to language modeling, by training one model per class and
+selecting the model assigning the highest probability. This is in fact what many common classifiers do.
+(In fact, due to the assumtion that \ngram~occurrences are independent, eq. \ref {eq:bigram_mle}
+could be viewed as a Naive Bayes classifier with only one class(prior=1).)
+
+As the reader may very well be aware, other classification methods exist. Combining multiple
+methods into one classifier is known as \emph{ensamble learning}.
+
+, and could in theory improve classifications,
+as different methods may consider different properties of data and may also be less likely to 
+
+
 
 \subsection{Scikit-learn and other classification methods}
 Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
@@ -527,6 +600,34 @@ Finally, for reference of what a production system can look like, Yelp's product
 
 \newpage
 \section{Results}
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Recall},
+        ylabel={Precision},
+        xmin=0, xmax=1,
+        %ymin=0.4, ymax=1,
+        %xtick={0,20,40,60,80,100},
+        %ytick={0,20,40,60,80,100,120},
+        legend pos=south west,
+        ymajorgrids=true,
+        grid style=dashed,
+      ]
+      \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unigram.csv};
+      \legend{
+        \ysc,
+        Unigram ensemble,
+        Bigram ensemble,
+        interpolated
+      }
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Sentiment new results}
+  \label{fig:sent_pr_curve}
+\end{figure}
 
 
 \begin{figure}[h]
@@ -632,6 +733,18 @@ Just as objective sentences can hold sentiment, subjective sentences may not, as
 \subsubsection{Long references}
 
 
+% ``I would've most likely ordered dessert if I had more time and if the waitress was not too busy''
+% ``we had the deep fried scallops ($14) nice and juicy.''
+% ignored comparative sentiments
+% ``The dining room with  low lighting is casual with comfortable booths and tables and a separate lounge area with more seating to watch sports''
+% ``The', 'menu', 'offers', 'sandwiches', ',', 'appetizers', ',', 'steaks', ',', 'seafood', ',', 'chicken', ',', 'ribs', ',', 'prime', 'rib', ',', 'pasta', ',', 'salads', ',', 'homemade', 'soups', ',', 'and', 'desserts',
+% Good food at reasonable prices
+% I like beef with potatoes on the side
+% I love steaks
+
+
+% Comparative opinions, PRUNE.
+
 
 % =========================================================================================================
 
@@ -673,6 +786,7 @@ For these experiments, Yelp reviews from the \category were manually annotated i
 
 \newpage
 \subsection{Getting data}
+\label{subsec:getting_data}
 \begin{figure}[h]
   \centering
   \fbox{\includegraphics[width=10cm]{annotate_sentence.png}}
@@ -942,7 +1056,7 @@ The graph search found a total of 78'844 word senses.
 
   \vspace{0.4cm}\caption{Result summary}
   \label{general_asp}
-\end{table}
+p\end{table}
 
 
 \section{Discussion}
@@ -962,6 +1076,8 @@ Another important thing to keep in mind about my results are that with such a sm
 % becomes easier with aspect-word only?
 
 % indata probably works for you
+
+% ``place is really small and seemed kinda dirty''
 
 
 %\chapter{Conclusions}
