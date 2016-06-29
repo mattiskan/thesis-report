@@ -516,12 +516,6 @@ selecting the model assigning the highest probability. This is in fact what many
 (In fact, due to the assumtion that \ngram~occurrences are independent, eq. \ref {eq:bigram_mle}
 could be viewed as a Naive Bayes classifier with only one class(prior=1).)
 
-As the reader may very well be aware, other classification methods exist. Combining multiple
-methods into one classifier is known as \emph{ensamble learning}.
-
-, and could in theory improve classifications,
-as different methods may consider different properties of data and may also be less likely to 
-
 
 
 \subsection{Scikit-learn and other classification methods}
@@ -562,6 +556,13 @@ for classifiers based on other concepts than probabilty, like SVCs and Logistic 
 \section{Related work}
 Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo} or statistical\cite{todo}. This sections aims to give some insight into what has been previously done in the field.
 
+\subsubsection{Chen, Goodman (1996)}
+In the thorough study ``An empirical study of smoothing techniques for language modeling.'' smoothing is
+thoroughly studied with regard to language modeling. Furthermore, a novel variation of an existing
+smoothing technique is introduced, \emph{Modified Kneser-Ney}-smoothing, which outperforms other
+smoothing methods to date.
+
+
 \subsubsection{Turney (2002)}
 In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
 
@@ -578,24 +579,43 @@ Finally a summary is produced, but this process is very briefly described, and i
 \section{Experiment setup}
 
 \subsection{Available data}
-\subsubsection{Sentiment labeled sentences}
-Yelp has a data set with 3216 positive and 1271 negative sentences labeled depending on their sentiment towards the the business in general.
 
-This was ultimately used to evaluate the sentiment classifiers.
+\subsubsection{Training data: Yelp academic data set}
+From the Yelp academic data set\footnote{https://www.yelp.com/dataset\_challenge/},
+reviews were randomly selected from 900940 positive reviews (rated 5/5)
+and 260492 negative reviews(rated 1/5). Most reviews consist of more than one sentence.
 
+Based on an underlying assumption that positive reviews consist predominantly of more
+positive than negative language, and vice versa for negative reviews,
+sentences were labeled as positive or negative depending on what review they originated from.
 
-\subsubsection{Yelp academic data set}
-From the Yelp academic data set\footnote{https://www.yelp.com/dataset\_challenge/}, reviews that are positive(rated 5/5) or negative(rated 1/5) were randomly selected. Based on the assumption that positive reviews consist of predominantly more positive language than negative reviews, review sentences were labeled according to the review they originate from.
+These reviews were used to train classifiers.
 
-These reviews were used to train my classifiers.
+\subsubsection{Evaluation data: Sentiment labeled sentences}
+Yelp has a data set with 3216 positive and 1271 negative sentences labeled
+according to their sentiment towards the the business in general.
+
+These were used to evaluate the sentiment classifiers.
 
 \subsection{Studied classifiers}
-To examine the effects of smoothing, a three classifiers were developed. The first two are ensambles of the classifiers in table \ref{tab:scikit_classifiers}, using \emph{unigrams} and \emph{bigrams} as features respectively. The classifiers were trained on 8000 sentences, half positive and half negative. Binary search found that 30'000 features was approperiate for the unigram model in terms of time/accuracy tradeoff, and since the bigram model never reached this cap, it used the \numBigramFeatures~bigrams it found.
+To examine the effects of varying \ngram models and smoothing,
+three \ngram~classifiers with additive smoothing were developed, based on the
+probability definition in equation \ref{eq:additive_smoothing}.
 
-The third classifier combines the above classifiers, \emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing}, with
+The classifiers were trained on 4'000 sentences from postive reviews
+and another 4'000 sentences from negative reviews.
+As features, up to the 30'000 most common \ngram s were used\footnote{As table
+  \ref{tab:found_ngrams} shows, the unigram model only produces 8772 \ngram s,
+  in which case all of them were used.}.
+
+
+Two more classifiers were developed with interpolated smoothing, 
+
+The third classifier combines the above classifiers,
+\emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing}, with
 $(\lambda_2=\lambda_1=0.5)$.
 
-Finally, for reference of what a production system can look like, Yelp's production classifier was included in results. It is based on a \emph{Modified Kneser-Ney}-smoothed language model.
+%Finally, for reference of what a production system can look like, Yelp's production classifier was included in results. It is based on a \emph{Modified Kneser-Ney}-smoothed language model.
 
 
 \newpage
@@ -605,64 +625,49 @@ Finally, for reference of what a production system can look like, Yelp's product
   \centering
   \begin{tikzpicture}
     \begin{axis}[
-        xlabel={Recall},
+        xlabel={Recall (normalized)},
         ylabel={Precision},
         xmin=0, xmax=1,
         %ymin=0.4, ymax=1,
         %xtick={0,20,40,60,80,100},
         %ytick={0,20,40,60,80,100,120},
-        legend pos=south west,
+        legend pos=north east,
         ymajorgrids=true,
         grid style=dashed,
       ]
-      \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_unigram.csv};
+      %\addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_new_unigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_new_bigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_new_trigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_new_interpol_12_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_new_interpol_123_pr.csv};
       \legend{
-        \ysc,
-        Unigram ensemble,
-        Bigram ensemble,
-        interpolated
+        %yelp..,
+        \texttt{Unigram},
+        \texttt{Bigram},
+        \texttt{Trigram},
+        \texttt{Interpol2},
+        \texttt{Interpol3},
       }
     \end{axis}
   \end{tikzpicture}
-  \caption{Sentiment new results}
-  \label{fig:sent_pr_curve}
+  \caption{Sentiment classifier precision vs. recall. Each dot represents a
+    10\% increase in confidence threshold (starting with 1.0 at the left).}
+  \label{fig:sent_pr_curve}nn
 \end{figure}
 
-
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Recall},
-        ylabel={Precision},
-        xmin=0, xmax=1,
-        %ymin=0.4, ymax=1,
-        %xtick={0,20,40,60,80,100},
-        %ytick={0,20,40,60,80,100,120},
-        legend pos=south west,
-        ymajorgrids=true,
-        grid style=dashed,
-      ]
-      \addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_unigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_bigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_trigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_interpol3_pr.csv};
-      \legend{
-        \ysc,
-        Unigram ensemble,
-        Bigram ensemble,
-        interpolated
-      }
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Sentiment classifier precision vs. recall. Each dot represents a 10\% increase in confidence threshold (starting with 0 at the right).}
-  \label{fig:sent_pr_curve}
-\end{figure}
 
 \subsection{Introducing confidence thresholds}
-Figure \ref{fig:sent_pr_curve} shows how the \emph{interpolated} classifier has consistently better performance than the individual unigram and bigram classifiers. The simpler unigram model slightly outperforms the bigram model unless confidence thresholds are really high (above 80\%). Finally,
+Figure \ref{fig:sent_pr_curve} shows how the \emph{interpolated} classifiers have
+consistently better performance than the additively smoothed classifiers.
+More specifically \texttt{interpol3} also outperforms \texttt{interpol2}, which
+not surprisingly means that adding another model to the interpolation improves results.
+
+It can also be seen that lower order models generalize better, as when required to
+classify all samples, they perfom better than higher order models, whereas the higher
+order models exhibit higher confidence in a few samples and in turn have higher
+precision with lower recall.
+
 
 \newpage
 
@@ -686,9 +691,9 @@ Figure \ref{fig:sent_pr_curve} shows how the \emph{interpolated} classifier has 
       legend pos=south west,
     ]
     \addplot table [x expr=\coordindex, y=p]{data/sent_yelp.csv};
-    \addplot table [x expr=\coordindex, y=p]{data/sent_unigram.csv};
-    \addplot table [x expr=\coordindex, y=p]{data/sent_bigram.csv};
-    \addplot table [x expr=\coordindex, y=p]{data/sent_interpol.csv};
+    %\addplot table [x expr=\coordindex, y=p]{data/sent_unigram.csv};
+    %\addplot table [x expr=\coordindex, y=p]{data/sent_bigram.csv};
+    %\addplot table [x expr=\coordindex, y=p]{data/sent_interpol.csv};
     \legend{\ysc, unigram, bigram, interpolated}
   \end{axis}
   \end{tikzpicture}
@@ -696,6 +701,23 @@ Figure \ref{fig:sent_pr_curve} shows how the \emph{interpolated} classifier has 
   \label{fig:sent_per_cat}
 \end{figure}
 
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c |}
+    \hline
+    \textbf{Model} & \textbf{Found \ngram s}\\ \hline
+    Unigram&8772\\
+    Bigram&55295\\
+    Trigram&92569\\
+    \hline
+  \end{tabular}
+  \caption{Number of unique \ngram s for different \ngram~lengths}
+  \label{tab:found_ngrams}
+\end{table}
+
+\subsection{Per class}
+todo
 
 \subsection{Notable examples}
 TODO: Table with number of failures per classifier.
@@ -730,7 +752,7 @@ Sentiment can also be derived from objective sentences: \emph{``the toilet seat 
 Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
 
 
-\subsubsection{Long references}
+\subsubsection{Further work}
 
 
 % ``I would've most likely ordered dessert if I had more time and if the waitress was not too busy''
