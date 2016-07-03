@@ -12,6 +12,8 @@
 \usepackage{pgfplotstable}
 \usepackage{afterpage}
 
+\usepackage{rotating}
+
 \graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
 
@@ -235,6 +237,36 @@ Based on that the supervised machine learning method is recommended over the alg
 \clearpage
 
 \newpage
+\section{Levels of sentiment analysis and this work}
+Sentiment analysis, the field of study under which opinion mining falls,
+is typically divided into three levels of granuality:
+
+On the \emph{document-level}, an entire review would be classified for
+its overall-sentiment value\cite[Chapter~1.2]{liu2012sentiment}.
+Although this may introduce difficulties with contradicting sentiments
+and largely varying document lengths, the fact that the document-level usually holds more information
+means it is usually slightly simpler than the other levels.
+
+The \emph{sentence-level} can still hold contradicting sentiments,
+\emph{e.g. ``I love this restaurant even though the service is terrible''},
+but this risk is mitigated due to sentences being shorter than their documents.
+
+To fully address the issue identifying exactly what people liked,
+sentiment classification has to be done on the \emph{aspect-level}.
+On this level, sentiment has to be liked to an identified aspect in order to be considered
+useful, which makes it much more useful, but also significantly increases complexity\cite[Chapter~1.2]{liu2012sentiment}.
+
+The Yelp reviews used in this work are already assigned an overall rating towards the entity under
+review, which is what sentiment analysis on the document-level would have resulted in.
+Therefore, in terms of the above, this work applies a combination of sentence-level and aspect-level
+sentiment analysis:
+
+Aspects are extracted and grouped on the aspect level, and sentiment classification is done on
+the sentence-level. This is done by assigning the average sentiment of the full sentence they appear in,
+which may seem as an intrusive simplification, which is why it is
+further discussed and motivated in section \ref{subsec:sentence_contradictions}.
+
+
 \section{Evaluation}
 A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
 
@@ -288,7 +320,7 @@ effective to motivate focusing on the other problems.
 
 \subsection{A data dependent task}
 Like other data extraction tasks, aspect extraction is largely dependent on the data
-aspects are being extracted from. Techniques may vary in effectiveness depending
+aspects are being extracted from; meaning techniques may vary in effectiveness depending
 on what domain they are applied to, demographics of review authors,
 contextual expectations of the reviewed entity and countless other factors.
 
@@ -321,90 +353,250 @@ techniques require the full candidate set when deciding whether to prune.
 In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data
-mining methods are used to on to find patterns that extract features(aspects).
-Sentiment classification is mentioned, but those results are presented in a subsequent paper.
+In ``Mining Opinion Features in Customer Reviews'' aspects are unsupervisedly
+extracted by considering frequent noun phrases found in data using POS-tagging.
+
+This approach appears to return a lot of false positives, which is why two pruning
+methods are introduced to improve precision.
+
+Sentiment classification is also mentioned, but those results are presented in a subsequent paper.
 
 \subsubsection{Liu, Hu and Cheng (2005)}
-In ``Opinion observer: analyzing and comparing opinions on the web'' a visualization interface
-for review analysis comparison is proposed.
+In ``Opinion observer: analyzing and comparing opinions on the web'', their previous work is extended
+by a visualization interface and a more sophisticated method of aspect extraction is introduced.
 
-In this work, aspects are extracted by mining data for POS-patterns that indicate aspects,
-rather than mining aspects directly. The same rule-mining is used to find mapping for implicit aspects.
+In short, their extraction is done the following way:
 
-\newpage
+Sentences are spilt into segments (using dots, commas, conjunctions etc.), POS-tagged, and aspects are
+manually replaced by tokens. Sentences are then broken into unordered \emph{trigrams},
+and words not replaced by tokens are stemmed.
+
+Finally, \emph{association rule mining}\cite{ma1998integrating} is used to find implications
+from either words or word-classes to those aspect tokens.
+
+%For an example, consider the sentence \emph{``I like the easily used autofocus''}.
+%\emph{autofocus} is annotated as the aspect  andthe rest of the sentence is stemmed,
+%resulting in something like: \\
+%``\texttt{<PRP>}\emph{I} \texttt{<VB>}\emph{lik} \texttt{<DT>}\emph{the} \texttt{<JJ>}\emph{easy}
+%\texttt{<VB>}\emph{us} \texttt{<NN>}<aspect>''.
+%
+%One of the trigrams found above (\texttt{<JJ>}\emph{easy}, \texttt{<VB>}\emph{us}, \texttt{<NN>}<aspect>)
+%would increase confidence in rules like \{\emph{easy}, \texttt{<VB>}\} $\rightarrow$ <aspect> amongst others.
+
+
 \section{Extracting aspects}
-A simple aspect extractor was developed. Given a review, the extractor used the
-POS-tagger in nltk\cite{nltk} and compared the text to a series of predefined grammatical patterns.
+\subsection{Candidate Identification}
+A simple aspect extractor was developed. Given a review, the extractor uses the
+POS-tagger in nltk\cite{nltk} and compares text to a series of predefined grammatical patterns.
 
-These patterns were aquired during the annotation described in section \ref{subsec:getting_data}.
-Each annotated aspect also included its POS-pattern, so reoccuring patterns were
-examined for candidate identification. They are listed in table \ref{tab:used_pos}.
+These patterns were aquired during the annotation described in section \ref{subsec:getting_data},
+where each annotated aspect also included its POS-pattern.
+
+A total of 511 unique patterns were found, but out of those, the 33 that occured more than
+once were examined. Out of those, 6 patterns were removed since they were two words or shorter
+and visual inspection of results indicated they produce significantly more false positives.
+
+The remainding patterns which were used are listed in table \ref{tab:used_pos}.
+
+The extractor uses the first pattern that matches, which then ``consumes'' that part of the text.
+Therefore, patterns were ordered by length to make sure that the longest possible pattern
+matches, and within the same length the order was determined by
+the number of times the pattern occured in the annotated data.
+
+One more observation was made: Several patterns have (some version of) the same word-class,
+examples include the \texttt{<PRP><VBZ><JJ><JJ>} and patterns \texttt{<JJ><NN><NN>} patterns.
+This also aligns well with understanding of the english language, where several nouns in sequence,
+like ``tooth brush'', usually still represent only one entity, and thus does not change
+the meaning of the pattern itself.
+
+With this in mind, an experiment was develped where patterns were extended to allow
+multiple words of same word-class in sequence wherever a noun(\texttt{<NN>+})
+or adjective(\texttt{<JJ>+}) occured.
+This experiment is called \texttt{Modified patterns} in the results, as opposed to
+the original \texttt{Unmodified patterns}.
+
+\subsection{Pruning}
+The only pruning applied in this work comes as a side effect of the methods introduced
+in the other two chapters, senitment classification and aspect grouping.
+
+In both chapters, confidence thresholds are introduced as a means of increasing
+precision at the cost of recall, and the aspects that fall under the confidence threshold
+are effectively being pruned.
+
+In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed further.
+
 
 \newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
 \newcommand{\ExtrPatTwo}{\texttt{<NNS?><VB.?>+<RB.?><JJ.?>}}
 
 \begin{table}[t]
   \centering
-  \begin{tabular}{| l | l |}
+  \begin{tabular}{| l | c | l |}
     \hline
-    \textbf{Pattern} & \textbf{Sample sentence}\\ \hline
-    &\\
-
+    \textbf{Pattern} &\textbf{No.} & \textbf{Sample sentence} \\ \hline
+    \texttt{<DT><NN><VBZ><RB><JJ><CC><JJ>} & 2 & \emph{``The staff is very good and friendly''}\\
+    \texttt{<DT><NNS><RB><VBP><RB><JJ>} & 2 & \emph{``The people here are very friendly''}\\
+    \texttt{<PRP><VBZ><RB><DT><JJ><NN>} & 2 & \emph{``It is always a little dirty''}\\
+    \texttt{<DT><NN><VBD><RB><RB><JJ>} & 2 & \emph{``The food was not sloppily prepared''}\\
+    \texttt{<DT><NN><VBZ><RB><RB><JJ>} & 2 & \emph{``The pizza is still really good''}\\
+    \texttt{<DT><NN><VBZ><RB><JJ>} & 11 & \emph{``The place is immaculately clean''}\\
+    \texttt{<DT><NN><VBD><RB><JJ>} & 2 & \emph{``This dessert looked pretty good''}\\
+    \texttt{<DT><NNS><VBP><RB><JJ>} & 2 & \emph{``The prices are not bad''}\\
+    \texttt{<DT><NN><VBD><JJ>} & 9 & \emph{``The bread was horrible''}\\
+    \texttt{<PRP><VBD><RB><JJ>} & 4 & \emph{``He was extremely rude''}\\
+    \texttt{<DT><NN><VBZ><JJ>} & 4 & \emph{``The location is great''}\\
+    \texttt{<IN><DT><JJ><NN>} & 3 & \emph{``At a fair price''}\\
+    \texttt{<DT><NNS><VBD><JJ>} & 3 & \emph{``The facilities were clean''}\\
+    \texttt{<PRP><VBZ><JJ><JJ>} & 2 & \emph{``It 's metro accessible''}\\
+    \texttt{<NN><VBD><RB><JJ>} & 2 & \emph{``Everything was very delicious''}\\
+    \texttt{<NN><VBZ><RB><JJ>} & 2 & \emph{``Restaurant is very clean''}\\
+    \texttt{<PRP><VBP><JJ><NNS>} & 2 & \emph{``They have sweet booths''}\\
+    \texttt{<DT><NNS><VBP><JJ>} & 2 & \emph{``The salads are fresh''}\\
+    \texttt{<JJ><NN><NN>} & 6 & \emph{``Great clam chowder''}\\
+    \texttt{<RB><JJ><NN>} & 4 & \emph{``Sloppily prepared sandwich''}\\
+    \texttt{<NNS><VBP><JJ>} & 3 & \emph{``Portions are huge''}\\
+    \texttt{<JJ><JJ><NN>} & 3 & \emph{``Consistent excellent quality''}\\
+    \texttt{<PRP\$><JJ><NN>} & 3 & \emph{``Their amazing vinagrette''}\\
+    \texttt{<NNP><JJ><NN>} & 3 & \emph{``Great italian food''}\\
+    \texttt{<JJ><JJ><NNS>} & 3 & \emph{``Fresh generous subs''}\\
+    \texttt{<JJ><VBG><NN>} & 2 & \emph{``Tasty looking food''}\\
+    \texttt{<RB><RB><JJ>} & 2 & \emph{``Admittedly not cheap''}\\
+    \hline
+    \textbf{Excluded patterns} && \\
+    \hline
+    \texttt{<JJ><NN>} & 24 & \emph{``Good food''}\\
+    \texttt{<JJ><NNS>} & 7 & \emph{``Reasonable prices''}\\
+    \texttt{<NNP><NN>} & 5 & \emph{``Great food''}\\
+    \texttt{<NN><NNS>} & 3 & \emph{``Singing waitors''}\\
+    \texttt{<NN><NN>} & 2 & \emph{``Bland food''}\\
+    \texttt{<RB><VBN>} & 2 & \emph{``Reasonably priced''}\\
     \hline
   \end{tabular}
-  \caption{Patterns used in entity extraction}
+  \caption{Patterns found when annotating and how frequent they were.}
   \label{tab:used_pos}
 \end{table}
 
+\clearpage
 \section{Results}
 
-\begin{figure}[h]
+\begin{sidewaysfigure}[h]
   \centering
   \begin{tikzpicture}
 
   \begin{axis}[
-      xlabel={Found aspects},
+      xlabel={Aspects found in review},
       ylabel={No. reviews},
       ybar, ymin=0, %3ymax=9999,
-      %bar width=20pt,
+      bar width=6pt,
       xtick=data,
+      x=0.8cm,
+      xmax=23,
+      enlarge x limits={abs=0.5cm},
       %x tick label style={rotate=45,anchor=east},
-      xticklabels from table={data/extraction_counts.csv}{found},
+      xticklabels from table={data/extraction_count_all_modified.csv}{found},
       xticklabel style={text height=1.5ex},
       ymajorgrids=true,
       grid style=dashed,
       legend pos=north east,
     ]
-    \addplot table [x expr=\coordindex, y=count]{data/extraction_count1.csv};
-    \addplot table [x expr=\coordindex, y=count]{data/extraction_count2.csv};
-    \addplot table [x expr=\coordindex, y=count]{data/extraction_count_both.csv};
+    \addplot table [x expr=\coordindex, y=count]{data/extraction_count_unmodified.csv};
+    \addplot table [x expr=\coordindex, y=count]{data/extraction_count_all_modified.csv};
+    %\addplot table [x expr=\coordindex, y=count]{data/extraction_count_both.csv};
     \legend{
-      \ExtrPatTwo,
-      \ExtrPatOne,
-      Both patterns,
-      }
+      \hspace{0.4cm}\texttt{Unmodified patterns},
+      \texttt{Modified patterns}
+    }
   \end{axis}
   \end{tikzpicture}
-  \caption{Distribution of number of extracted aspects per review}
+  \caption{Distribution of number of extracted aspects per review. One review had as many as 23 aspects in it.}
   \label{fig:extr_count}
-\end{figure}
+\end{sidewaysfigure}
 
+Out of 10'000 reviews, a total of 27'656 aspects were found using the modified patterns
+and 26'766 using the original patterns.
+Figure \ref{fig:extr_count} shows the distribution of reviews and the number of
+found aspects. The figure has been cut at 13 reviews, but it continues up to 23 reviews
+with 
 
-
-Out of 10'000 reviews, in total 12'246 aspects were found, which works out to an average of around 1.2 aspects per review. Figure \ref{fig:extr_count} shows the distribution of reviews and the number of found aspects. Note that the graph does not show how many aspects were found, but in how many reviews a certain number of were found.
+Note that the graph does not show how many aspects were found,
+but in how many reviews a certain number of were found, which means that for the
+total sum each count has to be multiplied with the number of aspects it corresponds to.
 
 \section{Discussion}
+\subsection{The modified patterns}
+As results show, there is very little difference between the modified patterns and
+the original ones. Although the modified patters do find a few more aspects, looking
+at the distribution in figure \ref{fig:extr_count} the additional aspects more often
+appear to be found in reviews where aspects were already found, or in other words;
+the modified patterns appear to further favor the writing styles of already included authors.
 
-On average, just above one aspect per review is found, which may not sound like a lot, but for entities with lots of reviews it may be enough. Later in this work when we study aspect clustering, figure \ref{fig:cat_count} will show that the least common category, \emph{value}, represents around 10\% of the aspects, for a reviewed entity with 300 reviews then, around 35 opinions can be expected, which should be enough for a conclusion. In practice, review comparisons would likely be done for business chains which can easily have 10'000 reviews, which is why in this work this simple method was deemed sufficient.
+In fact, out of the 110 new aspects found, only 5 aspects came from new reviews.
+On the other hand, I believe there is marginal downside to keeping these modified
+patterns after glancing over the additional aspects, but without a qualtiy measure
+it is hard to definitely tell. 
 
-To make conclusions more impartial, it might be a good idea to only allow one opinion per aspect from each review. Arguably one reviewer mentioning a bad service experience ten times should not be valued the same as positive mentions from ten reviewers. Ideally, some average of all sentiments for  each aspect in one review should probably be used when summarizing results, but the aspect extraction task may know what category found aspects belong to. If this is a concern a definite lower bound can still be estimated by allowing at most one aspect per review, which effectively would eliminate this risk at the cost of about half of all found aspects.
+\subsection{Mitigating author bias}
+76 had reviews out of 10'000 had more than 13 aspects with as high as 23 aspects
+in one review. If we simply included each aspect from that review the opinions of
+that sole author would be represented 23 times as much as the opinions from a review
+with one found aspect.
 
-Another problem that is harder to mitigate is presented by the method itself; basing a conclusion on aspects extracted from a single pattern effectively concludes what reviewers \emph{using language with that pattern} think of something. Adding more patterns would mitigate this risk, but I think the best way to circumvent this problem would be to use at least two fundamentally different methods in combination, such as including a supervised learner.
+Luckily, as simple way To make conclusions more impartial,
+would be to only allow one opinion per aspect group from each review.
+I.e. each review contributes with \emph{at most} one opinion on product, one on service, etc.
+And ideally, the opinion should be picked so that it represents the majority of
+sentiments expressed towards that aspect group.
 
-%patterns by trial and error
+The results in this section do not have the aspect groups associated with them,
+but an lower bound as to how many aspects can be kept in the worst case
+is found by simply discounting all but one aspect from each review. This is the same
+as summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
+exact sum is 7851.
+
+\subsection{Aspect quantity}
+On average, around 2.7 aspects per review are found, which may not sound like a lot 
+but for entities with lots of reviews it is enough:
+
+Later in this work when we study aspect clustering, figure \ref{fig:cat_count}
+will show that the least common category, \emph{value}, represents around
+10\% of all aspects.
+
+Glancing at future results, confidence thresholds with $recall\approx 0.7$
+appears reasonable for both sentiment classification and aspect grouping.
+
+An estimate for the number of value aspects found for a business with 300 reviews
+using the nubmers in this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.1 = 39.69$ aspects.
+Around 40 aspects should be enough to give a statistically significant indication.
+Especially as in practice review comparisons are likely going to be done for
+business chains which can have 10'000 reviews or more.
+
+
+\subsection{Aspect quality}
+The results in this section are indeed a bit vauge, %todo
+
+% 1/5 is 0
+
+A problem that is hard to mitigate is presented by the method itself;
+basing a conclusion on aspects extracted from a single pattern effectively concludes
+what reviewers \emph{using language with that pattern} think of something.
+Adding more patterns would mitigate this risk, but I think the best way to
+circumvent this problem would be to use at least two fundamentally different
+methods in combination, such as including a supervised learner.
+
+
+\subsection{Further Pruning}
+\label{subsec:suggested_pruing}
+
+%patterns by reinforcement learning?
+
+% the word 'and'
+% noun-phrases
+% couting patterns i.e. a, b, c, and/or d
+
+% toss comparable opinions and NE
 
 %\section{Further improvements}
+
 
 
 \chapter{Sentiment Classification}
@@ -447,11 +639,7 @@ A naive \gls{MLE} of a sentence $s$ could be defined something like this:
 P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w_*)}
 \end{equation}
 
-Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words the fraction of this particular bigram out of all bigrams with the same first word.
-
-\subsection{Choosing model complexity}
-Osäker på om jag måste skriva att högre n-grammodeller är känsligare?
-\loremipsum
+Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words; the fraction of this particular bigram out of all bigrams with the same first word.
 
 \section{Smoothing language models}
 A common problem when statistically modeling based on existing data,
@@ -466,7 +654,14 @@ sentence\cite{chen_goodman}.
 
 Smoothing is a means of improving models with limited data samples.
 It can mitigate the problem of unseen data,
-but also makes for better estimations of rare entities.
+but also makes for better estimations of rare entities, or even combine multiple models.
+
+The rest of this chapter will introduce a few smoothing methods in a somewhat simplified way.
+Methods that combine multiple \ngram~orders will be described only using bigrams and
+unigrams for enhanced readability,
+but are all generalizeable to higher order \ngram~models as well.
+For this and a more comprehensible introduction to smoothing,
+readers are recommended \emph{(Chen \& Goodman, 1996)}.
 
 \subsection{Additive smoothing}
 One of the most basic smoothing techniques called \emph{additive smoothing},
@@ -479,9 +674,9 @@ where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also cal
 
 
 \subsection{Interpolated smoothing}
-Additive smoothing addresses unseen data, there are other models that give more accurate estimations.
+Although additive smoothing addresses unseen data, there are other models that give more accurate estimations.
 
-\emph{Interpolated smoothing} is a way of combining models of various complexities,
+\emph{Interpolated smoothing} is S. F. Chen and J. Goodman way of combining models of various complexities,
 in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
 Below is an example of what most interpolated smoothing approaches look like for bigrams:
 \begin{equation}\label{eq:interpolated_smoothing}
@@ -492,22 +687,36 @@ Below is an example of what most interpolated smoothing approaches look like for
 where $\lambda_1, \lambda_2$ are weights dividing influence between models, and $\lambda_1 + \lambda_2 = 1$.
 In my experiments $\lambda_1 = \lambda_2 = 0.5$ yielded the best results, but this is data dependent.
 
-Interpolated smoothing techniques mitigate the trade-off between complex models with higher accuracy and simpler models that generalize well. If a queried bigram does not exist in training data at all, the first term will effectively equal zero, and the estimate will be the one of a individual unigram model times a reducing factor.
+Interpolated smoothing techniques provide a simple means of mitigating
+the trade-off between complex models with higher confidence
+and simpler models that generalize well.
+If a queried bigram does not exist in training data at all,
+the first term will effectively equal zero,
+and the estimate will be the one of a individual unigram model times a reducing factor.
 
-The above can easily be generalized to include arbitrarily high \ngram~models by extending the number of terms to match the highest included model.
+\subsection{Modified Kneser-Ney smoothing}
+One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing},
+or \emph{Modified Kneser-Ney smoothing}\cite{nlp_book}, which incorporates two additional intuitions:
 
-%\subsection{Modified Kneser-Ney smoothing}
-%One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing},
-%or \emph{Modified Kneser-Ney smoothing}\cite{nlp_book}, which incorporates two additional intuitions:
-%
-%Firstly, since higher order models have lesser total counts in the denominator,
-%even few occurences will have high probabilities compared to lower order models.
-%This is addressed by subtracting a \emph{discounting }
-%
-%
-%The first one is that common features with high counts already have high probabilities, so subtracting a small value from counts will affect uncommon features that the model is insecure about and thus for those features give more influence to the lower order models. This is called \emph{absolute discounting}\cite{npl_book}. \emph{Modified Kneser-Ney smoothing}, as opposed to the model originally proposed by\emph{Kneser-Ney}, uses four different constants depending on the occurrence count it is penalizing.
-%
-%The second intuition is that just as lower order models are given higher influence when the higher models have less confidence, lower order models should not be consulted when higher order models estimate well. \emph{TODO: Example: With many occurrences of  ``San Francisco'', where ``Francisco'' only occurs after ``San'', the unigram model will overestimate the sentence ``In the park I got bitten by a Francisco''}.
+Firstly, a high occurence of higher \ngram s implies at least as high
+lower order occurence. I.e. if the bigram \emph{``San Francisco''} occurs 25 times,
+the unigram \emph{``Francisco''} will occur at least 25 times or more.
+If the word \emph{``Francisco''} always is preceeded by  \emph{``San''},
+the probability of other occurences will be overestimated unigram model.
+In Kneser-Ney smoothing, the lower order model is set to be proportional to the
+number of times it occurs with \emph{unique histories} divided by the number of times it
+occurs with the history in the current \ngram\cite{chen_goodman}, which  in the previous example
+works out to be $\frac{1}{25}$.
+
+Higher order models have lesser total counts in their denominator, which means that common
+higher order \ngram s, like \emph{``San Francisco''} in our previous example, are assigned high probabilites.
+This leads to the second intuition, which is that even few occurences will
+get high probabilities compared to lower order models, which may lead to overestimations.
+This is addressed by subtracting a small \emph{discounting}-constant $D$ in the numerator,
+which makes a difference if the count is small, but becomes disappearingly small for high counts.
+The \emph{modified} part of Modified Kneser-Key smoothing is using different values for this
+$D$ depending on the occurence count of the \ngram~being estimated\cite{chen_goodman}.
+
 
 \section{Classification methods}
 The previous section introduces language modeling, which is used to give the probability of a sentence.
@@ -518,38 +727,40 @@ could be viewed as a Naive Bayes classifier with only one class(prior=1).)
 
 
 
-\subsection{Scikit-learn and other classification methods}
-Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
-
-The following methods were examined in this work:
-
-\begin{table}[h]
-  \centering
-  \begin{tabular}{ r l }
-    \textbf{Module name} & \textbf{Explanation}\\
-    GaussianNB (\texttt{GNB}) & Gaussian distributed prior Naive Bayes classifier.\\
-         %& No smoothing (Gaussian prior).\\
-    MultinomialNB (\texttt{MNB}) & Multinomial distributed prior Naive Bayes classifier. \\
-         %& Additive smoothing.\\
-    BernoulliNB (\texttt{BNB})& Bernoulli distributed prior Naive Bayes classifier.\\
-         %& Additive smoothing.\\
-    LogisticRegression (\texttt{LR}) & \\
-    SGDClassifier (\texttt{SGD}) & \\
-    SVC (\texttt{SVC})& \\
-    LinearSVC (\texttt{LSVC}) & \\
-    NuSVC (\texttt{NSVC})& \\
-  \end{tabular}
-  \caption{todo}
-  \label{tab:scikit_classifiers}
-\end{table}
-
-Section \ref{tab:clf_results} shows the individual classifier performances, and based on these results,
-\todo were selected when developing an ensamble classifier. To classify, the ensamble consulted each of
-the included classifiers individually, and selected the class with the highest probability sum(using
-$p=0.75$ \footnote{Selected using binary search between 0.5 and 1.}
-for classifiers based on other concepts than probabilty, like SVCs and Logistic Regression).
+%\subsection{Scikit-learn and other classification methods}
+%Scikit-learn\cite{scikit-learn} is a collection of machine learning implementations in Python, ready to use ``out of the box''.
+%
+%The following methods were examined in this work:
+%
+%\begin{table}[h]
+%  \centering
+%  \begin{tabular}{ r l }
+%    \textbf{Module name} & \textbf{Explanation}\\
+%    GaussianNB (\texttt{GNB}) & Gaussian distributed prior Naive Bayes classifier.\\
+%         %& No smoothing (Gaussian prior).\\
+%    MultinomialNB (\texttt{MNB}) & Multinomial distributed prior Naive Bayes classifier. \\
+%         %& Additive smoothing.\\
+%    BernoulliNB (\texttt{BNB})& Bernoulli distributed prior Naive Bayes classifier.\\
+%         %& Additive smoothing.\\
+%    LogisticRegression (\texttt{LR}) & \\
+%    SGDClassifier (\texttt{SGD}) & \\
+%    SVC (\texttt{SVC})& \\
+%    LinearSVC (\texttt{LSVC}) & \\
+%    NuSVC (\texttt{NSVC})& \\
+%  \end{tabular}
+%  \caption{todo}
+%  \label{tab:scikit_classifiers}
+%\end{table}
+%
+%Section \ref{tab:clf_results} shows the individual classifier performances, and based on these results,
+%\todo were selected when developing an ensamble classifier. To classify, the ensamble consulted each of
+%the included classifiers individually, and selected the class with the highest probability sum(using
+%$p=0.75$ \footnote{Selected using binary search between 0.5 and 1.}
+%for classifiers based on other concepts than probabilty, like SVCs and Logistic Regression).
 
 %Confidence was defined as the average 
+
+
 
 
 \newpage
@@ -606,7 +817,7 @@ The classifiers were trained on 4'000 sentences from postive reviews
 and another 4'000 sentences from negative reviews.
 As features, up to the 30'000 most common \ngram s were used\footnote{As table
   \ref{tab:found_ngrams} shows, the unigram model only produces 8772 \ngram s,
-  in which case all of them were used.}.
+  in which case all of them were used.}. %todo balancing
 
 
 Two more classifiers were developed with interpolated smoothing, 
@@ -625,9 +836,9 @@ $(\lambda_2=\lambda_1=0.5)$.
   \centering
   \begin{tikzpicture}
     \begin{axis}[
-        xlabel={Recall (normalized)},
+        xlabel={Recall},
         ylabel={Precision},
-        xmin=0, xmax=1,
+        xmin=0.4, xmax=1,
         %ymin=0.4, ymax=1,
         %xtick={0,20,40,60,80,100},
         %ytick={0,20,40,60,80,100,120},
@@ -636,11 +847,11 @@ $(\lambda_2=\lambda_1=0.5)$.
         grid style=dashed,
       ]
       %\addplot table [x=r, y=p]{data/sent_yelp_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_new_unigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_new_bigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_new_trigram_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_new_interpol_12_pr.csv};
-      \addplot table [x=r, y=p]{data/sent_new_interpol_123_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unnorm_unigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unnorm_bigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unnorm_trigram_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unnorm_interpol_12_pr.csv};
+      \addplot table [x=r, y=p]{data/sent_unnorm_interpol_123_pr.csv};
       \legend{
         %yelp..,
         \texttt{Unigram},
@@ -728,22 +939,44 @@ Examples of where \ysc~succeeds but my classifiers fail, use to speculate about 
 \newpage
 \section{Discussion}
 
-One of the most imporant results shown in Figure \ref{fig:sent_pr_curve} is that feature selection is not in itself deteriming performance.  Which can be concluded from the interpolated classifier being supperior, and from the unigram and bigram model comparison depending on recall.
+One of the most imporant results shown in Figure \ref{fig:sent_pr_curve}
+is that feature selection is not in itself deteriming performance.
+Which can be concluded from the interpolated classifier being supperior,
+and from the unigram and bigram model comparison depending on recall.
 
-The fact that the unigram model performs better than the bigram model at full recall, but that the bigram model is better at confidence $>80\%$, indicates that the unigram model generalizes better and that the bigram model has higher confidence in results that align well with the model, which confirms premises that has motivated previous studies of smoothing.
+The fact that the unigram model performs better than the bigram model at full recall,
+but that the bigram model is better at confidence $>80\%$,
+indicates that the unigram model generalizes better and
+that the bigram model has higher confidence in results that align well with the model,
+which confirms premises that has motivated previous studies of smoothing.
 
 It should be noted that the comparison between \ysc~and the other models is unfair, since the \ysc~has been trained on more data and has been rigurously tested and reviewed. It is solely included to give perspective on performance of the simpler models.
 
 Figure \ref{fig:sent_per_cat} shows all classifiers have a slight bias towards the positive class despite down-sampling training data to be equal. I believe that this is due to positive reviews being more expressive of sentiment. It could arguably be a desired property for real world applications as real data has an even larger positive bias, which makes statistical models align better with reality. There may also be a social benefit of this positive bias.
 
+% todo reconfirm^
 
-% logical negation might clash with bi-gram model
+\subsection{Further improving results}
+I am convinced that exploring smoohting further, and in particular Modified Kneser-Ney,
+is a reliable way of further improving sentiment classification results. I did not included the
+mathematical representations of this smoothing because there are open sourced implementations
+that are probably worthwhile looking into. However, readers who are interested will not
+be disappointed reading \emph{(Chen \& Goodman, 1996)}.
+
+\subsection{Things that did not work}
+Before looking into smoothing, a significant amount of time was spent looking into
+various ways of combining different classification methods in a voting system.
+
+
+
+%todo test various feature counts ??
+
+% logical negation might clash with higher order n-gram models
 % introducing neutral-class
 % actually training to identify positive reviews, not positive statements
 
 
-
-\subsection{Difficulties}
+\subsection{\ngram~model shortcomings}
 \subsubsection{Subjective and objective sentiments}
 Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
 
@@ -762,8 +995,9 @@ Just as objective sentences can hold sentiment, subjective sentences may not, as
 % ``The', 'menu', 'offers', 'sandwiches', ',', 'appetizers', ',', 'steaks', ',', 'seafood', ',', 'chicken', ',', 'ribs', ',', 'prime', 'rib', ',', 'pasta', ',', 'salads', ',', 'homemade', 'soups', ',', 'and', 'desserts',
 % Good food at reasonable prices
 % I like beef with potatoes on the side
-% I love steaks
-
+% I love steaks, ....
+% You would think their exorbitant prices would at least buy some decent customer service.
+% other restaurants!!!!!
 
 % Comparative opinions, PRUNE.
 
