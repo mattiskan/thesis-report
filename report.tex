@@ -51,9 +51,8 @@
 \newcommand{\todo}{ ... }
 \newcommand{\ngram}{$n$-gram}
 \newcommand{\category}{restaurant category }  % may become plural
-\newcommand{\numAnnotated}{XX}
+\newcommand{\numAnnotated}{1000}
 \newcommand{\numClassifierAproaches}{2}
-\newcommand{\numBigramFeatures}{XX}
 
 \newcommand{\ysc}{Modified Kneser-Ney classifier}
 
@@ -76,7 +75,7 @@
 
 \makeglossaries
 
-\title{Mining opinions from local business reviews:\\ A technical walkthrough.}
+\title{Mining opinions from local business reviews:\\ A technical walk-through.}
 
 \subtitle{Getting that degree would be nice1 before I go work full time}
 \foreigntitle{This is the Swedish title}
@@ -93,16 +92,16 @@
 \maketitle
 \selectlanguage{english}
 \begin{abstract}
-With increased internet usage, reviews online are becoming one of the most important resources when comparing businesses, services and products.
-The increasing quantity of content makes for more reliable conclusions as more opinions can be taken into account, but it also poses a problem,
-since there is a limit to what human readers can process.
-
-Computers are obviously faster and more capable to handle big quantities of data, which suggests potential for using computers as aid when
-interpreting review-like content.
-
-This report introduces required theory, describes on a technical level how to develop a system that
-mines opinions and produces comparable summaries, and prodives detailed studies of a few key concepts required
-to provide accurate and reliable results.
+%line are becoming one of the most important resources when comparing businesses, services and products.
+%for more reliable conclusions as more opinions can be taken into account, but it also poses a problem,
+%ers can process.
+%
+%apable to handle big quantities of data, which suggests potential for using computers as aid when
+%
+%
+%escribes on a technical level how to develop a system that
+%mmaries, and prodives detailed studies of a few key concepts required
+%
 \end{abstract}
 
 
@@ -129,19 +128,19 @@ far more than a human reader can process. Thus there is incentive to use compute
 visualize large quantities of opinions.
 
 This report introduces required theory, describes on a technical level how to develop a system that
-mines opinions to produce comparable summaries, and prodives detailed studies of a two concepts
+mines opinions to produce comparable summaries, and provides detailed studies of a two concepts
 shown to improve results; \emph{smoothing} and \emph{down-sampling}.
 
 
 \section{System overview}
 This report introduces a system, which given a set of opinion-rich documents produces a summary of these
-opinions, grouped by their \emph{opinion target} (the subject of the opionion)
+opinions, grouped by their \emph{opinion target} (the subject of the opinion)
 and their \emph{semantic orientation} (positive or negative).
 
 The goal for the produced summary is to contain everything required to draw conclusions about opinions
 and to enable future work to create interactive visualizations.
 
-To acomplish this, three problems are introduced. This chapter will make a few definitions, and then go on to
+To accomplish this, three problems are introduced. This chapter will make a few definitions, and then go on to
 describe each problem briefly. Finally some shared theory will be introduced.
 
 
@@ -185,11 +184,11 @@ Solutions to the following three problems will be the basis for our system.
 Below they are briefly introduced with the most important findings in this work and references
 to subsequent chapters, where they are studied individually and in more detail.
 
-The reader is adviced to look at figure \ref{fig:overview}; which aims to
+The reader is advised to look at figure \ref{fig:overview}; which aims to
 give an overview of how the problems relate to one another.
 
 \subsection{Aspect extraction}
-Before anyhting else can be done, opinions need to be found and extracted from documents.
+Before anything else can be done, opinions need to be found and extracted from documents.
 This is studied in chapter \ref{sec:aspect_extraction}, where the problem is described in more detail,
 and a simple solution is introduced.
 
@@ -207,12 +206,12 @@ Chapter \ref{sec:sentiment_classification} introduces \ngram~language models and
 to classify sentiment. \emph{Smoothing} is also introduced studied in depth in this section.
 
 Good results are achieved, and it is shown that smoothing can significantly increase language
-model preformance.
+model performance.
 
 \subsection{Aspect grouping}
 In this work, aspects are grouped to enable comparisons between businesses that may not have exactly the same aspects ---
 for example it is perfectly reasonable to compare a taco restaurant with a burger joint using the aspect group \emph{food}
-if opinions on various tacos and burgers are assigned that gruop.
+if opinions on various tacos and burgers are assigned that group.
 
 Chapter \ref{sec:aspect_grouping} introduces and compares two methods of grouping aspects into predefined groups;
 one supervised and one algorithmic. This chapter also studies data bias and its consequences more carefully,
@@ -239,7 +238,7 @@ Based on that the supervised machine learning method is recommended over the alg
 \newpage
 \section{Levels of sentiment analysis and this work}
 Sentiment analysis, the field of study under which opinion mining falls,
-is typically divided into three levels of granuality:
+is typically divided into three levels of granularity:
 
 On the \emph{document-level}, an entire review would be classified for
 its overall-sentiment value\cite[Chapter~1.2]{liu2012sentiment}.
@@ -325,7 +324,7 @@ on what domain they are applied to, demographics of review authors,
 contextual expectations of the reviewed entity and countless other factors.
 
 Furthermore, even within the same data set, there may be hidden properties on a
-per-entity basis. E.g. one could imagine that even on the same review sitem, there would still
+per-entity basis. E.g. one could imagine that even on the same review site, there would still
 be systematic differences between reviews written for a surgeon's instrument
 compared to reviews for a toy car.
 
@@ -367,7 +366,7 @@ by a visualization interface and a more sophisticated method of aspect extractio
 
 In short, their extraction is done the following way:
 
-Sentences are spilt into segments (using dots, commas, conjunctions etc.), POS-tagged, and aspects are
+Sentences are split into segments (using dots, commas, conjunctions etc.), POS-tagged, and aspects are
 manually replaced by tokens. Sentences are then broken into unordered \emph{trigrams},
 and words not replaced by tokens are stemmed.
 
@@ -386,44 +385,45 @@ from either words or word-classes to those aspect tokens.
 
 \section{Extracting aspects}
 \subsection{Candidate Identification}
-A simple aspect extractor was developed. Given a review, the extractor uses the
-POS-tagger in nltk\cite{nltk} and compares text to a series of predefined grammatical patterns.
+A simple aspect extractor was developed. Given a review, much like Turney's pattern extraction,
+the extractor uses the POS-tagger in nltk\cite{nltk} and
+compares text to a series of predefined grammatical patterns.
 
-These patterns were aquired during the annotation described in section \ref{subsec:getting_data},
-where each annotated aspect also included its POS-pattern.
+These patterns were acquired during the annotation described in section \ref{subsec:getting_data},
+where each annotated aspect also included its POS-pattern. As happens to be, all patterns match noun-phrases.
 
-A total of 511 unique patterns were found, but out of those, the 33 that occured more than
+A total of 511 unique patterns were found, but out of those, the 33 that occurred more than
 once were examined. Out of those, 6 patterns were removed since they were two words or shorter
 and visual inspection of results indicated they produce significantly more false positives.
 
-The remainding patterns which were used are listed in table \ref{tab:used_pos}.
+The remaining patterns which were used are listed in table \ref{tab:used_pos}.
 
 The extractor uses the first pattern that matches, which then ``consumes'' that part of the text.
 Therefore, patterns were ordered by length to make sure that the longest possible pattern
 matches, and within the same length the order was determined by
-the number of times the pattern occured in the annotated data.
+the number of times the pattern occurred in the annotated data.
 
 One more observation was made: Several patterns have (some version of) the same word-class,
-examples include the \texttt{<PRP><VBZ><JJ><JJ>} and patterns \texttt{<JJ><NN><NN>} patterns.
-This also aligns well with understanding of the english language, where several nouns in sequence,
+examples include the \texttt{<PRP><VBZ><JJ><JJ>} and \texttt{<JJ><NN><NN>} patterns.
+This also aligns well with understanding of the English language, where several nouns in sequence,
 like ``tooth brush'', usually still represent only one entity, and thus does not change
 the meaning of the pattern itself.
 
-With this in mind, an experiment was develped where patterns were extended to allow
+With this in mind, an experiment was developed where patterns were extended to allow
 multiple words of same word-class in sequence wherever a noun(\texttt{<NN>+})
-or adjective(\texttt{<JJ>+}) occured.
+or adjective(\texttt{<JJ>+}) occurred.
 This experiment is called \texttt{Modified patterns} in the results, as opposed to
 the original \texttt{Unmodified patterns}.
 
 \subsection{Pruning}
 The only pruning applied in this work comes as a side effect of the methods introduced
-in the other two chapters, senitment classification and aspect grouping.
+in the other two chapters, sentiment classification and aspect grouping.
 
 In both chapters, confidence thresholds are introduced as a means of increasing
 precision at the cost of recall, and the aspects that fall under the confidence threshold
 are effectively being pruned.
 
-In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed further.
+%In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed further.
 
 
 \newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
@@ -456,8 +456,8 @@ In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed
     \texttt{<RB><JJ><NN>} & 4 & \emph{``Sloppily prepared sandwich''}\\
     \texttt{<NNS><VBP><JJ>} & 3 & \emph{``Portions are huge''}\\
     \texttt{<JJ><JJ><NN>} & 3 & \emph{``Consistent excellent quality''}\\
-    \texttt{<PRP\$><JJ><NN>} & 3 & \emph{``Their amazing vinagrette''}\\
-    \texttt{<NNP><JJ><NN>} & 3 & \emph{``Great italian food''}\\
+    \texttt{<PRP\$><JJ><NN>} & 3 & \emph{``Their amazing vinaigrette''}\\
+    \texttt{<NNP><JJ><NN>} & 3 & \emph{``Great Italian food''}\\
     \texttt{<JJ><JJ><NNS>} & 3 & \emph{``Fresh generous subs''}\\
     \texttt{<JJ><VBG><NN>} & 2 & \emph{``Tasty looking food''}\\
     \texttt{<RB><RB><JJ>} & 2 & \emph{``Admittedly not cheap''}\\
@@ -467,7 +467,7 @@ In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed
     \texttt{<JJ><NN>} & 24 & \emph{``Good food''}\\
     \texttt{<JJ><NNS>} & 7 & \emph{``Reasonable prices''}\\
     \texttt{<NNP><NN>} & 5 & \emph{``Great food''}\\
-    \texttt{<NN><NNS>} & 3 & \emph{``Singing waitors''}\\
+    \texttt{<NN><NNS>} & 3 & \emph{``Singing waiters''}\\
     \texttt{<NN><NN>} & 2 & \emph{``Bland food''}\\
     \texttt{<RB><VBN>} & 2 & \emph{``Reasonably priced''}\\
     \hline
@@ -475,9 +475,6 @@ In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed
   \caption{Patterns found when annotating and how frequent they were.}
   \label{tab:used_pos}
 \end{table}
-
-\clearpage
-\section{Results}
 
 \begin{sidewaysfigure}[h]
   \centering
@@ -508,9 +505,13 @@ In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed
     }
   \end{axis}
   \end{tikzpicture}
-  \caption{Distribution of number of extracted aspects per review. One review had as many as 23 aspects in it.}
+  \caption{Distribution of how many aspects were found in  reviews.}
   \label{fig:extr_count}
 \end{sidewaysfigure}
+
+\clearpage
+
+\section{Results}
 
 Out of 10'000 reviews, a total of 27'656 aspects were found using the modified patterns
 and 26'766 using the original patterns.
@@ -532,26 +533,8 @@ the modified patterns appear to further favor the writing styles of already incl
 
 In fact, out of the 110 new aspects found, only 5 aspects came from new reviews.
 On the other hand, I believe there is marginal downside to keeping these modified
-patterns after glancing over the additional aspects, but without a qualtiy measure
+patterns after glancing over the additional aspects, but without a quality measure
 it is hard to definitely tell. 
-
-\subsection{Mitigating author bias}
-76 had reviews out of 10'000 had more than 13 aspects with as high as 23 aspects
-in one review. If we simply included each aspect from that review the opinions of
-that sole author would be represented 23 times as much as the opinions from a review
-with one found aspect.
-
-Luckily, as simple way To make conclusions more impartial,
-would be to only allow one opinion per aspect group from each review.
-I.e. each review contributes with \emph{at most} one opinion on product, one on service, etc.
-And ideally, the opinion should be picked so that it represents the majority of
-sentiments expressed towards that aspect group.
-
-The results in this section do not have the aspect groups associated with them,
-but an lower bound as to how many aspects can be kept in the worst case
-is found by simply discounting all but one aspect from each review. This is the same
-as summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
-exact sum is 7851.
 
 \subsection{Aspect quantity}
 On average, around 2.7 aspects per review are found, which may not sound like a lot 
@@ -565,27 +548,78 @@ Glancing at future results, confidence thresholds with $recall\approx 0.7$
 appears reasonable for both sentiment classification and aspect grouping.
 
 An estimate for the number of value aspects found for a business with 300 reviews
-using the nubmers in this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.1 = 39.69$ aspects.
+using the numbers in this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.1 = 39.69$ aspects.
 Around 40 aspects should be enough to give a statistically significant indication.
 Especially as in practice review comparisons are likely going to be done for
 business chains which can have 10'000 reviews or more.
 
+\subsection{Evaluation of aspect extraction}
+The results in this section are a bit vague, but there is a reason for this.
+Common practice in information retrieval is to use precision as a measure of
+quality, however, this requires a clear definition of what is relevant.
+When manually annotating aspects I found it difficult to determine where to draw the
+line for what an aspect is. As section \ref{subsec:objective_sentiments} describes,
+sentiments can be derived from various forms of sentences.
 
-\subsection{Aspect quality}
-The results in this section are indeed a bit vauge, %todo
+My concern was that what definition I decided upon would influence the results without
+reflecting the methods effectiveness.
 
-% 1/5 is 0
+Thus, I decided to revisit metrical measures when I aspect extracting became the
+bottleneck of the systems performance, which is a point I never reached in this work.
 
-A problem that is hard to mitigate is presented by the method itself;
-basing a conclusion on aspects extracted from a single pattern effectively concludes
-what reviewers \emph{using language with that pattern} think of something.
-Adding more patterns would mitigate this risk, but I think the best way to
-circumvent this problem would be to use at least two fundamentally different
-methods in combination, such as including a supervised learner.
+I believe it could be a good idea to evaluate aspect extraction in the context of
+the full system and not individually, as what to extract is so dependent on what
+the purpose of the extracted data is. This would probably also make it easier to
+determine what is relevant and what is not.
+
+\subsection{Mitigating author bias}
+76 review out of 10'000 had more than 13 aspects with one review having as much as 23 aspects.
+If we simply included each aspect from reviews like that one the opinions of
+those sole authors would be represented 23 times more than the opinions from reviews
+with one extracted aspect each.
+
+Luckily, a simple way to make conclusions more impartial is to only allow one
+opinion per aspect group from each review.
+I.e. each review contributes with \emph{at most} one opinion on product, one on service, etc.
+The opinion should be picked so that it represents the majority of
+sentiments expressed towards that aspect group.
+
+The results in this section do not have the aspect groups associated with them,
+but an lower bound as to how many aspects can be kept in the worst case
+is found by simply discounting all but one aspect from each review. This is the same
+as summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
+exact sum is 7851.
+
+That being said, it is probably OK and even preferred to allow a few more opinions per review,
+but an upper limit can make sure that a one or a few rigged reviews will not compromise results.
 
 
-\subsection{Further Pruning}
-\label{subsec:suggested_pruing}
+\section{Further work}
+\subsection{Further mitigating author bias}
+I believe it to be more important to reduce the number of reviews where no aspect was
+found at all. My current results where at least one aspect is found in approximately
+80\% of reviews are decent but could be improved.
+
+This is desired to mitigate bias towards or against authors writing with certain styles.
+However, in pursuit of this, I would advice to use more metrics; either annotated data
+or at least metrics normalized by review length. I suspect that some in some cases
+aspects are not found because reviews are really short and/or because there are no aspects
+to find.
+
+\subsection{Named Entity pruning}
+
+Something I have come across and which should be pruned is mentions of other businesses
+in reviews. Although a sentence like
+\emph{``I recommend this place over Alfredo's across the street, because their pizza tastes like rubber.''}
+although perfectly reasonable in a review, the system will inaccurately discredit
+the evaluated business for having rubber-like pizza.
+
+Pruning these mentions should be reasonably simple using \emph{named entity extraction}, where named
+entities found could be compared to the name of the business under review and if not matching,
+the sentence along can be then be pruned.
+
+As a bonus, named entities that are found to refer to the business can be replaced
+with a token value which likely will improve performance of language models in future chapters.
 
 %patterns by reinforcement learning?
 
@@ -593,16 +627,34 @@ methods in combination, such as including a supervised learner.
 % noun-phrases
 % couting patterns i.e. a, b, c, and/or d
 
-% toss comparable opinions and NE
-
-%\section{Further improvements}
+%%%%%%%%%% toss comparable opinions and NE
 
 
 
 \chapter{Sentiment Classification}
-Sentiment classification is the problem of deciding whether sentiment in a sentence is positive, negative or neutral\cite{nlp_book}. Being a central part of sentiment analysis it can also done on the same three levels: Document level, sentence level and aspect level.
+Sentiment classification is the problem of deciding whether sentiment in a sentence
+is positive, negative or neutral\cite{nlp_book}.
 
-Sentiment classification can be a classification- or regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
+%Sentiment classification can also be regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
+
+Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''}
+is an example of a sentence with negative subjective sentiment.
+Subjective sentiments may per definition not apply to everyone.
+
+Sentiment can also be derived from objective sentences:
+\emph{``the toilet seat was broken''} clearly implies negative sentiment
+as \emph{broken} is an unquestionably negative property for a toilet seat.
+Many sentences may be some combination of subjective and objective;
+e.g. \emph{``the portion size was small''} is of objective nature,
+but holds a subjective definition of what a small portion size is.
+And just as objective sentences can hold sentiment, subjective sentences may not, as
+the statement \emph{``I thought the wall was red''} illustrates.
+
+This all goes to show that for sentiment classifications, it is insufficient
+to use algorithmic or static methods, like the POS-patterns introduced in previous
+chapters.
+
+Instead readers will be introduced to a more dynamic statistical method.
 
 \section{Language modeling}
 
@@ -615,9 +667,9 @@ As an example, the word-\emph{bigrams} for the sentence \emph{``Languages are fu
 \begin{quote}
   \vspace*{0.1cm}
   \centering
-\emph{``\$ Languages''}, \emph{``Languages are''}, \emph{``are fun''}, and \emph{``fun \$''}
+\emph{``\texttt{<BOS>} Languages''}, \emph{``Languages are''}, \emph{``are fun''}, and \emph{``fun \texttt{<EOS>}''}
 \end{quote}
-where \emph{\$} is a token meaning the start/end of sentence.
+where \emph{\texttt{<BOS>}} and \emph{\texttt{<EOS>}} are a tokens representing the starts and ends of sentences.
 
 Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
 
@@ -639,7 +691,18 @@ A naive \gls{MLE} of a sentence $s$ could be defined something like this:
 P(w_i|w_{i-1}) = \frac{c(w_{i-1}\,w_i)}{\sum_{w} c(w_{i-1}\, w_*)}
 \end{equation}
 
-Here the number of occurrences where the word $w_{i-1}$ follows $w_i$ (as provided by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$ is followed by any word $w_*$, or in other words; the fraction of this particular bigram out of all bigrams with the same first word.
+Here the number of occurrences where the word $w_{i-1}$ follows $w_i$
+(as given by the count function $c$) are normalized by the number of occurrences where $w_{i-1}$
+is followed by any word $w_*$, or in other words; the fraction of this particular bigram
+out of all bigrams with the same first word.
+
+%\subsection{Why \ngram~s?}
+%There are several early studies using publicly available \emph{sentiment lexicons},
+%corpora of words with associated sentiment scores.
+%Readers may be tempted to use such corpora to for 
+%
+%Human language is full of 
+%
 
 \section{Smoothing language models}
 A common problem when statistically modeling based on existing data,
@@ -656,10 +719,10 @@ Smoothing is a means of improving models with limited data samples.
 It can mitigate the problem of unseen data,
 but also makes for better estimations of rare entities, or even combine multiple models.
 
-The rest of this chapter will introduce a few smoothing methods in a somewhat simplified way.
+The rest of this section will introduce a few smoothing methods in a somewhat simplified way.
 Methods that combine multiple \ngram~orders will be described only using bigrams and
 unigrams for enhanced readability,
-but are all generalizeable to higher order \ngram~models as well.
+but are all generalizable to higher order \ngram~models as well.
 For this and a more comprehensible introduction to smoothing,
 readers are recommended \emph{(Chen \& Goodman, 1996)}.
 
@@ -698,33 +761,39 @@ and the estimate will be the one of a individual unigram model times a reducing 
 One of the most commonly used modern smoothing methods is \emph{interpolated Kneser-Ney smoothing},
 or \emph{Modified Kneser-Ney smoothing}\cite{nlp_book}, which incorporates two additional intuitions:
 
-Firstly, a high occurence of higher \ngram s implies at least as high
-lower order occurence. I.e. if the bigram \emph{``San Francisco''} occurs 25 times,
+Firstly, a high occurrence of higher \ngram s implies at least as high
+lower order occurrence. I.e. if the bigram \emph{``San Francisco''} occurs 25 times,
 the unigram \emph{``Francisco''} will occur at least 25 times or more.
-If the word \emph{``Francisco''} always is preceeded by  \emph{``San''},
-the probability of other occurences will be overestimated unigram model.
+If the word \emph{``Francisco''} always is preceded by  \emph{``San''},
+the probability of other occurrences will be overestimated unigram model.
 In Kneser-Ney smoothing, the lower order model is set to be proportional to the
 number of times it occurs with \emph{unique histories} divided by the number of times it
 occurs with the history in the current \ngram\cite{chen_goodman}, which  in the previous example
 works out to be $\frac{1}{25}$.
 
 Higher order models have lesser total counts in their denominator, which means that common
-higher order \ngram s, like \emph{``San Francisco''} in our previous example, are assigned high probabilites.
-This leads to the second intuition, which is that even few occurences will
-get high probabilities compared to lower order models, which may lead to overestimations.
+higher order \ngram s, like \emph{``San Francisco''} in our previous example, are assigned high probabilities.
+This leads to the second intuition, which is that even few occurrences will
+get high probabilities compared to lower order models, which may lead to over-estimations.
 This is addressed by subtracting a small \emph{discounting}-constant $D$ in the numerator,
-which makes a difference if the count is small, but becomes disappearingly small for high counts.
+which makes a difference if the count is small, but becomes insignificant small for high counts.
 The \emph{modified} part of Modified Kneser-Key smoothing is using different values for this
-$D$ depending on the occurence count of the \ngram~being estimated\cite{chen_goodman}.
+$D$ depending on the occurrence count of the \ngram~being estimated\cite{chen_goodman}.
 
 
 \section{Classification methods}
 The previous section introduces language modeling, which is used to give the probability of a sentence.
 Classification can without much effort be reduced to language modeling, by training one model per class and
 selecting the model assigning the highest probability. This is in fact what many common classifiers do.
-(In fact, due to the assumtion that \ngram~occurrences are independent, eq. \ref {eq:bigram_mle}
+(In fact, due to the assumption that \ngram~occurrences are independent, eq. \ref {eq:bigram_mle}
 could be viewed as a Naive Bayes classifier with only one class(prior=1).)
 
+\subsection{Choosing a level of analysis}
+Sentence level. Less than 2\% of sentences with multiple opinions had contradicting sentiments.
+Furthermore, out of those sentences, X\% were pruned due to sentiment classification falling under the
+confidence threshold.
+
+Thus, sentence level was deemed appropriate for sentiment classification. TODO.
 
 
 %\subsection{Scikit-learn and other classification methods}
@@ -761,11 +830,9 @@ could be viewed as a Naive Bayes classifier with only one class(prior=1).)
 %Confidence was defined as the average 
 
 
-
-
 \newpage
 \section{Related work}
-Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo} or statistical\cite{todo}. This sections aims to give some insight into what has been previously done in the field.
+%Various approaches to sentiment classification exist, where approaches can generally be categorized as either grammatical\cite{todo} or statistical\cite{todo}. This sections aims to give some insight into what has been previously done in the field.
 
 \subsubsection{Chen, Goodman (1996)}
 In the thorough study ``An empirical study of smoothing techniques for language modeling.'' smoothing is
@@ -781,7 +848,14 @@ In early work, Peter Turney classified sentiment of reviews for \emph{automobile
 In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
 
 \subsubsection{Hu, Liu (2004)}
-In ``Mining and summarizing customer reviews'', previous work by the same authors is extended with sentiment classification to produce product summaries. Sentiment is classified by looking for \emph{sentiment words} predefined as positive or negative or their synonyms/antonyms using WordNet. Their method also searches for nearby \emph{negation words}, which if found, simply negate the outcome of the classification.
+In ``Mining and summarizing customer reviews'',
+previous work by the same authors is extended
+with sentiment classification to produce product summaries.
+
+Sentiment is classified by using words in a \emph{sentiment lexicon},
+which is extended by word relations in WordNet. Their method also searches for nearby
+\emph{negation words}, which if found,
+simply negate the outcome of the classification.
 
 Finally a summary is produced, but this process is very briefly described, and is without evaluations. To my understanding, opinions are solely grouped on the lemmatized form of explicit aspects.
 
@@ -793,14 +867,14 @@ Finally a summary is produced, but this process is very briefly described, and i
 
 \subsubsection{Training data: Yelp academic data set}
 From the Yelp academic data set\footnote{https://www.yelp.com/dataset\_challenge/},
-reviews were randomly selected from 900940 positive reviews (rated 5/5)
-and 260492 negative reviews(rated 1/5). Most reviews consist of more than one sentence.
+reviews were randomly selected from 900940 positive reviews (rating the business 5/5)
+and 260492 negative reviews(rating the business 1/5).%Most reviews consist of more than one sentence.
 
 Based on an underlying assumption that positive reviews consist predominantly of more
 positive than negative language, and vice versa for negative reviews,
 sentences were labeled as positive or negative depending on what review they originated from.
 
-These reviews were used to train classifiers.
+These reviews were used to train and \emph{balance} classifiers.
 
 \subsubsection{Evaluation data: Sentiment labeled sentences}
 Yelp has a data set with 3216 positive and 1271 negative sentences labeled
@@ -809,22 +883,22 @@ according to their sentiment towards the the business in general.
 These were used to evaluate the sentiment classifiers.
 
 \subsection{Studied classifiers}
-To examine the effects of varying \ngram models and smoothing,
-three \ngram~classifiers with additive smoothing were developed, based on the
-probability definition in equation \ref{eq:additive_smoothing}.
+To examine the behavior of \ngram~models and the effects of smoothing,
+three \ngram~classifiers (unigram, bigram and trigram) with additive smoothing
+were developed, based on the probability definition in equation \ref{eq:additive_smoothing}.
 
-The classifiers were trained on 4'000 sentences from postive reviews
-and another 4'000 sentences from negative reviews.
+The classifiers were trained on 8'000 sentences from positive and negative reviews.
+
 As features, up to the 30'000 most common \ngram s were used\footnote{As table
-  \ref{tab:found_ngrams} shows, the unigram model only produces 8772 \ngram s,
-  in which case all of them were used.}. %todo balancing
+\ref{tab:found_ngrams} shows, the unigram model only produces 8772 \ngram s,
+in which case all of them were used.}. %todo balancing
 
 
 Two more classifiers were developed with interpolated smoothing, 
 
 The third classifier combines the above classifiers,
-\emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing}, with
-$(\lambda_2=\lambda_1=0.5)$.
+\emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing} (where
+$\lambda_2=\lambda_1=0.5)$ was found optimal).
 
 %Finally, for reference of what a production system can look like, Yelp's production classifier was included in results. It is based on a \emph{Modified Kneser-Ney}-smoothed language model.
 
@@ -864,7 +938,7 @@ $(\lambda_2=\lambda_1=0.5)$.
   \end{tikzpicture}
   \caption{Sentiment classifier precision vs. recall. Each dot represents a
     10\% increase in confidence threshold (starting with 1.0 at the left).}
-  \label{fig:sent_pr_curve}nn
+  \label{fig:sent_pr_curve} 
 \end{figure}
 
 
@@ -874,11 +948,15 @@ consistently better performance than the additively smoothed classifiers.
 More specifically \texttt{interpol3} also outperforms \texttt{interpol2}, which
 not surprisingly means that adding another model to the interpolation improves results.
 
-It can also be seen that lower order models generalize better, as when required to
-classify all samples, they perfom better than higher order models, whereas the higher
-order models exhibit higher confidence in a few samples and in turn have higher
-precision with lower recall.
 
+The same figure also shows how standalone \ngram~models perform for various values for $n$
+(\texttt{unigram}, \texttt{bigram} and \texttt{trigram}).
+Precision at full recall directly relates with the order of the model, as lower order
+models achieve slightly better performance than higher order models.
+However, when confidence thresholds are higher, as recall declines,
+higher order models perform better, which can be most clearly seen for the trigram model.
+
+Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the positive class, despite the efforts of balancing.
 
 \newpage
 
@@ -891,25 +969,28 @@ precision with lower recall.
       %title={Classifier performance per category},
       %xlabel={Categories},
       ylabel={Fraction of correctly classified},
-      ybar, ymin=0.5,
+      ybar, ymin=0.5, ymax=1,
       %bar width=20pt,
       xtick=data,
       x tick label style={rotate=45,anchor=east},
-      xticklabels from table={data/sent_unigram.csv}{l},
+      xticklabels from table={data/sent_pos.csv}{l},
       xticklabel style={text height=1.5ex},
       ymajorgrids=true,
       grid style=dashed,
       legend pos=south west,
     ]
-    \addplot table [x expr=\coordindex, y=p]{data/sent_yelp.csv};
-    %\addplot table [x expr=\coordindex, y=p]{data/sent_unigram.csv};
+    %\addplot table [x expr=\coordindex, y=p]{data/sent_yelp.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/sent_pos.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/sent_neg.csv};
     %\addplot table [x expr=\coordindex, y=p]{data/sent_bigram.csv};
     %\addplot table [x expr=\coordindex, y=p]{data/sent_interpol.csv};
-    \legend{\ysc, unigram, bigram, interpolated}
+    \legend{
+      positive
+    }
   \end{axis}
   \end{tikzpicture}
-  \caption{Perfomance of classifiers per class. No thresholds(recall=1)}
-  \label{fig:sent_per_cat}
+  \caption{Performance of classifiers per class. No thresholds(recall=1)}
+  \label{fig:sent_bias}
 \end{figure}
 
 
@@ -927,37 +1008,56 @@ precision with lower recall.
   \label{tab:found_ngrams}
 \end{table}
 
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c |}
+    \hline
+    \textbf{Model} & \textbf{Avg. Accuracy}\\ \hline
+    Gaussian Naive Bayes & todo\\
+    Multinomial Naive Bayes & todo \\
+    Bernoulli Naive Bayes & todo \\
+    Logistic regression & todo \\
+    SGDClassifier & todo \\
+    SVC & todo \\
+    LinearSVC  & todo \\
+    NuSVC & todo \\
+    \hline
+  \end{tabular}
+  \caption{Performance of other classifiers at full recall.}
+  \label{tab:found_ngrams}
+\end{table}
+
 \subsection{Per class}
 todo
-
-\subsection{Notable examples}
-TODO: Table with number of failures per classifier.
-
-Examples of where \ysc~succeeds but my classifiers fail, use to speculate about smoothing.
 
 
 \newpage
 \section{Discussion}
+Of the most important results shown in Figure \ref{fig:sent_pr_curve}
+is the effectiveness of smoothing.
+Prior to smoothing, I tried various ways of sampling \ngram~s, stemming, lemmatization, stop-lists and entropy estimation of individual \ngram s with little to very little gain.
 
-One of the most imporant results shown in Figure \ref{fig:sent_pr_curve}
-is that feature selection is not in itself deteriming performance.
-Which can be concluded from the interpolated classifier being supperior,
-and from the unigram and bigram model comparison depending on recall.
+None of the things tested for feature selection resulted in consistent performance gain
+like smoothing, where even one of the most basic methods increased performance by around 
 
-The fact that the unigram model performs better than the bigram model at full recall,
-but that the bigram model is better at confidence $>80\%$,
-indicates that the unigram model generalizes better and
-that the bigram model has higher confidence in results that align well with the model,
-which confirms premises that has motivated previous studies of smoothing.
 
-It should be noted that the comparison between \ysc~and the other models is unfair, since the \ysc~has been trained on more data and has been rigurously tested and reviewed. It is solely included to give perspective on performance of the simpler models.
 
-Figure \ref{fig:sent_per_cat} shows all classifiers have a slight bias towards the positive class despite down-sampling training data to be equal. I believe that this is due to positive reviews being more expressive of sentiment. It could arguably be a desired property for real world applications as real data has an even larger positive bias, which makes statistical models align better with reality. There may also be a social benefit of this positive bias.
+The same figure also shows how \ngram~models perform for various values for $n$.
+As shown, the performance at full recall directly relates to the order of the
+\ngram~model, but that
 
-% todo reconfirm^
+
+
+%It should be noted that the comparison between \ysc~and the other models is unfair, since the \ysc~has been trained on more data and has been rigurously tested and reviewed. It is solely included to give perspective on performance of the simpler models.
+
+
+
+The slight bias seen in \ref{fig:sent_bias} does not worry me too much.
+I believe this is due to positive reviews being more expressive of sentiment. It could arguably be a desired property for real world applications as real data has an even larger positive bias, which makes statistical models align better with reality. There may also be a social benefit of this positive bias.
+
 
 \subsection{Further improving results}
-I am convinced that exploring smoohting further, and in particular Modified Kneser-Ney,
+I am convinced that exploring smoothing further, and in particular Modified Kneser-Ney,
 is a reliable way of further improving sentiment classification results. I did not included the
 mathematical representations of this smoothing because there are open sourced implementations
 that are probably worthwhile looking into. However, readers who are interested will not
@@ -977,12 +1077,8 @@ various ways of combining different classification methods in a voting system.
 
 
 \subsection{\ngram~model shortcomings}
-\subsubsection{Subjective and objective sentiments}
-Sentiment can be derived in various ways. \emph{``I disliked the taste of my coffee''} is an example of a sentence subjective sentiment. Subjective sentiments may per definition not apply to everyone.
+Although \ngram~language models clearly are powerful, they have some shortcomings
 
-Sentiment can also be derived from objective sentences: \emph{``the toilet seat was broken''} clearly implies negative sentiment as \emph{broken} is an unquestionably negative property for a toilet. Most sentences are somewhere in between subjective and objective, e.g. the sentence ``the portion size was small'' is of objective nature, but holds a subjective definition of \emph{small portion size}.
-
-Just as objective sentences can hold sentiment, subjective sentences may not, as ``I thought the ''
 
 
 \subsubsection{Further work}
@@ -1028,27 +1124,30 @@ classification with evenly distributed classes, a classifier that favors one cla
 always chooses the same class, still achieves around 0.5 precision since the number of true positives
 would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
 in the binary case, since any classifier performing consistently worse could be modified to return the
-opposite and thus have the inverse precision.}. This also illustrates that there is a dependency between
-precision of biased classifiers and distribution of classes in test data.
+opposite and thus have the inverse precision which would be better.}.
+If the evaluation data is also biased towards the same class, that classifier will get even
+higher precision, which illustrates how important it is to examine classifier
+bias and data distribution.
 
-A commonly employed and simple way to solve problems with disproportionate data altogether is to exclude all but an equal amount from each class to artificially balance the class distribution, also sometimes referred to as \emph{down-sampling}\cite{provost2000machine}. This could pose a problem if data is very skewed, as this means that the required amount of data is effectively multiplied by the fraction of the least common class. However, in this work the data was not skewed enough to consider more sophisticated other approaches.
+A commonly employed and simple way to solve problems with disproportionate data
+is to exclude all but an equal amount from each class to artificially balance the class distribution,
+more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
+This could pose a problem if data is very skewed, as this means that the required
+amount of data is effectively multiplied by the fraction of the least common class.
+However, in this work the data was not skewed enough to motivate studies of more
+complicated approaches.
 
-Although artificially balanced evaluation data eliminates bias in evaluations, which makes evaluations between classifiers more comparable, it also reduces the amount of entries used for evaluation, which makes evaluations less informed. Therefore this report will evaluate unscaled data once classifiers have been verified to be reasonably unbiased in a per class comparison.
+Although down-sampling eliminates bias in evaluations, which makes evaluations between
+classifiers more comparable, it also reduces the amount of entries used in evaluations.
+Therefore this report will evaluate unscaled data once classifiers have been verified to be reasonably
+unbiased in a per class comparison.
 
 \section{Experiment setup}
-For these experiments, Yelp reviews from the \category were manually annotated in various ways.
-
-\numAnnotated~sentences were manually annotated on the sentence level and divided into three parts: Training, testing and evaluation. During development the first two parts of the data-set were made available, whereas the evaluation set of sentences was kept separately to ensure reliable results. To ensure impartialness of methods and increase reliability of results, the only output allowed from the evaluation data set was strictly restricted to summaries of results (i.e. no individual results were presented with their outcome)\ifhasStudiedFailures, except for when failing instances were explicitly studied after method development was finished\fi.
+For these experiments, Yelp reviews from the \category were manually annotated
 
 \newpage
 \subsection{Getting data}
 \label{subsec:getting_data}
-\begin{figure}[h]
-  \centering
-  \fbox{\includegraphics[width=10cm]{annotate_sentence.png}}
-  \caption{Sentence level annotation interface}
-  \label{fig:annotate_sentence}
-\end{figure}
 
 \begin{figure}[h]
   \centering
@@ -1057,7 +1156,11 @@ For these experiments, Yelp reviews from the \category were manually annotated i
   \label{fig:annotate_aspect}
 \end{figure}
 
-Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the interface that was developed to annotate on the \emph{sentence level} and \emph{aspect level} respectively. This simple web-interface was served by a local web server and could be accessed by multiple users simultaneously.
+Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
+according to their group and sentiment.
+
+This simple web-interface was served by a local web server.
+
 
 
 \begin{figure}[t]
@@ -1090,7 +1193,7 @@ Figures \ref{fig:annotate_sentence} and \ref{fig:annotate_aspect} show the inter
 
 \section{Aspect clustering}
 \subsection{Using graph search}
-Based on the observation that there are usually key words in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
+Based on the observation that there are usually keywords in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
 
@@ -1102,7 +1205,10 @@ This method to categorize individual words, can then be extended to categorize f
 \subsubsection{Voting heuristic}
 The heuristic is given a sentence, and is supposed to decide on a cluster for the entire sentence. To do this, it can use the above described setup to query for the category of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches the sentence word senses, decreasing in length, starting with the assumption that the full sentence is one word begin.
 
-Next, the map built using the word relation search was queried for the category of each word sense. The result of each query is not only which category, but also the distance $d$ from the word sense to the category. This was then combined into one score using the following scheme:
+Next, the map built using the word relation search was queried for the category
+of each word sense. The result of each query is not only which category is nearest,
+but also the distance $d$ from the word sense to the category.
+This was then combined into one score using the following scheme:
 
 \begin{equation} \label{eq:heruistic}
   category(s) =
@@ -1113,15 +1219,19 @@ Next, the map built using the word relation search was queried for the category 
 \begin{equation} \label{eq:heruistic_d}
   categoryScore(w, k) =
   \begin{cases}
-    max(d_*) - d_k(w) + 1, & \text{if}\ d_k(w) < d_{\,!k}(w)\\
+    max(d_*) - d_k(w) + 1, & \text{if}\ k \text{ is the nearest class}\\
     0, & \text{otherwise}
   \end{cases}
 \end{equation}
 
-where $d_k(w)$ is the distance from the word sense $w$ to its nearest category and $d_*$ is the biggest distance for any word to its nearest category.
+where $d_k(w)$ is the distance from the word sense $w$
+to its nearest category and $d_*$ is the highest distance any word in the sentence
+has to its nearest category(making the category score for worst scored word in the sentence 1).
 
-This way, a three word sentence with distances $d_A(w_1)=4$, $d_A(w_2)=6$ and $d_B(w_3)=3$, will receive the scores $A=3+1$ and $B=4$, and thus category $A$ would be selected.
-
+This way, for a three word sentence $s=w_1w_2w_3$ with the nearest distances
+$d_A(w_1)=4$, $d_A(w_2)=6$ and $d_B(w_3)=3$,
+the categories will receive the scores $A=3+1+0$ and $B=0+0+4$, and the highest scoring category $A$
+would be selected.
 
 \begin{table}[t]
   \centering
@@ -1129,9 +1239,9 @@ This way, a three word sentence with distances $d_A(w_1)=4$, $d_A(w_2)=6$ and $d
     \hline
     \textbf{Category} & \textbf{Predefined keywords}\\ \hline
     Establishment & \emph{Furniture, view, music, loud, appearance, clean, location}\\ \hline
-    Product & \emph{food, taste, edible}\\ \hline
+    Product & \emph{food, drink, taste, edible}\\ \hline
     Value & \emph{Cheap, price, dollar, buck, lots, bargain}\\ \hline
-    Service & \emph{Service, quick, attentive}\\ \hline
+    Service & \emph{Service, quick, attentive, wait}\\ \hline
   \end{tabular}
   \caption{Categories with their pre-associated key words.}
   \label{cat_words}
@@ -1250,7 +1360,10 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 %  \label{fig:per_cat}
 %\end{figure}
 
-Section \ref{subsec:bias} introduced bias in data, along with some of its consequences, which motivated a more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on balanced training data perform much more consistent between classes.
+Section \ref{subsec:bias} introduced bias in data, along with some of its
+consequences which motivated a more detailed study of classifier results on
+a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
+down-sampled training data perform much more consistent between classes.
 
 Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
@@ -1322,7 +1435,7 @@ There are however a few reasons why the results should be interpreted with cauti
 
 I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
 
-Another important thing to keep in mind about my results are that with such a small data-set, there is a risk of methods becoming too specific toward the training data. This is often discussed in statstical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heurisic perform better than it would in general.
+Another important thing to keep in mind about my results are that with such a small data-set, there is a risk of methods becoming too specific toward the training data. This is often discussed in statistical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heuristic perform better than it would in general.
 
 
 
@@ -1336,32 +1449,21 @@ Another important thing to keep in mind about my results are that with such a sm
 % ``place is really small and seemed kinda dirty''
 
 
-%\chapter{Conclusions}
-%\section{Aspect clustering}
-
-\chapter{Conclusions}
-This report has introduced problems and basic approaches known to work for opinon mining.
-
-\subsection{Sentiment classification is not only about feature selection}
-\loremipsum
-\subsection{}
-
-
-\chapter{Lessons learned}
-\subsection{Data annotation}
-A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected.
-
-First of all, deciding to do it on the on the aspect level introduced some confusion as to how annotation should be done. As an example, in the sentence \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence annotated as both \emph{service} and \emph{product}?
-
-After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
-
-However, this process of finding out how to annotate sentences took a few tries before a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
-
-\subsection{Know your data}
-
-\subsection{It is not all about feature selection}
-
-% todo: what I learned
+%\chapter{Lessons learned}
+%\subsection{Data annotation}
+%A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected.
+%
+%First of all, deciding to do it on the on the aspect level introduced some confusion as to how annotation should be done. As an example, in the sentence \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence annotated as both \emph{service} and \emph{product}?
+%
+%After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
+%
+%However, this process of finding out how to annotate sentences took a few tries before a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
+%
+%\subsection{Know your data}
+%
+%\subsection{It is not all about feature selection}
+%
+%% todo: what I learned
 
 
 \bibliographystyle{plain}
