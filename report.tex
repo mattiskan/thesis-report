@@ -124,12 +124,16 @@ Imagine being in charge of making improvements to a big business chain. How woul
 Customer feedback could certainly help with decisions, but traditional methods such as surveys or interviews
 require planning and resources. With increased internet usage, it is likely that the answers you need already
 are available online, but for big business chains there could easily be tens of thousands of reviews ---
-far more than a human reader can process. Thus there is incentive to use computers as aid to organize and
-visualize large quantities of opinions.
+far more than a human reader can process. Thus there is incentive to use computers as aid to organize, summarize and visualize large quantities of opinions.
 
-This report introduces required theory, describes on a technical level how to develop a system that
-mines opinions to produce comparable summaries, and provides detailed studies of a two concepts
-shown to improve results; \emph{smoothing} and \emph{down-sampling}.
+Not only could programmatically generated summaries of 
+
+
+This report introduces required theory, describes on a technical level accessible to computer scientists
+not directly familiar with natural language processing how to develop a system that
+mines opinions to produce comparable summaries. Included are also more detailed studies of a two concepts
+shown to directly improve results: \emph{Smoothing} and \emph{down-sampling}.
+
 
 
 \section{System overview}
@@ -140,8 +144,8 @@ and their \emph{semantic orientation} (positive or negative).
 The goal for the produced summary is to contain everything required to draw conclusions about opinions
 and to enable future work to create interactive visualizations.
 
-To accomplish this, three problems are introduced. This chapter will make a few definitions, and then go on to
-describe each problem briefly. Finally some shared theory will be introduced.
+To accomplish this, three tasks are introduced. This chapter will make a few definitions, and then go on to
+describe each task briefly. Finally some shared theory will be introduced.
 
 
 
@@ -179,17 +183,17 @@ Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; 
 
 \pagebreak
 
-\section{Introduction of problems}
-Solutions to the following three problems will be the basis for our system.
+\section{Introduction of tasks}
+Solutions to the following three tasks will be the basis for our system.
 Below they are briefly introduced with the most important findings in this work and references
 to subsequent chapters, where they are studied individually and in more detail.
 
 The reader is advised to look at figure \ref{fig:overview}; which aims to
-give an overview of how the problems relate to one another.
+give an overview of how the tasks relate to one another.
 
 \subsection{Aspect extraction}
 Before anything else can be done, opinions need to be found and extracted from documents.
-This is studied in chapter \ref{sec:aspect_extraction}, where the problem is described in more detail,
+This is studied in chapter \ref{sec:aspect_extraction}, where the task is described in more detail,
 and a simple solution is introduced.
 
 The introduced solution is shown to achieve somewhat mediocre results, but estimates indicate
@@ -200,7 +204,7 @@ to use in case data is limited are introduced.
 
 
 \subsection{Sentiment classification}
-Sentiment classification is the problem of deciding whether sentiment in text is positive, negative or neutral.
+Sentiment classification is the task of deciding whether sentiment in text is positive, negative or neutral.
 
 Chapter \ref{sec:sentiment_classification} introduces \ngram~language models and how they can be used
 to classify sentiment. \emph{Smoothing} is also introduced studied in depth in this section.
@@ -242,13 +246,14 @@ is typically divided into three levels of granularity:
 
 On the \emph{document-level}, an entire review would be classified for
 its overall-sentiment value\cite[Chapter~1.2]{liu2012sentiment}.
-Although this may introduce difficulties with contradicting sentiments
+Although this may introduce difficulties with different sentiments
 and largely varying document lengths, the fact that the document-level usually holds more information
 means it is usually slightly simpler than the other levels.
 
 The \emph{sentence-level} can still hold contradicting sentiments,
 \emph{e.g. ``I love this restaurant even though the service is terrible''},
-but this risk is mitigated due to sentences being shorter than their documents.
+but this risk of multiple sentiments that are different is smaller in sentences
+since they are shorter than full documents.
 
 To fully address the issue identifying exactly what people liked,
 sentiment classification has to be done on the \emph{aspect-level}.
@@ -296,7 +301,7 @@ Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
 
 \chapter{Aspect extraction}
 
-\section{Problem definition}
+\section{Task definition}
 Aspect extraction is the task of finding and outputting sentiment carrying expressions
 with identified \emph{targets}. A target is either some aspect of the entity that is
 subject to the sentiment, or the entity in its entirety. E.g. in the sentence
@@ -315,7 +320,7 @@ In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu
 \item Extraction using topic modeling
 \end{enumerate}
 In this work only the first kind is employed, and results will show it sufficiently
-effective to motivate focusing on the other problems.
+effective to motivate focusing on the other tasks.
 
 \subsection{A data dependent task}
 Like other data extraction tasks, aspect extraction is largely dependent on the data
@@ -540,7 +545,7 @@ it is hard to definitely tell.
 On average, around 2.7 aspects per review are found, which may not sound like a lot 
 but for entities with lots of reviews it is enough:
 
-Later in this work when we study aspect clustering, figure \ref{fig:cat_count}
+Later in this work when aspect clustering is studied, figure \ref{fig:cat_count}
 will show that the least common category, \emph{value}, represents around
 10\% of all aspects.
 
@@ -612,7 +617,7 @@ Something I have come across and which should be pruned is mentions of other bus
 in reviews. Although a sentence like
 \emph{``I recommend this place over Alfredo's across the street, because their pizza tastes like rubber.''}
 although perfectly reasonable in a review, the system will inaccurately discredit
-the evaluated business for having rubber-like pizza.
+the evaluated business for its neighbour's rubber-like pizza.
 
 Pruning these mentions should be reasonably simple using \emph{named entity extraction}, where named
 entities found could be compared to the name of the business under review and if not matching,
@@ -632,7 +637,7 @@ with a token value which likely will improve performance of language models in f
 
 
 \chapter{Sentiment Classification}
-Sentiment classification is the problem of deciding whether sentiment in a sentence
+Sentiment classification is the task of deciding whether sentiment in a sentence
 is positive, negative or neutral\cite{nlp_book}.
 
 %Sentiment classification can also be regression analysis problem\cite{liu2012sentiment}, depending on whether results are expected to be discrete class-labels or a continuous measures of positively. In this report the discrete classification definition will be used unless otherwise specified.
@@ -698,11 +703,18 @@ out of all bigrams with the same first word.
 
 %\subsection{Why \ngram~s?}
 %There are several early studies using publicly available \emph{sentiment lexicons},
-%corpora of words with associated sentiment scores.
+%which are corpora of words with associated sentiment scores.
 %Readers may be tempted to use such corpora to for 
 %
-%Human language is full of 
-%
+%Human language is full of
+
+\subsection{Properties of different \ngram~lengths}
+
+The length of \ngram s most definitely impact the behaviour of the model.
+To illustrate, consider the sentence ``incredibly cheap owners''.
+
+Althroug the sentence is clearly negative, a unigram model may assign it positive sentiment,
+%todo
 
 \section{Smoothing language models}
 A common problem when statistically modeling based on existing data,
@@ -739,7 +751,7 @@ where $0 < \alpha \leq 1$ is commonly used. The case when $\alpha=1$ is also cal
 \subsection{Interpolated smoothing}
 Although additive smoothing addresses unseen data, there are other models that give more accurate estimations.
 
-\emph{Interpolated smoothing} is S. F. Chen and J. Goodman way of combining models of various complexities,
+\emph{Interpolated smoothing} is S. F. Chen and J. Goodman's way of combining models of various complexities,
 in this case multiple \ngram~models with different lengths. In interpolation, the probabilities of each model are summed, usually weighted so higher complexity models are given more influence\cite{chen_goodman}.
 Below is an example of what most interpolated smoothing approaches look like for bigrams:
 \begin{equation}\label{eq:interpolated_smoothing}
@@ -789,7 +801,8 @@ selecting the model assigning the highest probability. This is in fact what many
 could be viewed as a Naive Bayes classifier with only one class(prior=1).)
 
 \subsection{Choosing a level of analysis}
-Sentence level. Less than 2\% of sentences with multiple opinions had contradicting sentiments.
+\label{subsec:sentence_contradictions}
+Less than 2\% of sentences with multiple opinions had both positive and negative sentiments.
 Furthermore, out of those sentences, X\% were pruned due to sentiment classification falling under the
 confidence threshold.
 
@@ -1103,7 +1116,7 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 
 
 \chapter{Aspect Clustering}
-So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which introduces a new problem: How can these aspects with known sentiments be combined into an adequate summary?
+So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which introduces a new task: How can these aspects with known sentiments be combined into an adequate summary?
 
 The first and most important observation is that even if we find a statement and accurately identify it as a positive mention on something, it is not enough to merit a conclusion. Opinions are per definition subjective, and should individually be considered unreliable. However, as the number of processed opinions increase, so does confidence in conclusions that are based on them.
 
@@ -1114,7 +1127,7 @@ This is task is defined as \emph{aspect clustering}, or in some work \emph{aspec
 
 \subsection{Skewed data}
 \label{subsec:bias}
-When dealing with real world data, it is possible that some classes in classification problems are more
+When dealing with real world data, it is possible that some classes in classification tasks are more
 common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
 and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
 classes\cite{rennie2003bias, svm_bias}.
@@ -1161,8 +1174,6 @@ according to their group and sentiment.
 
 This simple web-interface was served by a local web server.
 
-
-
 \begin{figure}[t]
   \centering
   \begin{tikzpicture}
@@ -1197,12 +1208,12 @@ Based on the observation that there are usually keywords in a sentence with lexi
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
 
-\subsubsection{The algorithm}
+\subsection{The algorithm}
 A \gls{BFS}(BFS) is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are acquired using word relations defined by \gls{jaws}). Each word sense is also mapped to its source category in this process to allow for quick look-ups.
 
 This method to categorize individual words, can then be extended to categorize full sentences using heuristics.
 
-\subsubsection{Voting heuristic}
+\subsection{Voting heuristic}
 The heuristic is given a sentence, and is supposed to decide on a cluster for the entire sentence. To do this, it can use the above described setup to query for the category of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches the sentence word senses, decreasing in length, starting with the assumption that the full sentence is one word begin.
 
 Next, the map built using the word relation search was queried for the category
@@ -1325,10 +1336,10 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram_unbalanced.csv};
     \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram.csv};
     \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram_unbalanced.csv};
-    \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
+    \legend{Down-sampled unigram, Unmodified unigram, Down-sampled bigram, Unmodified bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Balanced vs. unbalanced classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
+  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
   \label{fig:per_cat}
 \end{figure}
 
