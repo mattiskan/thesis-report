@@ -133,19 +133,13 @@ large quantities of opinions.
 \begin{figure}[t]
   \centering
   \fbox{\includegraphics[width=12cm]{review_example.png}}
-  \caption{\textbf{Sample review.} This review expresses negative opinions of the
-    atmosphere(loud music), mixed but mostly negative opinions about the food,
-    and positive mentions of the service at the restaurant.
-    Review was publicly available and taken from yelp.com.}
-  \label{fig:overview}
+  \caption{Sample review with clearly expressed opinions.}
 \end{figure}
-
 
 This report introduces required theory, describes on a technical level accessible to computer scientists
 not directly familiar with natural language processing how to develop a system that
 mines opinions to produce comparable summaries. Included are also more detailed studies of a two concepts
 shown to directly improve results: \emph{Smoothing} and \emph{down-sampling}.
-
 
 
 \section{System overview}
@@ -283,30 +277,8 @@ which may seem as an intrusive simplification, which is why it is
 further discussed and motivated in section \ref{subsec:sentence_contradictions}.
 
 
-\section{Evaluation}
-A common way to evaluate information retrieval tasks is \emph{precision} and \emph{recall}. Together they evaluate a systems ability to retrieve results, by evaluating the capacity to exclude irrelevant results, and include relevant results, respectively.
-
-\subsection{Precision}
-Precision is a measure of what fraction of retrieved results are considered relevant or correct.
-
-It is defined as follows:
-\begin{equation} \label{eq:precision}
-Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
-\end{equation}
-
-\subsection{Recall}
-In this work, confidence thresholds are used to examine whether better results can be achieved by
-allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
-the precision denominator, as they are not considered to be classified.
-Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
-
-\begin{equation} \label{eq:recall}
-Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
-\end{equation}
 
 %\subsection{Perplexity}
-
-
 
 
 
@@ -400,6 +372,8 @@ from either words or word-classes to those aspect tokens.
 %would increase confidence in rules like \{\emph{easy}, \texttt{<VB>}\} $\rightarrow$ <aspect> amongst others.
 
 
+
+
 \section{Extracting aspects}
 \subsection{Candidate Identification}
 A simple aspect extractor was developed. Given a review, much like Turney's pattern extraction,
@@ -426,7 +400,7 @@ This also aligns well with understanding of the English language, where several 
 like ``tooth brush'', usually still represent only one entity, and thus does not change
 the meaning of the pattern itself.
 
-With this in mind, an experiment was developed where patterns were extended to allow
+With this in mind, an experiment was set up where patterns were extended to allow
 multiple words of same word-class in sequence wherever a noun(\texttt{<NN>+})
 or adjective(\texttt{<JJ>+}) occurred.
 This experiment is called \texttt{Modified patterns} in the results, as opposed to
@@ -434,13 +408,31 @@ the original \texttt{Unmodified patterns}.
 
 \subsection{Pruning}
 The only pruning applied in this work comes as a side effect of the methods introduced
-in the other two chapters, sentiment classification and aspect grouping.
+in the other two chapters, sentiment classification and aspect grouping, and the
+confidence thresholds that they allow.
 
 In both chapters, confidence thresholds are introduced as a means of increasing
 precision at the cost of recall, and the aspects that fall under the confidence threshold
-are effectively being pruned.
+are effectively being pruned. Please note that results in this chapter are presented
+before any pruning has been done, as the pruning process is intimitely related
+to the other two tasks.
 
-%In section \ref{subsec:suggested_pruning} feasible pruning methods are discussed further.
+%In section \ref{subsec:suggested_pruning} pruning methods are discussed further.
+
+\subsection{Evaluating extraction performance}
+% todo
+Information retrieval tasks are often evaluated with two capabilities in particular
+in mind, namely the capabilities of excluding irrelevant results and including relevant ones.
+These are formally introduced later as \emph{precision} and \emph{recall} in
+section \ref{sec:precision_recall}, but for this section an informal definition should be sufficient.
+
+The way tasks are divided in this work, with further pruning subsequently done in
+the later tasks, one of the most important questions for aspect extraction is
+\emph{will it find enough candidates to for a reasonable summary?}
+
+Therefore, 
+
+
 
 
 \newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
@@ -489,7 +481,9 @@ are effectively being pruned.
     \texttt{<RB><VBN>} & 2 & \emph{``Reasonably priced''}\\
     \hline
   \end{tabular}
-  \caption{Patterns found when annotating and how frequent they were.}
+  \caption{Patterns found when annotating and how frequent they were.
+    For a complete list of the word classes used in the patterns, see Appendix \ref{TODO}.
+  }
   \label{tab:used_pos}
 \end{table}
 
@@ -522,7 +516,12 @@ are effectively being pruned.
     }
   \end{axis}
   \end{tikzpicture}
-  \caption{Distribution of how many aspects were found in  reviews.}
+  \caption{Distribution of how many aspects were found in  reviews.
+    The height of each bar represents in how many out of 10'000 reviews exactly $n$
+    aspects were found, where $n$ is the column of the bar. Thus, each bar represents
+    $n$ times as many aspects as its height. E.g. the second column, with just over 1,600
+    reviews, represents twice as many aspects.
+  }
   \label{fig:extr_count}
 \end{sidewaysfigure}
 
@@ -533,8 +532,8 @@ are effectively being pruned.
 Out of 10'000 reviews, a total of 27'656 aspects were found using the modified patterns
 and 26'766 using the original patterns.
 Figure \ref{fig:extr_count} shows the distribution of reviews and the number of
-found aspects. The figure has been cut at 13 reviews, but it continues up to 23 reviews
-with 
+found aspects. The figure has been cut at 21 reviews, but two reviews had as many
+as 22 and 23 aspects found in them, respectively.
 
 Note that the graph does not show how many aspects were found,
 but in how many reviews a certain number of were found, which means that for the
@@ -571,6 +570,9 @@ Especially as in practice review comparisons are likely going to be done for
 business chains which can have 10'000 reviews or more.
 
 \subsection{Evaluation of aspect extraction}
+
+
+
 The results in this section are a bit vague, but there is a reason for this.
 Common practice in information retrieval is to use precision as a measure of
 quality, however, this requires a clear definition of what is relevant.
@@ -602,10 +604,10 @@ The opinion should be picked so that it represents the majority of
 sentiments expressed towards that aspect group.
 
 The results in this section do not have the aspect groups associated with them,
-but an lower bound as to how many aspects can be kept in the worst case
+but an absolute lower bound to how many aspects can be kept in the worst case
 is found by simply discounting all but one aspect from each review. This is the same
 as summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
-exact sum is 7851.
+exact sum is 7851, or equally 7.85\% of reviews.
 
 That being said, it is probably OK and even preferred to allow a few more opinions per review,
 but an upper limit can make sure that a one or a few rigged reviews will not compromise results.
@@ -719,6 +721,9 @@ out of all bigrams with the same first word.
 %Readers may be tempted to use such corpora to for 
 %
 %Human language is full of
+
+
+
 
 \subsection{Properties of different \ngram~lengths}
 
@@ -923,7 +928,7 @@ Two more classifiers were developed with interpolated smoothing,
 
 The third classifier combines the above classifiers,
 \emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing} (where
-$\lambda_2=\lambda_1=0.5)$ was found optimal).
+$\lambda_2=\lambda_1=0.5$ was found optimal).
 
 %Finally, for reference of what a production system can look like, Yelp's production classifier was included in results. It is based on a \emph{Modified Kneser-Ney}-smoothed language model.
 
@@ -1120,6 +1125,9 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 % You would think their exorbitant prices would at least buy some decent customer service.
 % other restaurants!!!!!
 
+% food is good ole american
+
+
 % Comparative opinions, PRUNE.
 
 
@@ -1136,80 +1144,6 @@ As a consequence, four positive mentions of ``steak'' may not be enough for a co
 
 This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
 
-
-\subsection{Skewed data}
-\label{subsec:bias}
-When dealing with real world data, it is possible that some classes in classification tasks are more
-common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
-and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
-classes\cite{rennie2003bias, svm_bias}.
-
-Not only classification methods, but also precision measures are affected by skewed data. In binary
-classification with evenly distributed classes, a classifier that favors one class to the extreme that it
-always chooses the same class, still achieves around 0.5 precision since the number of true positives
-would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
-in the binary case, since any classifier performing consistently worse could be modified to return the
-opposite and thus have the inverse precision which would be better.}.
-If the evaluation data is also biased towards the same class, that classifier will get even
-higher precision, which illustrates how important it is to examine classifier
-bias and data distribution.
-
-A commonly employed and simple way to solve problems with disproportionate data
-is to exclude all but an equal amount from each class to artificially balance the class distribution,
-more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
-This could pose a problem if data is very skewed, as this means that the required
-amount of data is effectively multiplied by the fraction of the least common class.
-However, in this work the data was not skewed enough to motivate studies of more
-complicated approaches.
-
-Although down-sampling eliminates bias in evaluations, which makes evaluations between
-classifiers more comparable, it also reduces the amount of entries used in evaluations.
-Therefore this report will evaluate unscaled data once classifiers have been verified to be reasonably
-unbiased in a per class comparison.
-
-\section{Experiment setup}
-For these experiments, Yelp reviews from the \category were manually annotated
-
-\newpage
-\subsection{Getting data}
-\label{subsec:getting_data}
-
-\begin{figure}[h]
-  \centering
-  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
-  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
-  \label{fig:annotate_aspect}
-\end{figure}
-
-Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
-according to their group and sentiment.
-
-This simple web-interface was served by a local web server.
-
-\begin{figure}[t]
-  \centering
-  \begin{tikzpicture}
-
-  \begin{axis}[
-      %title={Classifier performance per category},
-      %xlabel={Categories},
-      ylabel={Number of aspects},
-      ybar, ymin=0,
-      %bar width=20pt,
-      xtick=data,
-      x tick label style={rotate=45,anchor=east},
-      xticklabels from table={data/category_distribution.csv}{category},
-      xticklabel style={text height=1.5ex},
-      ymajorgrids=true,
-      grid style=dashed,
-      legend pos=north east,
-    ]
-    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
-  \end{axis}
-  \end{tikzpicture}
-  \caption{Number of annotated sentences per category}
-  \label{fig:cat_count}
-\end{figure}
 
 
 \newpage
@@ -1267,7 +1201,7 @@ would be selected.
     Service & \emph{Service, quick, attentive, wait}\\ \hline
   \end{tabular}
   \caption{Categories with their pre-associated key words.}
-  \label{cat_words}
+  \label{tab:cat_words}
 \end{table}
 
 \begin{figure}[t]
@@ -1279,8 +1213,112 @@ would be selected.
 
 \clearpage
 
-% todo: annotations interface screenshot
 % todo: num sentences table
+
+
+\section{Evaluation}
+\label{sec:precision_recall}
+A common way to evaluate information retrieval tasks is \emph{precision}
+and \emph{recall}. Together they evaluate a systems ability to retrieve results,
+by evaluating the capacity to exclude irrelevant results,
+and include relevant results, respectively.
+
+\subsection{Precision}
+% todo: accuracy
+Precision is a measure of what fraction of retrieved results are considered relevant or correct.
+
+It is defined as follows:
+\begin{equation} \label{eq:precision}
+Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
+\end{equation}
+
+\subsection{Recall}
+In this work, confidence thresholds are used to examine whether better results can be achieved by
+allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
+the precision denominator, as they are not considered to be classified.
+Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
+
+\begin{equation} \label{eq:recall}
+Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
+\end{equation}
+
+
+\newpage
+\subsection{Getting data}
+\label{subsec:getting_data}
+
+\begin{figure}[h]
+  \centering
+  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
+  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
+  \label{fig:annotate_aspect}
+\end{figure}
+
+Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
+according to their group and sentiment.
+
+This simple web-interface was served by a local web server.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Number of aspects},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/category_distribution.csv}{category},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Number of annotated sentences per category}
+  \label{fig:cat_count}
+\end{figure}
+
+\clearpage
+
+
+\subsection{Skewed data}
+\label{subsec:bias}
+When dealing with real world data, it is possible that some classes in classification tasks are more
+common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
+and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
+classes\cite{rennie2003bias, svm_bias}.
+
+
+%todo 1/n
+Not only classification methods, but also precision measures are affected by skewed data. In binary
+classification with evenly distributed classes, a classifier that favors one class to the extreme that it
+always chooses the same class, still achieves around 0.5 precision since the number of true positives
+would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
+in the binary case, since any classifier performing consistently worse could be modified to return the
+opposite and thus have the inverse precision which would be better.}.
+If the evaluation data is also biased towards the same class, that classifier will get even
+higher precision, which illustrates how important it is to examine classifier
+bias and data distribution.
+
+A commonly employed and simple way to solve problems with disproportionate data
+is to exclude all but an equal amount from each class to artificially balance the class distribution,
+more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
+This could pose a problem if data is very skewed, as this means that the required
+amount of available data effectively is divided by the fraction of the least common class.
+However, in this work the data was not skewed enough to motivate studies of more
+complicated approaches.
+
+Although down-sampling eliminates bias in evaluations, which makes evaluations between
+classifiers more comparable, it also reduces the amount of entries used in evaluations.
+Therefore this report will evaluate using unscaled data once classifiers have been
+verified to be reasonably unbiased in a per class comparison.
+
 
 
 \section{Results}
@@ -1428,9 +1466,11 @@ Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the 
 \newpage
 
 \section{Graph-search classifier}
-The graph search found a total of 78'844 word senses.
+%todo NUM X
+The graph search found and categorized a total of 78'844 word senses, and as a reminder,
+these words are labeled solely using the $X$ predefined words from table \ref{tab:cat_words}.
 
-
+%todo notable failures?
 
 \section{Comparison of classifiers}
 \label{sec:comparison}
