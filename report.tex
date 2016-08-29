@@ -142,6 +142,21 @@ mines opinions to produce comparable summaries. Included are also more detailed 
 shown to directly improve results: \emph{Smoothing} and \emph{down-sampling}.
 
 
+% why group?
+%The first and most important observation is that even if we find a statement and
+%accurately identify it as a positive mention on something, it is not enough to merit a conclusion.
+%Opinions are per definition subjective, and should individually be considered unreliable.
+%However, as the number of processed opinions increase, so does confidence in conclusions that are based on them.
+%
+%As a consequence, four positive mentions of ``steak'' may not be enough for a conclusion,
+%but in combination with positive mentions on ``chicken'', ``turkey'',  and ``meatballs''
+%one may be able to conclude positive the common \gls{superword} \emph{meats}.
+%Or if more confidence is required, ``salads'' may be included under
+%the \gls{superword} \emph{food}, and so on.
+%
+
+
+
 \section{System overview}
 This report introduces a system, which given a set of opinion-rich documents produces a summary of these
 opinions, grouped by their \emph{opinion target} (the subject of the opinion)
@@ -628,9 +643,9 @@ to find.
 \subsection{Named Entity pruning}
 
 Something I have come across and which should be pruned is mentions of other businesses
-in reviews. Although a sentence like
+in reviews. A sentence like
 \emph{``I recommend this place over Alfredo's across the street, because their pizza tastes like rubber.''}
-although perfectly reasonable in a review, the system will inaccurately discredit
+, although perfectly reasonable in a review, will inaccurately discredit
 the evaluated business for its neighbour's rubber-like pizza.
 
 Pruning these mentions should be reasonably simple using \emph{named entity extraction}, where named
@@ -646,7 +661,393 @@ with a token value which likely will improve performance of language models in f
 % noun-phrases
 % couting patterns i.e. a, b, c, and/or d
 
-%%%%%%%%%% toss comparable opinions and NE
+%%%%%%%%%% toss comparing opinions and NE
+
+\chapter{Aspect Grouping}
+Thus far this work has introduced methodology for extracting aspects from text.
+Recall from the last chapter that aspects where yielded as noun phrases highly
+probable to contain an opinion. To compare opinions on a more detailed level,
+some attention has to be paid towards \emph{what} the opinion concerns.
+
+If the opinion target is identified, comparisons for that target are made possible.
+
+
+
+
+\vspace{3cm}
+This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
+
+
+\newpage
+
+\section{Grouping methodologies}
+\subsection{Using graph search}
+Based on the observation that there are usually keywords in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
+
+Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
+
+\subsubsection{The algorithm}
+A \gls{BFS}(BFS) is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are acquired using word relations defined by \gls{jaws}). Each word sense is also mapped to its source category in this process to allow for quick look-ups.
+
+This method to categorize individual words, can then be extended to categorize full sentences using heuristics.
+
+\subsubsection{Voting heuristic}
+The heuristic is given a sentence, and is supposed to decide on a cluster for the entire sentence. To do this, it can use the above described setup to query for the category of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches the sentence word senses, decreasing in length, starting with the assumption that the full sentence is one word begin.
+
+Next, the map built using the word relation search was queried for the category
+of each word sense. The result of each query is not only which category is nearest,
+but also the distance $d$ from the word sense to the category.
+This was then combined into one score using the following scheme:
+
+\begin{equation} \label{eq:heruistic}
+  category(s) =
+  \underset{k}{\text{argmax}}
+  \sum_{w \in s} categoryScore(w, k)
+\end{equation}
+
+\begin{equation} \label{eq:heruistic_d}
+  categoryScore(w, k) =
+  \begin{cases}
+    max(d_*) - d_k(w) + 1, & \text{if}\ k \text{ is the nearest class}\\
+    0, & \text{otherwise}
+  \end{cases}
+\end{equation}
+
+where $d_k(w)$ is the distance from the word sense $w$
+to its nearest category and $d_*$ is the highest distance any word in the sentence
+has to its nearest category(making the category score for worst scored word in the sentence 1).
+
+This way, for a three word sentence $s=w_1w_2w_3$ with the nearest distances
+$d_A(w_1)=4$, $d_A(w_2)=6$ and $d_B(w_3)=3$,
+the categories will receive the scores $A=3+1+0$ and $B=0+0+4$, and the highest scoring category $A$
+would be selected.
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c |}
+    \hline
+    \textbf{Category} & \textbf{Predefined keywords}\\ \hline
+    Establishment & \emph{Furniture, view, music, loud, appearance, clean, location}\\ \hline
+    Product & \emph{food, drink, taste, edible}\\ \hline
+    Value & \emph{Cheap, price, dollar, buck, lots, bargain}\\ \hline
+    Service & \emph{Service, quick, attentive, wait}\\ \hline
+  \end{tabular}
+  \caption{Categories with their pre-associated key words.}
+  \label{tab:cat_words}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \fbox{\includegraphics[width=10cm]{img/baklava_lex.png}}
+  \caption{Example showing how ``baklava'' could be lexicographically closer to category ``product'' than ``establishment''. Ellipses represent word senses, rectangles the relations between senses, and diamonds predefined categories with a few associated senses (in this case \emph{food} and \emph{location}).}
+  \label{fig:baklava_lex}
+\end{figure}
+
+\subsection{Machine learning classifiers}
+
+\todo
+warranted bias study
+
+\clearpage
+
+% todo: num sentences table
+
+
+\section{Evaluation}
+\label{sec:precision_recall}
+A common way to evaluate information retrieval tasks is \emph{precision}
+and \emph{recall}. Together they evaluate a systems ability to retrieve results,
+by evaluating the capacity to exclude irrelevant results,
+and include relevant results, respectively.
+
+\subsection{Precision}
+% todo: accuracy
+Precision is a measure of what fraction of retrieved results are considered relevant or correct.
+
+It is defined as follows:
+\begin{equation} \label{eq:precision}
+Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
+\end{equation}
+
+\subsection{Recall}
+In this work, confidence thresholds are used to examine whether better results can be achieved by
+allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
+the precision denominator, as they are not considered to be classified.
+Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
+
+\begin{equation} \label{eq:recall}
+Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
+\end{equation}
+
+
+\newpage
+\subsection{Getting data}
+\label{subsec:getting_data}
+
+\begin{figure}[h]
+  \centering
+  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
+  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
+  \label{fig:annotate_aspect}
+\end{figure}
+
+Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
+according to their group and sentiment.
+
+This simple web-interface was served by a local web server.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Number of aspects},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/category_distribution.csv}{category},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Number of annotated sentences per category}
+  \label{fig:cat_count}
+\end{figure}
+
+\clearpage
+
+
+\subsection{Skewed data}
+\label{subsec:bias}
+When dealing with real world data, it is possible that some classes in classification tasks are more
+common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
+and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
+classes\cite{rennie2003bias, svm_bias}.
+
+
+%todo 1/n
+Not only classification methods, but also precision measures are affected by skewed data. In binary
+classification with evenly distributed classes, a classifier that favors one class to the extreme that it
+always chooses the same class, still achieves around 0.5 precision since the number of true positives
+would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
+in the binary case, since any classifier performing consistently worse could be modified to return the
+opposite and thus have the inverse precision which would be better.}.
+If the evaluation data is also biased towards the same class, that classifier will get even
+higher precision, which illustrates how important it is to examine classifier
+bias and data distribution.
+
+A commonly employed and simple way to solve problems with disproportionate data
+is to exclude all but an equal amount from each class to artificially balance the class distribution,
+more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
+This could pose a problem if data is very skewed, as this means that the required
+amount of available data effectively is divided by the fraction of the least common class.
+However, in this work the data was not skewed enough to motivate studies of more
+complicated approaches.
+
+Although down-sampling eliminates bias in evaluations, which makes evaluations between
+classifiers more comparable, it also reduces the amount of entries used in evaluations.
+Therefore this report will evaluate using unscaled data once classifiers have been
+verified to be reasonably unbiased in a per class comparison.
+
+
+
+\section{Results}
+
+This chapter is laid out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
+
+
+\subsection{Machine learning classifiers}
+
+\begin{figure}[h]
+  \centering
+
+  \begin{tikzpicture}
+    \begin{axis}[
+        %title={Classifier performance based on data size},
+        xlabel={Training data-set size},
+        ylabel={Fraction of correctly classified},
+        %xmin=0.3, xmax=0.7,
+        %ymin=0.25, ymax=0.75,
+        %xtick={0,20,40,60,80,100},
+        %ytick={0,20,40,60,80,100,120},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+      ]
+      %\addplot table [x=n, y=p]{data/data_size_unigram.csv};
+      \addplot table [x=n, y=p]{data/data_size_unigram_balanced.csv};
+      \addplot table [x=n, y=p]{data/data_size_bigram.csv};
+      \legend{
+        %biased unigram,
+        unigram,
+        bigram
+      }
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Sentence classification performance based on training data size}
+  \label{fig:data_size}
+\end{figure}
+
+
+As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees very steady increment.
+
+\pagebreak
+
+\subsection{Per class classification}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Fraction of correctly classified},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/per_category_unigram.csv}{n},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram_unbalanced.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram.csv};
+    \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram_unbalanced.csv};
+    \legend{Down-sampled unigram, Unmodified unigram, Down-sampled bigram, Unmodified bigram}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
+  \label{fig:per_cat}
+\end{figure}
+
+
+%\begin{figure}[h]
+%  \centering
+%  \begin{tikzpicture}
+%
+%  \begin{axis}[
+%      %title={Classifier performance per category},
+%      %xlabel={Categories},
+%      ylabel={Fraction of correctly classified},
+%      ybar, ymin=0,
+%      %bar width=20pt,
+%      xtick=data,
+%      x tick label style={rotate=45,anchor=east},
+%      xticklabels from table={data/per_category_unigram.csv}{n},
+%      xticklabel style={text height=1.5ex},
+%      ymajorgrids=true,
+%      grid style=dashed,
+%      legend pos=north east,
+%    ]
+%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_unigram.csv};
+%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_bigram.csv};
+%    \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
+%  \end{axis}
+%  \end{tikzpicture}
+%  \caption{Percat2}
+%  \label{fig:per_cat}
+%\end{figure}
+
+Section \ref{subsec:bias} introduced bias in data, along with some of its
+consequences which motivated a more detailed study of classifier results on
+a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
+down-sampled training data perform much more consistent between classes.
+
+Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
+
+It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
+
+\newpage
+
+\subsection{Introducing confidence thresholds}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        %title={Classifier performance based on data size},
+        xlabel={Recall},
+        ylabel={Precision},
+        %xmin=0.5, xmax=1,
+        %ymin=0.4, ymax=1,
+        %xtick={0,20,40,60,80,100},
+        %ytick={0,20,40,60,80,100,120},
+        legend pos=south west,
+        ymajorgrids=true,
+        grid style=dashed,
+      ]
+      \addplot table [x=r, y=p]{data/pr_unigram.csv};
+      \addplot table [x=r, y=p]{data/pr_bigram.csv};
+      \legend{
+        unigram,
+        bigram
+      }
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Precision vs. recall created varying a confidence threshold}
+  \label{fig:pr_curve}
+\end{figure}
+
+
+Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
+
+\newpage
+
+\section{Graph-search classifier}
+%todo NUM X
+The graph search found and categorized a total of 78'844 word senses, and as a reminder,
+these words are labeled solely using the $X$ predefined words from table \ref{tab:cat_words}.
+
+%todo notable failures?
+
+\section{Comparison of classifiers}
+\label{sec:comparison}
+
+\begin{table}[h]
+  \centering
+  \pgfplotstabletypeset[
+    columns={method,p,r},
+    col sep=comma,
+    every head row/.style={after row=\midrule},
+    columns/method/.style={string type,column type=l, column name=Classifier},
+    columns/p/.style={precision=3, column type=l, zerofill, column name=Precision},
+    columns/r/.style={precision=4, column type=l, column name=Recall},
+  ]{data/general_aspect.csv}
+
+  \vspace{0.4cm}\caption{Result summary}
+  \label{general_asp}
+p\end{table}
+
+
+\section{Discussion}
+As the results show, it is in fact possible to categorize aspects using a lexical database. What is particularly interesting about this result is that the heuristic is unsupervised.
+
+There are however a few reasons why the results should be interpreted with caution:
+
+I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
+
+Another important thing to keep in mind about my results are that with such a small data-set, there is a risk of methods becoming too specific toward the training data. This is often discussed in statistical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heuristic perform better than it would in general.
+
+
+
+%todo reasons:
+% small data-set, might be overfitted?
+
+% becomes easier with aspect-word only?
+
+% indata probably works for you
+
+% ``place is really small and seemed kinda dirty''
+
 
 
 
@@ -1135,381 +1536,7 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 
 
 
-\chapter{Aspect Clustering}
-So far this work has introduced methodology for extracting aspects from text and classifying their sentiments, which introduces a new task: How can these aspects with known sentiments be combined into an adequate summary?
 
-The first and most important observation is that even if we find a statement and accurately identify it as a positive mention on something, it is not enough to merit a conclusion. Opinions are per definition subjective, and should individually be considered unreliable. However, as the number of processed opinions increase, so does confidence in conclusions that are based on them.
-
-As a consequence, four positive mentions of ``steak'' may not be enough for a conclusion, but in combination with positive mentions on ``chicken'', ``turkey'',  and ``meatballs'' one may be able to conclude positive the common \gls{superword} \emph{meats}. Or if more confidence is required, ``salads'' may be included under the \gls{superword} \emph{food}, and so on.
-
-This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
-
-
-
-\newpage
-
-\section{Aspect clustering}
-\subsection{Using graph search}
-Based on the observation that there are usually keywords in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
-
-Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
-
-\subsection{The algorithm}
-A \gls{BFS}(BFS) is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are acquired using word relations defined by \gls{jaws}). Each word sense is also mapped to its source category in this process to allow for quick look-ups.
-
-This method to categorize individual words, can then be extended to categorize full sentences using heuristics.
-
-\subsection{Voting heuristic}
-The heuristic is given a sentence, and is supposed to decide on a cluster for the entire sentence. To do this, it can use the above described setup to query for the category of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches the sentence word senses, decreasing in length, starting with the assumption that the full sentence is one word begin.
-
-Next, the map built using the word relation search was queried for the category
-of each word sense. The result of each query is not only which category is nearest,
-but also the distance $d$ from the word sense to the category.
-This was then combined into one score using the following scheme:
-
-\begin{equation} \label{eq:heruistic}
-  category(s) =
-  \underset{k}{\text{argmax}}
-  \sum_{w \in s} categoryScore(w, k)
-\end{equation}
-
-\begin{equation} \label{eq:heruistic_d}
-  categoryScore(w, k) =
-  \begin{cases}
-    max(d_*) - d_k(w) + 1, & \text{if}\ k \text{ is the nearest class}\\
-    0, & \text{otherwise}
-  \end{cases}
-\end{equation}
-
-where $d_k(w)$ is the distance from the word sense $w$
-to its nearest category and $d_*$ is the highest distance any word in the sentence
-has to its nearest category(making the category score for worst scored word in the sentence 1).
-
-This way, for a three word sentence $s=w_1w_2w_3$ with the nearest distances
-$d_A(w_1)=4$, $d_A(w_2)=6$ and $d_B(w_3)=3$,
-the categories will receive the scores $A=3+1+0$ and $B=0+0+4$, and the highest scoring category $A$
-would be selected.
-
-\begin{table}[t]
-  \centering
-  \begin{tabular}{| c | c |}
-    \hline
-    \textbf{Category} & \textbf{Predefined keywords}\\ \hline
-    Establishment & \emph{Furniture, view, music, loud, appearance, clean, location}\\ \hline
-    Product & \emph{food, drink, taste, edible}\\ \hline
-    Value & \emph{Cheap, price, dollar, buck, lots, bargain}\\ \hline
-    Service & \emph{Service, quick, attentive, wait}\\ \hline
-  \end{tabular}
-  \caption{Categories with their pre-associated key words.}
-  \label{tab:cat_words}
-\end{table}
-
-\begin{figure}[t]
-  \centering
-  \fbox{\includegraphics[width=10cm]{img/baklava_lex.png}}
-  \caption{Example showing how ``baklava'' could be lexicographically closer to category ``product'' than ``establishment''. Ellipses represent word senses, rectangles the relations between senses, and diamonds predefined categories with a few associated senses (in this case \emph{food} and \emph{location}).}
-  \label{fig:baklava_lex}
-\end{figure}
-
-\clearpage
-
-% todo: num sentences table
-
-
-\section{Evaluation}
-\label{sec:precision_recall}
-A common way to evaluate information retrieval tasks is \emph{precision}
-and \emph{recall}. Together they evaluate a systems ability to retrieve results,
-by evaluating the capacity to exclude irrelevant results,
-and include relevant results, respectively.
-
-\subsection{Precision}
-% todo: accuracy
-Precision is a measure of what fraction of retrieved results are considered relevant or correct.
-
-It is defined as follows:
-\begin{equation} \label{eq:precision}
-Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
-\end{equation}
-
-\subsection{Recall}
-In this work, confidence thresholds are used to examine whether better results can be achieved by
-allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
-the precision denominator, as they are not considered to be classified.
-Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
-
-\begin{equation} \label{eq:recall}
-Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
-\end{equation}
-
-
-\newpage
-\subsection{Getting data}
-\label{subsec:getting_data}
-
-\begin{figure}[h]
-  \centering
-  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
-  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
-  \label{fig:annotate_aspect}
-\end{figure}
-
-Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
-according to their group and sentiment.
-
-This simple web-interface was served by a local web server.
-
-\begin{figure}[t]
-  \centering
-  \begin{tikzpicture}
-
-  \begin{axis}[
-      %title={Classifier performance per category},
-      %xlabel={Categories},
-      ylabel={Number of aspects},
-      ybar, ymin=0,
-      %bar width=20pt,
-      xtick=data,
-      x tick label style={rotate=45,anchor=east},
-      xticklabels from table={data/category_distribution.csv}{category},
-      xticklabel style={text height=1.5ex},
-      ymajorgrids=true,
-      grid style=dashed,
-      legend pos=north east,
-    ]
-    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
-  \end{axis}
-  \end{tikzpicture}
-  \caption{Number of annotated sentences per category}
-  \label{fig:cat_count}
-\end{figure}
-
-\clearpage
-
-
-\subsection{Skewed data}
-\label{subsec:bias}
-When dealing with real world data, it is possible that some classes in classification tasks are more
-common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
-and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
-classes\cite{rennie2003bias, svm_bias}.
-
-
-%todo 1/n
-Not only classification methods, but also precision measures are affected by skewed data. In binary
-classification with evenly distributed classes, a classifier that favors one class to the extreme that it
-always chooses the same class, still achieves around 0.5 precision since the number of true positives
-would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
-in the binary case, since any classifier performing consistently worse could be modified to return the
-opposite and thus have the inverse precision which would be better.}.
-If the evaluation data is also biased towards the same class, that classifier will get even
-higher precision, which illustrates how important it is to examine classifier
-bias and data distribution.
-
-A commonly employed and simple way to solve problems with disproportionate data
-is to exclude all but an equal amount from each class to artificially balance the class distribution,
-more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
-This could pose a problem if data is very skewed, as this means that the required
-amount of available data effectively is divided by the fraction of the least common class.
-However, in this work the data was not skewed enough to motivate studies of more
-complicated approaches.
-
-Although down-sampling eliminates bias in evaluations, which makes evaluations between
-classifiers more comparable, it also reduces the amount of entries used in evaluations.
-Therefore this report will evaluate using unscaled data once classifiers have been
-verified to be reasonably unbiased in a per class comparison.
-
-
-
-\section{Results}
-
-This chapter is laid out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
-
-
-\subsection{Machine learning classifiers}
-
-\begin{figure}[h]
-  \centering
-
-  \begin{tikzpicture}
-    \begin{axis}[
-        %title={Classifier performance based on data size},
-        xlabel={Training data-set size},
-        ylabel={Fraction of correctly classified},
-        %xmin=0.3, xmax=0.7,
-        %ymin=0.25, ymax=0.75,
-        %xtick={0,20,40,60,80,100},
-        %ytick={0,20,40,60,80,100,120},
-        legend pos=north west,
-        ymajorgrids=true,
-        grid style=dashed,
-      ]
-      %\addplot table [x=n, y=p]{data/data_size_unigram.csv};
-      \addplot table [x=n, y=p]{data/data_size_unigram_balanced.csv};
-      \addplot table [x=n, y=p]{data/data_size_bigram.csv};
-      \legend{
-        %biased unigram,
-        unigram,
-        bigram
-      }
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Sentence classification performance based on training data size}
-  \label{fig:data_size}
-\end{figure}
-
-
-As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees very steady increment.
-
-\pagebreak
-
-\subsection{Per class classification}
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}
-
-  \begin{axis}[
-      %title={Classifier performance per category},
-      %xlabel={Categories},
-      ylabel={Fraction of correctly classified},
-      ybar, ymin=0,
-      %bar width=20pt,
-      xtick=data,
-      x tick label style={rotate=45,anchor=east},
-      xticklabels from table={data/per_category_unigram.csv}{n},
-      xticklabel style={text height=1.5ex},
-      ymajorgrids=true,
-      grid style=dashed,
-      legend pos=north east,
-    ]
-    \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram.csv};
-    \addplot table [x expr=\coordindex, y=p]{data/per_category_unigram_unbalanced.csv};
-    \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram.csv};
-    \addplot table [x expr=\coordindex, y=p]{data/per_category_bigram_unbalanced.csv};
-    \legend{Down-sampled unigram, Unmodified unigram, Down-sampled bigram, Unmodified bigram}
-  \end{axis}
-  \end{tikzpicture}
-  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
-  \label{fig:per_cat}
-\end{figure}
-
-
-%\begin{figure}[h]
-%  \centering
-%  \begin{tikzpicture}
-%
-%  \begin{axis}[
-%      %title={Classifier performance per category},
-%      %xlabel={Categories},
-%      ylabel={Fraction of correctly classified},
-%      ybar, ymin=0,
-%      %bar width=20pt,
-%      xtick=data,
-%      x tick label style={rotate=45,anchor=east},
-%      xticklabels from table={data/per_category_unigram.csv}{n},
-%      xticklabel style={text height=1.5ex},
-%      ymajorgrids=true,
-%      grid style=dashed,
-%      legend pos=north east,
-%    ]
-%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_unigram.csv};
-%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_bigram.csv};
-%    \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
-%  \end{axis}
-%  \end{tikzpicture}
-%  \caption{Percat2}
-%  \label{fig:per_cat}
-%\end{figure}
-
-Section \ref{subsec:bias} introduced bias in data, along with some of its
-consequences which motivated a more detailed study of classifier results on
-a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
-down-sampled training data perform much more consistent between classes.
-
-Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
-
-It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
-
-\newpage
-
-\subsection{Introducing confidence thresholds}
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-        %title={Classifier performance based on data size},
-        xlabel={Recall},
-        ylabel={Precision},
-        %xmin=0.5, xmax=1,
-        %ymin=0.4, ymax=1,
-        %xtick={0,20,40,60,80,100},
-        %ytick={0,20,40,60,80,100,120},
-        legend pos=south west,
-        ymajorgrids=true,
-        grid style=dashed,
-      ]
-      \addplot table [x=r, y=p]{data/pr_unigram.csv};
-      \addplot table [x=r, y=p]{data/pr_bigram.csv};
-      \legend{
-        unigram,
-        bigram
-      }
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Precision vs. recall created varying a confidence threshold}
-  \label{fig:pr_curve}
-\end{figure}
-
-
-Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
-
-\newpage
-
-\section{Graph-search classifier}
-%todo NUM X
-The graph search found and categorized a total of 78'844 word senses, and as a reminder,
-these words are labeled solely using the $X$ predefined words from table \ref{tab:cat_words}.
-
-%todo notable failures?
-
-\section{Comparison of classifiers}
-\label{sec:comparison}
-
-\begin{table}[h]
-  \centering
-  \pgfplotstabletypeset[
-    columns={method,p,r},
-    col sep=comma,
-    every head row/.style={after row=\midrule},
-    columns/method/.style={string type,column type=l, column name=Classifier},
-    columns/p/.style={precision=3, column type=l, zerofill, column name=Precision},
-    columns/r/.style={precision=4, column type=l, column name=Recall},
-  ]{data/general_aspect.csv}
-
-  \vspace{0.4cm}\caption{Result summary}
-  \label{general_asp}
-p\end{table}
-
-
-\section{Discussion}
-As the results show, it is in fact possible to categorize aspects using a lexical database. What is particularly interesting about this result is that the heuristic is unsupervised.
-
-There are however a few reasons why the results should be interpreted with caution:
-
-I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
-
-Another important thing to keep in mind about my results are that with such a small data-set, there is a risk of methods becoming too specific toward the training data. This is often discussed in statistical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heuristic perform better than it would in general.
-
-
-
-%todo reasons:
-% small data-set, might be overfitted?
-
-% becomes easier with aspect-word only?
-
-% indata probably works for you
-
-% ``place is really small and seemed kinda dirty''
 
 
 \chapter{Project conclusions}

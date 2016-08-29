@@ -1,0 +1,61 @@
+
+# Extraction
+
+Noun is target?
+
+Might actually be a good idea to work on sentence parts.
+
+the word "and"
+
+handle 2-word patterns separately?
+
+<NNP><NN> failing noun patterns.
+
+
+Jämför found count med annotated data!
+
+
+# Grouping
+
+- introduciton
+
+- method introduction
+
+- evaluation
+
+- getting data
+
+- annotation results
+
+- screwed data
+
+- method results
+
+- discussion
+
+
+s/clustering/grouping
+
+originated from simple noun-canonicalization
+
+
+# Sentiment classification
+calculate pruning values
+
+
+
+
+# general:
+
+narrative
+
+too complicated annotation
+Where to do what? splitting tasks made it harder.
+Handle General aspect more consistently.
+
+
+
+
+
+
+
