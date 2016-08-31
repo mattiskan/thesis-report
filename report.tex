@@ -300,7 +300,6 @@ further discussed and motivated in section \ref{subsec:sentence_contradictions}.
 
 \chapter{Aspect extraction}
 
-\section{Task definition}
 Aspect extraction is the task of finding and outputting sentiment carrying expressions
 with identified \emph{targets}. A target is either some aspect of the entity that is
 subject to the sentiment, or the entity in its entirety. E.g. in the sentence
@@ -318,8 +317,12 @@ In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu
 \item Extraction using supervised learning
 \item Extraction using topic modeling
 \end{enumerate}
-In this work only the first kind is employed, and results will show it sufficiently
-effective to motivate focusing on the other tasks.
+This work mainly employs the first kind, with some of pruning methods defered to
+later tasks using supervised learning (further details in section
+\ref{subsec:pruning}).
+
+Results will show it sufficiently effective to not examine other methods in
+this work.
 
 \subsection{A data dependent task}
 Like other data extraction tasks, aspect extraction is largely dependent on the data
@@ -347,7 +350,7 @@ identification result set.
 
 The reason why these usually are done separately in sequence is that many common pruning
 techniques require the full candidate set when deciding whether to prune.
-(Examples are \emph{idf}-scores or plain occurrence counts.)
+(Examples include \emph{idf}-scores or plain occurrence counts.)
 
 
 \section{Related Work}
@@ -422,6 +425,7 @@ This experiment is called \texttt{Modified patterns} in the results, as opposed 
 the original \texttt{Unmodified patterns}.
 
 \subsection{Pruning}
+\label{subsec:pruning}
 The only pruning applied in this work comes as a side effect of the methods introduced
 in the other two chapters, sentiment classification and aspect grouping, and the
 confidence thresholds that they allow.
@@ -665,23 +669,38 @@ with a token value which likely will improve performance of language models in f
 
 \chapter{Aspect Grouping}
 Thus far this work has introduced methodology for extracting aspects from text.
-Recall from the last chapter that aspects where yielded as noun phrases highly
-probable to contain an opinion. To compare opinions on a more detailed level,
-some attention has to be paid towards \emph{what} the opinion concerns.
+Recall from the last chapter that aspect extraction yields noun phrases that are likely
+to hold an opinion.
 
-If the opinion target is identified, comparisons for that target are made possible.
+Identifying the aspects of opinions is a key task as it is what enables
+summaries about \emph{what} opinions actually are about, rather than treating all opinions
+as sentiments about the reviewed entity in its entirety.
 
+To illustrate, imagine an entity for which every other opinion is positive and the rest
+negative. Without any identification of the aspects opinions are targeting, the best
+conclusion would be averaging the positive with the negative,
+whereas if the aspects of opinions were identified,
+it would be possible to find out if something specific is the cause of many opinions
+--- possibly a very useful insight!
 
+But identifying aspect identification is not enough. Finding that the
+most appreciated aspects of a restaurant are \emph{french fries},
+\emph{fried potatoes}, and \emph{fries} is superfluous as they are
+clearly refferring to the same thing!
+This could potentially be a problem for aspects that are described very diversely:
+To ensure reliability and counteract subjectivity, aspects with few opinions are
+likely to be ignored, so there is a risk valuable opinions are disregarded unless mulitple descriptions of the same aspect are
+bundled.
 
-
-\vspace{3cm}
-This is task is defined as \emph{aspect clustering}, or in some work \emph{aspect grouping}.
-
-
+The task introduced to address this is \emph{aspect grouping}, or in work where
+groups are dynamically derived from data; \emph{aspect clustering}.
 \newpage
 
+\subsection{Levels of grouping and this work}
+todo
+
 \section{Grouping methodologies}
-\subsection{Using graph search}
+\subsection{Lexical graph search}
 Based on the observation that there are usually keywords in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
