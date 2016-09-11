@@ -35,7 +35,7 @@ report.bbl: references.bib
 
 report.gls:
 	xelatex report.tex
-	makeglossaries report
+#makeglossaries report
 
 
 clean:

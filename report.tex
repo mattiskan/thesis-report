@@ -6,7 +6,7 @@
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
-\usepackage[toc]{glossaries}
+%\usepackage[toc]{glossaries}
 \usepackage{pgfplots}
 \usepackage{graphicx}
 \usepackage{pgfplotstable}
@@ -17,35 +17,35 @@
 \graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
 
-\newglossaryentry{computer}{
-  name=computer,
-  description=
-  {is a programmable machine that receives input,
-    stores and manipulates data, and provides
-    output in a useful format}
-}
-\newglossaryentry{MLE}{
-  name=Maximum Likelihood Estimate,
-  description=
-  {\todo yolo}
-}
-\newglossaryentry{BFS}{
-  name=Breadth First Search,
-  description={Basic search algorithm where each previously unexamined connecting neighbor of a node is examined in a iteration, and the queued to be subject for the next iteration.}
-}
-\newglossaryentry{wordnet}{
-  name=WordNet,
-  description={WordNet\cite{wordnet} is a lexical database for English. WordNet has nouns, verbs, adjectives and adverbs grouped into sets of cognitive synonyms (synsets), each expressing a distinct concept. These synsets are interlinked by means of conceptual-semantic and lexical relations.}
-}
-\newglossaryentry{jaws}{
-  name=JAWS,
-  description={JAWS\cite{jaws} is a library providing API methods for accessing synset relations in \gls{wordnet}}
-}
-
-\newglossaryentry{superword}{
-  name=hypernym,
-  description={A word relation implying less specific meaning. For example, \emph{color} is a hypernym of \emph{red}.}
-}
+%\newglossaryentry{computer}{
+%  name=computer,
+%  description=
+%  {is a programmable machine that receives input,
+%    stores and manipulates data, and provides
+%    output in a useful format}
+%}
+%\newglossaryentry{MLE}{
+%  name=Maximum Likelihood Estimate,
+%  description=
+%  {\todo yolo}
+%}
+%\newglossaryentry{BFS}{
+%  name=Breadth First Search,
+%  description={Basic search algorithm where each previously unexamined connecting neighbor of a node is examined in a iteration, and the queued to be subject for the next iteration.}
+%}
+%\newglossaryentry{wordnet}{
+%  name=WordNet,
+%  description={WordNet\cite{wordnet} is a lexical database for English. WordNet has nouns, verbs, adjectives and adverbs grouped into sets of cognitive synonyms (synsets), each expressing a distinct concept. These synsets are interlinked by means of conceptual-semantic and lexical relations.}
+%}
+%\newglossaryentry{jaws}{
+%  name=JAWS,
+%  description={JAWS\cite{jaws} is a library providing API methods for accessing synset relations in \gls{wordnet}}
+%}
+%
+%\newglossaryentry{superword}{
+%  name=hypernym,
+%  description={A word relation implying less specific meaning. For example, \emph{color} is a hypernym of \emph{red}.}
+%}
 
 
 \newcommand{\todo}{ ... }
@@ -68,12 +68,13 @@
   all, great. Place night Gathering upon were forth light deep. Abundantly.
   Kind air beginning his void seed it dry. Own and spirit may dry abundantly
   beast good forth. The fifth beginning. Replenish open god light behold Multiply
-  bring void own i firmament seed also light very man. \gls{computer}
+  bring void own i firmament seed also light very man.
 
   }
 }
 
-\makeglossaries
+\newcommand{\gls}[1]{TODO(#1)}
+%\makeglossaries
 
 \title{Mining opinions from local business reviews:\\ A technical walk-through.}
 
@@ -113,7 +114,7 @@
 \clearpage
 \tableofcontents*
 
-\glsaddall
+%\glsaddall
 %\printglossaries
 
 \mainmatter
