@@ -590,7 +590,7 @@ business chains which can have 10'000 reviews or more.
 
 \subsection{Evaluation of aspect extraction}
 
-
+%todo rewrite
 
 The results in this section are a bit vague, but there is a reason for this.
 Common practice in information retrieval is to use precision as a measure of
@@ -671,33 +671,49 @@ with a token value which likely will improve performance of language models in f
 Thus far this work has introduced methodology for extracting aspects from text.
 Recall from the last chapter that aspect extraction yields noun phrases that are likely
 to hold an opinion.
-
-Identifying the aspects of opinions is a key task as it is what enables
+Identifying the aspects of these opinions is a key task as it is what enables
 summaries about \emph{what} opinions actually are about, rather than treating all opinions
 as sentiments about the reviewed entity in its entirety.
 
-To illustrate, imagine an entity for which every other opinion is positive and the rest
-negative. Without any identification of the aspects opinions are targeting, the best
-conclusion would be averaging the positive with the negative,
-whereas if the aspects of opinions were identified,
-it would be possible to find out if something specific is the cause of many opinions
---- possibly a very useful insight!
+To illustrate, imagine an entity with a mix of positive and negative opinions.
+Without identifying what aspects of the entity the opinions are targeting, the best
+you can do is averaging the positive with the negative.
+Whereas if the aspects were identified 
+it would be possible to find out what in specific is the cause of opinions;
+one might find some aspects to be cause of consistently positive or negative opinions,
+or one may find aspects with disagreeing oppinions
+--- either discovery is likely to be highly useful!
 
-But identifying aspect identification is not enough. Finding that the
+\subsection{Why group aspects?}
+Identifying aspects is not enough. Finding that the
 most appreciated aspects of a restaurant are \emph{french fries},
 \emph{fried potatoes}, and \emph{fries} is superfluous as they are
-clearly refferring to the same thing!
-This could potentially be a problem for aspects that are described very diversely:
-To ensure reliability and counteract subjectivity, aspects with few opinions are
-likely to be ignored, so there is a risk valuable opinions are disregarded unless mulitple descriptions of the same aspect are
-bundled.
+clearly referring to the same thing.
+This could potentially be a problem for aspects that are very diversely described;
+to ensure reliability and counteract subjectivity, aspects with few opinions are
+likely to be ignored, so there is a risk valuable opinions are disregarded unless
+mulitple descriptions of the same aspect are grouped as one. This is known as \emph{synonym grouping}.
 
-The task introduced to address this is \emph{aspect grouping}, or in work where
-groups are dynamically derived from data; \emph{aspect clustering}.
-\newpage
+%todo group tree figure
 
-\subsection{Levels of grouping and this work}
-todo
+It may be beneficial to take this grouping even further;
+if there after the grouping still are too few opinions about \emph{fries},
+it might be possible to further group with opinions about \emph{mashed potatoes}
+and \emph{baked potatoes} under the shared (hyopnymIteratively \emph{potatoes} can
+be grouped with \emph{salads} as \emph{sides} and so forth with each iteration aggregating
+more opinions under the same label.
+
+This has another important side effect; it enables comparisons that would otherwise
+be impossible, becasue to compare two entities they need shared aspects.
+E.g. when comparing an italian restaurant and an asian restaurant, sufficient aspects may
+have been found for \emph{pasta carbonara} and \emph{vegetable wok}, but neither of
+those aspects is shared by both entities, rendering comparison is impossible.
+However, if aspects are grouped under a shared hyponym, such as \emph{main courses},
+the entities can be compared using this common aspect.
+
+
+\subsection{Aspect grouping in this work}
+%todo
 
 \section{Grouping methodologies}
 \subsection{Lexical graph search}
@@ -1048,15 +1064,34 @@ p\end{table}
 
 
 \section{Discussion}
-As the results show, it is in fact possible to categorize aspects using a lexical database. What is particularly interesting about this result is that the heuristic is unsupervised.
+\subsection{Graph search classifier}
+As the results show, it is in fact possible to categorize aspects using a lexical database.
+What is particularly interesting about this result is that, although the method is evaluated in a supervised
+manner, the heuristic is in itself unsupervised. %todo retrofit for hillclibming?
+
+
+The origins of this method are largely narrated by the introductory section of this chapter;
+when getting the system to work initially, aspects were merely grouped by their lemmatized rightmost noun.
+This introduced an obvious need for \emph{synonym grouping}. Later, when studying this task in more detail,
+this method was evolved retrofitting the existing solution with further WordNet word relations.
+
+\subsection{Machine learning classifier}
+
+\subsection{Comparision}
+
+\subsection{Conclusion}
 
 There are however a few reasons why the results should be interpreted with caution:
 
-I believe my limited amount of data to have much influence over my results. As figure \ref{fig:data_size} illustrates, neither machine learning classifier appears ``saturated'', and would most likely have benefited from more annotated aspects.
+I believe my limited amount of data to have much influence over my results.
+As figure \ref{fig:data_size} illustrates, neither machine learning classifier
+appears ``saturated'', and would most likely have benefited from more annotated aspects.
 
-Another important thing to keep in mind about my results are that with such a small data-set, there is a risk of methods becoming too specific toward the training data. This is often discussed in statistical modeling as \emph{``overfitting'' }, but the same phenomenon can also appear with heuristics. I believe that some aspects of my data make this heuristic perform better than it would in general.
-
-
+Another important thing to keep in mind about my results are that with such a small data-set,
+there is a risk of methods becoming too specific toward the training data.
+This is often discussed in statistical modeling as \emph{``overfitting'' },
+but the same phenomenon can also appear with heuristics.
+I believe that some aspects of my data make this heuristic perform better than it would in general.
 
 %todo reasons:
 % small data-set, might be overfitted?
