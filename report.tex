@@ -6,7 +6,7 @@
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
-\usepackage[toc]{glossaries}
+%\usepackage[toc]{glossaries}
 \usepackage{pgfplots}
 \usepackage{graphicx}
 \usepackage{pgfplotstable}
@@ -17,35 +17,35 @@
 \graphicspath{ {img/} }
 \pgfplotsset{width=12cm,compat=1.9}
 
-\newglossaryentry{computer}{
-  name=computer,
-  description=
-  {is a programmable machine that receives input,
-    stores and manipulates data, and provides
-    output in a useful format}
-}
-\newglossaryentry{MLE}{
-  name=Maximum Likelihood Estimate,
-  description=
-  {\todo yolo}
-}
-\newglossaryentry{BFS}{
-  name=Breadth First Search,
-  description={Basic search algorithm where each previously unexamined connecting neighbor of a node is examined in a iteration, and the queued to be subject for the next iteration.}
-}
-\newglossaryentry{wordnet}{
-  name=WordNet,
-  description={WordNet\cite{wordnet} is a lexical database for English. WordNet has nouns, verbs, adjectives and adverbs grouped into sets of cognitive synonyms (synsets), each expressing a distinct concept. These synsets are interlinked by means of conceptual-semantic and lexical relations.}
-}
-\newglossaryentry{jaws}{
-  name=JAWS,
-  description={JAWS\cite{jaws} is a library providing API methods for accessing synset relations in \gls{wordnet}}
-}
-
-\newglossaryentry{superword}{
-  name=hypernym,
-  description={A word relation implying less specific meaning. For example, \emph{color} is a hypernym of \emph{red}.}
-}
+%\newglossaryentry{computer}{
+%  name=computer,
+%  description=
+%  {is a programmable machine that receives input,
+%    stores and manipulates data, and provides
+%    output in a useful format}
+%}
+%\newglossaryentry{MLE}{
+%  name=Maximum Likelihood Estimate,
+%  description=
+%  {\todo yolo}
+%}
+%\newglossaryentry{BFS}{
+%  name=Breadth First Search,
+%  description={Basic search algorithm where each previously unexamined connecting neighbor of a node is examined in a iteration, and the queued to be subject for the next iteration.}
+%}
+%\newglossaryentry{wordnet}{
+%  name=WordNet,
+%  description={WordNet\cite{wordnet} is a lexical database for English. WordNet has nouns, verbs, adjectives and adverbs grouped into sets of cognitive synonyms (synsets), each expressing a distinct concept. These synsets are interlinked by means of conceptual-semantic and lexical relations.}
+%}
+%\newglossaryentry{jaws}{
+%  name=JAWS,
+%  description={JAWS\cite{jaws} is a library providing API methods for accessing synset relations in \gls{wordnet}}
+%}
+%
+%\newglossaryentry{superword}{
+%  name=hypernym,
+%  description={A word relation implying less specific meaning. For example, \emph{color} is a hypernym of \emph{red}.}
+%}
 
 
 \newcommand{\todo}{ ... }
@@ -68,12 +68,13 @@
   all, great. Place night Gathering upon were forth light deep. Abundantly.
   Kind air beginning his void seed it dry. Own and spirit may dry abundantly
   beast good forth. The fifth beginning. Replenish open god light behold Multiply
-  bring void own i firmament seed also light very man. \gls{computer}
+  bring void own i firmament seed also light very man.
 
   }
 }
 
-\makeglossaries
+\newcommand{\gls}[1]{TODO(#1)}
+%\makeglossaries
 
 \title{Mining opinions from local business reviews:\\ A technical walk-through.}
 
@@ -113,7 +114,7 @@
 \clearpage
 \tableofcontents*
 
-\glsaddall
+%\glsaddall
 %\printglossaries
 
 \mainmatter
@@ -727,12 +728,12 @@ A \gls{BFS}(BFS) is conducted from the initial category word senses, defined in 
 This method to categorize individual words, can then be extended to categorize full sentences using heuristics.
 
 \subsubsection{Voting heuristic}
-The heuristic is given a sentence, and is supposed to decide on a cluster for the entire sentence. To do this, it can use the above described setup to query for the category of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches the sentence word senses, decreasing in length, starting with the assumption that the full sentence is one word begin.
+The heuristic is what actually classifies sentences into groups. To do this, it can use the above described group to query for the group of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches for multiple word word-senses, decreasing in length, starting with the assumption that the full sentence is one word.
 
-Next, the map built using the word relation search was queried for the category
-of each word sense. The result of each query is not only which category is nearest,
+Next, a map is built using enabling constant time lookup of not only which group is nearest,
 but also the distance $d$ from the word sense to the category.
-This was then combined into one score using the following scheme:
+
+This is then combined into one score using the following scheme:
 
 \begin{equation} \label{eq:heruistic}
   category(s) =
@@ -1373,17 +1374,14 @@ three \ngram~classifiers (unigram, bigram and trigram) with additive smoothing
 were developed, based on the probability definition in equation \ref{eq:additive_smoothing}.
 
 The classifiers were trained on 8'000 sentences from positive and negative reviews.
-
 As features, up to the 30'000 most common \ngram s were used\footnote{As table
 \ref{tab:found_ngrams} shows, the unigram model only produces 8772 \ngram s,
-in which case all of them were used.}. %todo balancing
+in which case all of them were used.}.
 
 
-Two more classifiers were developed with interpolated smoothing, 
-
-The third classifier combines the above classifiers,
-\emph{interpolated} as suggested in eq. \ref{eq:interpolated_smoothing} (where
-$\lambda_2=\lambda_1=0.5$ was found optimal).
+Two more classifiers were developed with \emph{interpolated} smoothing as suggested in eq.
+\ref{eq:interpolated_smoothing}. For this classifier $\lambda_2=\lambda_1=0.5$ was found optimal using
+using binary search. %todo
 
 %Finally, for reference of what a production system can look like, Yelp's production classifier was included in results. It is based on a \emph{Modified Kneser-Ney}-smoothed language model.
 
@@ -1441,7 +1439,7 @@ models achieve slightly better performance than higher order models.
 However, when confidence thresholds are higher, as recall declines,
 higher order models perform better, which can be most clearly seen for the trigram model.
 
-Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the positive class, despite the efforts of balancing.
+Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the positive class, despite the efforts of balancing introduced in section \ref{subsec:sent_balance}.
 
 \newpage
 
@@ -1470,7 +1468,7 @@ Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the posi
     %\addplot table [x expr=\coordindex, y=p]{data/sent_bigram.csv};
     %\addplot table [x expr=\coordindex, y=p]{data/sent_interpol.csv};
     \legend{
-      positive
+      positive, negative
     }
   \end{axis}
   \end{tikzpicture}
@@ -1518,25 +1516,20 @@ todo
 
 \newpage
 \section{Discussion}
-Of the most important results shown in Figure \ref{fig:sent_pr_curve}
+Of the results shown in Figure \ref{fig:sent_pr_curve}, the most important 
 is the effectiveness of smoothing.
-Prior to smoothing, I tried various ways of sampling \ngram~s, stemming, lemmatization, stop-lists and entropy estimation of individual \ngram s with little to very little gain.
-
-None of the things tested for feature selection resulted in consistent performance gain
-like smoothing, where even one of the most basic methods increased performance by around 
-
-
+Prior to smoothing, I tried various ways of sampling \ngram~s, stemming, lemmatization, stop-lists and entropy estimation of individual \ngram s with little gain. None of the things tried for feature selection resulted in consistent performance gain like did smoothing, where even one of the most basic methods increased overall performance by 5\% units, without any compromises.
 
 The same figure also shows how \ngram~models perform for various values for $n$.
 As shown, the performance at full recall directly relates to the order of the
-\ngram~model, but that
-
+\ngram~model, but that at lower recall the same relationship is inversed. I believe this
+to support the hypothesis that lower order \ngram~models generalize better, as opposed to higher order
+models which exibit higher confidence but in fewer entities.
 
 
 %It should be noted that the comparison between \ysc~and the other models is unfair, since the \ysc~has been trained on more data and has been rigurously tested and reviewed. It is solely included to give perspective on performance of the simpler models.
 
-
-
+%todo check:
 The slight bias seen in \ref{fig:sent_bias} does not worry me too much.
 I believe this is due to positive reviews being more expressive of sentiment. It could arguably be a desired property for real world applications as real data has an even larger positive bias, which makes statistical models align better with reality. There may also be a social benefit of this positive bias.
 
@@ -1547,11 +1540,6 @@ is a reliable way of further improving sentiment classification results. I did n
 mathematical representations of this smoothing because there are open sourced implementations
 that are probably worthwhile looking into. However, readers who are interested will not
 be disappointed reading \emph{(Chen \& Goodman, 1996)}.
-
-\subsection{Things that did not work}
-Before looking into smoothing, a significant amount of time was spent looking into
-various ways of combining different classification methods in a voting system.
-
 
 
 %todo test various feature counts ??
