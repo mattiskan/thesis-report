@@ -425,38 +425,36 @@ or adjective(\texttt{<JJ>+}) occurred.
 This experiment is called \texttt{Modified patterns} in the results, as opposed to
 the original \texttt{Unmodified patterns}.
 
+
 \subsection{Pruning}
 \label{subsec:pruning}
-The only pruning applied in this work comes as a side effect of the methods introduced
-in the other two chapters, sentiment classification and aspect grouping, and the
-confidence thresholds that they allow.
+The only pruning applied in this work comes as side effects of the methods introduced
+in the two subsequent chapters, sentiment classification and aspect grouping.
 
-In both chapters, confidence thresholds are introduced as a means of increasing
-precision at the cost of recall, and the aspects that fall under the confidence threshold
-are effectively being pruned. Please note that results in this chapter are presented
+Both chapters introduce confidence thresholds as a means of increasing
+\emph{precision} at the cost of \emph{recall}(introduced in section \ref{sec:precision_recall}),
+where the aspects that are deemed under the confidence threshold are effectively being pruned.
+Please note that results in this chapter are presented
 before any pruning has been done, as the pruning process is intimitely related
 to the other two tasks.
 
-%In section \ref{subsec:suggested_pruning} pruning methods are discussed further.
 
-\subsection{Evaluating extraction performance}
+\subsection{Extraction priorities}
 % todo
-Information retrieval tasks are often evaluated with two capabilities in particular
-in mind, namely the capabilities of excluding irrelevant results and including relevant ones.
-These are formally introduced later as \emph{precision} and \emph{recall} in
-section \ref{sec:precision_recall}, but for this section an informal definition should be sufficient.
-
 The way tasks are divided in this work, with further pruning subsequently done in
-the later tasks, one of the most important questions for aspect extraction is
-\emph{will it find enough candidates to for a reasonable summary?}
+the later tasks, the most important question in this chapter is
+\emph{Will it find enough candidates to for a reasonable summary?}
+To ensure quality of the extracted aspects, some concern has to be kept towards \emph{How many
+  of extracted aspect are deemed relevant?}
 
-Therefore, 
+%Information retrieval tasks are often evaluated with two capabilities in particular
+%in mind, namely the capabilities of excluding irrelevant results and including relevant ones.
+%These are formally introduced later as \emph{precision} and \emph{recall} in
+%section \ref{sec:precision_recall}, and correspond 
+%
 
 
-
-
-\newcommand{\ExtrPatOne}{\texttt{<NNS?><VB.?>+<JJ.?>+}}
-\newcommand{\ExtrPatTwo}{\texttt{<NNS?><VB.?>+<RB.?><JJ.?>}}
+%In section \ref{subsec:suggested_pruning} pruning methods are discussed further.
 
 \begin{table}[t]
   \centering
@@ -559,6 +557,7 @@ Note that the graph does not show how many aspects were found,
 but in how many reviews a certain number of were found, which means that for the
 total sum each count has to be multiplied with the number of aspects it corresponds to.
 
+
 \section{Discussion}
 \subsection{The modified patterns}
 As results show, there is very little difference between the modified patterns and
@@ -584,40 +583,41 @@ Glancing at future results, confidence thresholds with $recall\approx 0.7$
 appears reasonable for both sentiment classification and aspect grouping.
 
 An estimate for the number of value aspects found for a business with 300 reviews
-using the numbers in this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.1 = 39.69$ aspects.
+using the numbers from this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.1 = 39.69$ aspects.
 Around 40 aspects should be enough to give a statistically significant indication.
 Especially as in practice review comparisons are likely going to be done for
 business chains which can have 10'000 reviews or more.
 
 \subsection{Evaluation of aspect extraction}
+To examine what portion of retrieved aspects are relevant, a definition of relevant
+is required. This definition turned out to be somewhat of a challenge, as it is sensitive
+to other definitions such as the division of responsibilities between tasks
+in this system and their expectancy for the output of this task.
+During the course of this project this definition was subject to change more than once.
 
-%todo rewrite
+Further, because this definition is used to calculate the result, it can be the cause of
+various values of efficiency for the same method, which is of great concern
+since the method alone should be the cause of the results and not the way it is evaluated.
 
-The results in this section are a bit vague, but there is a reason for this.
-Common practice in information retrieval is to use precision as a measure of
-quality, however, this requires a clear definition of what is relevant.
-When manually annotating aspects I found it difficult to determine where to draw the
-line for what an aspect is. As section \ref{subsec:objective_sentiments} describes,
-sentiments can be derived from various forms of sentences.
+Still, to give readers an idea about the efficiency of this method two definitions
+were introduced; one strict definition, where opinions were required to have
+\emph{explicitly} positive or negative sentiment about an aspect that could be
+\emph{irrefutably} assigned one of the four aspect groups introduced in chapter \ref{chap:aspect_grouping},
+and one permissive definition, where sentiment was ignored and any opinion was considered
+relevant as long as it held the information to implicitly derive any one of the same aspect groups.
 
-My concern was that what definition I decided upon would influence the results without
-reflecting the methods effectiveness.
+Using these definitions, 10 aspects extracted using each pattern were randomly sampled (totally 270)
+and evaluated using these definitions  and it was found that 62.86\% of aspects were strictly relevant
+and 86.67\% were permissively relevant.
 
-Thus, I decided to revisit metrical measures when I aspect extracting became the
-bottleneck of the systems performance, which is a point I never reached in this work.
-
-I believe it could be a good idea to evaluate aspect extraction in the context of
-the full system and not individually, as what to extract is so dependent on what
-the purpose of the extracted data is. This would probably also make it easier to
-determine what is relevant and what is not.
 
 \subsection{Mitigating author bias}
-76 review out of 10'000 had more than 13 aspects with one review having as much as 23 aspects.
+76 reviews out of 10'000 had more than 13 aspects, with one review having as much as 23 aspects.
 If we simply included each aspect from reviews like that one the opinions of
 those sole authors would be represented 23 times more than the opinions from reviews
 with one extracted aspect each.
 
-Luckily, a simple way to make conclusions more impartial is to only allow one
+A really simple way to make conclusions more impartial is to only allow one
 opinion per aspect group from each review.
 I.e. each review contributes with \emph{at most} one opinion on product, one on service, etc.
 The opinion should be picked so that it represents the majority of
@@ -718,7 +718,11 @@ the entities can be compared using this common aspect.
 
 \section{Grouping methodologies}
 \subsection{Lexical graph search}
-Based on the observation that there are usually keywords in a sentence with lexicographical connection to the desired category, an alternative approach to traditional classification is proposed. This is motivated since classification models need pure training data to achieve good results. The idea is to use a lexicon of known word relations to find a path from a query word to one of few word senses with predefined category label, and assign the query word the same label.
+Based on the observation that there are usually keywords in a sentence with lexicographical
+connection to the desired category, an alternative approach to traditional classification is proposed.
+This is motivated since classification models need pure training data to achieve good results.
+The idea is to use a lexicon of known word relations to find a path from a query word to one of
+few word senses with predefined category label, and assign the query word the same label.
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
 
