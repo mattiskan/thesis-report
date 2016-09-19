@@ -366,7 +366,9 @@ extracted by considering frequent noun phrases found in data using POS-tagging.
 This approach appears to return a lot of false positives, which is why two pruning
 methods are introduced to improve precision.
 
-Sentiment classification is also mentioned, but those results are presented in a subsequent paper.
+Sentiment classification is also mentioned, but those results are presented in a subsequent paper:
+``Mining and summarizing customer reviews''(2004).
+
 
 \subsubsection{Liu, Hu and Cheng (2005)}
 In ``Opinion observer: analyzing and comparing opinions on the web'', their previous work is extended
@@ -585,7 +587,7 @@ appears reasonable for both sentiment classification and aspect grouping.
 An estimate for the number of value aspects found for a business with 300 reviews
 using the numbers from this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.16 = $ aspects. %todo equation
 Around 40 aspects should be enough to give a statistically significant indication.
-Especially as in practice review comparisons are likely going to be done for
+This is especially true when review comparisons are done for
 business chains which can have 10'000 reviews or more.
 
 \subsection{Evaluation of aspect extraction}
@@ -700,39 +702,106 @@ mulitple descriptions of the same aspect are grouped as one. This is known as \e
 It may be beneficial to take this grouping even further;
 if there after the grouping still are too few opinions about \emph{fries},
 it might be possible to further group with opinions about \emph{mashed potatoes}
-and \emph{baked potatoes} under the shared (hyopnymIteratively \emph{potatoes} can
+and \emph{baked potatoes} under the shared hyopnym. Iteratively \emph{potatoes} can
 be grouped with \emph{salads} as \emph{sides} and so forth with each iteration aggregating
 more opinions under the same label.
 
 This has another important side effect; it enables comparisons that would otherwise
 be impossible, becasue to compare two entities they need shared aspects.
 E.g. when comparing an italian restaurant and an asian restaurant, sufficient aspects may
-have been found for \emph{pasta carbonara} and \emph{vegetable wok}, but neither of
+have been found for \emph{pasta carbonara} and \emph{noodle wok}, but neither of
 those aspects is shared by both entities, rendering comparison is impossible.
 However, if aspects are grouped under a shared hyponym, such as \emph{main courses},
 the entities can be compared using this common aspect.
 
 
-\subsection{Aspect grouping in this work}
-%todo
+\subsection{Levels of aspect extraction and this work}
+In this work aspects are categorized into one of four groups:
+\emph{Establishment, Product, Value} and \emph{Food}.
+
+This way all the benefits introduced in the previous section of having the opinions
+aggregated are reaped; restaurants of all types can be compared and confidence in conclusions
+is furthered thanks to larger groups of opinions.
+Additionally, since groups are predefined and static,
+basic text classification methods can be employed, and the task is to be considered
+simpler than its dynamic counterpart.
+
+
+\section{Related Work}
+
+\subsubsection{Hu, Liu (2004)}
+In ``Mining Opinion Features in Customer Reviews'' aspects are unsupervisedly
+extracted by considering frequent noun phrases found in data using POS-tagging.
+
+This approach appears to return a lot of false positives, which is why two pruning
+methods are introduced to improve precision.
+
+Sentiment classification is also mentioned, but those results are presented in a subsequent paper:
+``Mining and summarizing customer reviews''(2004).
+
+
+\subsubsection{Liu, Hu and Cheng (2005)}
+In ``Opinion observer: analyzing and comparing opinions on the web'', their previous work is extended
+by a visualization interface and a more sophisticated method of aspect extraction is introduced.
+
+%In short, their extraction is done the following way:
+%
+%Sentences are split into segments (using dots, commas, conjunctions etc.), POS-tagged, and aspects are
+%manually replaced by tokens. Sentences are then broken into unordered \emph{trigrams},
+%and words not replaced by tokens are stemmed.
+%
+%Finally, \emph{association rule mining}\cite{ma1998integrating} is used to find implications
+%from either words or word-classes to those aspect tokens.
+
+Aspects found using their \emph{association rule mining}\cite{ma1998integrating} algorithm
+and grouped using \emph{synonym grouping} only. %todo conservative: uses wordesense synonyms only
+
+\subsubsection{Blair-Goldensohn et al. (2008)}
+In ``Building a Sentiment Summarizer for Local Service Reviews'', aspect grouping is
+conducted in conjunction with aspect extraction as one task.
+Two methods are used; one dynamic method largely comparing to synonym grouping,
+and one static which more compares to the methods in this work.
+
+The dynamic method extracts frequent aspects using the same methods as (Hu, Liu, 2004),
+where frequent by definition impliesa an aggregation and more than a few aspects,
+altough the actual amount is relative to the amount of data.
+
+In the same work, static extraction is also employed, where a binary maximum entropy classifier
+is used to decide if sentences are one of four categories or \emph{other}(getting pruned).
+Their results are promising, altough one category \emph{decor} is somewhat weaker than the othes.
 
 \section{Grouping methodologies}
 \subsection{Lexical graph search}
+The origins of this method are largely narrated by the introductory section of this chapter;
+starting out from bare noun matching and evolving into this algorithm.
+
 Based on the observation that there are usually keywords in a sentence with lexicographical
 connection to the desired category, an alternative approach to traditional classification is proposed.
-This is motivated since classification models need pure training data to achieve good results.
+This is motivated since classification models generally need good training data to achieve good results.
 The idea is to use a lexicon of known word relations to find a path from a query word to one of
-few word senses with predefined category label, and assign the query word the same label.
+few word senses each with predefined category labels, and assign the query word the same label.
 
-Figure~\ref{fig:baklava_lex} shows an example of this premise in action, where the word relations involved in finding the word ``baklava'' were used, and that it is closer to \emph{product} than \emph{establishment}.
+Figure~\ref{fig:baklava_lex} shows an example of this premise in action,
+where the word relations involved in finding the word ``baklava'' were used,
+and that it is closer to \emph{product} than \emph{establishment}.
 
 \subsubsection{The algorithm}
-A \gls{BFS}(BFS) is conducted from the initial category word senses, defined in table \ref{cat_words}. For each word, neighboring word senses are acquired using word relations defined by \gls{jaws}). Each word sense is also mapped to its source category in this process to allow for quick look-ups.
+A breadth first search is conducted from the initial category word senses,
+as defined in table \ref{cat_words}.
+For each word, neighboring word senses are acquired using word relations
+defined in WordNet. Each time a previously undiscovered word sense is seen, it is mapped
+to the nearest category, or equally the category from which it was found.
+This is done to allow for quick look-ups later.
 
-This method to categorize individual words, can then be extended to categorize full sentences using heuristics.
+This method to categorize individual word senses can then be extended to categorize full
+sentences using a voting heuristic.
 
 \subsubsection{Voting heuristic}
-The heuristic is what actually classifies sentences into groups. To do this, it can use the above described group to query for the group of an individual word sense. Since word senses can consist of more than one word, e.g. ``happy hour'', the heuristic iteratively searches for multiple word word-senses, decreasing in length, starting with the assumption that the full sentence is one word.
+The heuristic is what classifies sentences into groups.
+To do this, it can use the above described group to query for the group of an
+individual word sense. Since word senses can consist of more than one word,
+e.g. ``happy hour'', the heuristic iteratively searches for multiple word word-senses,
+decreasing in length, starting with the assumption that the full sentence is one word.
 
 Next, a map is built using enabling constant time lookup of not only which group is nearest,
 but also the distance $d$ from the word sense to the category.
@@ -895,7 +964,6 @@ Although down-sampling eliminates bias in evaluations, which makes evaluations b
 classifiers more comparable, it also reduces the amount of entries used in evaluations.
 Therefore this report will evaluate using unscaled data once classifiers have been
 verified to be reasonably unbiased in a per class comparison.
-
 
 
 \section{Results}
@@ -1075,10 +1143,6 @@ What is particularly interesting about this result is that, although the method 
 manner, the heuristic is in itself unsupervised. %todo retrofit for hillclibming?
 
 
-The origins of this method are largely narrated by the introductory section of this chapter;
-when getting the system to work initially, aspects were merely grouped by their lemmatized rightmost noun.
-This introduced an obvious need for \emph{synonym grouping}. Later, when studying this task in more detail,
-this method was evolved retrofitting the existing solution with further WordNet word relations.
 
 \subsection{Machine learning classifier}
 
