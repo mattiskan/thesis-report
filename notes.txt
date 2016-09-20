@@ -50,10 +50,14 @@ calculate pruning values
 narrative
 
 too complicated annotation
+
 Where to do what? splitting tasks made it harder.
-Handle General aspect more consistently.
 
+the General aspect
 
+entire system evaluation
+
+Find things unique for a restaurant
 
 mention yelp.
 
