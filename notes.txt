@@ -62,4 +62,4 @@ Find things unique for a restaurant
 mention yelp.
 
 
-
+lower text quality -- wordnet less effective.

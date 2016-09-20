@@ -11,6 +11,7 @@
 \usepackage{graphicx}
 \usepackage{pgfplotstable}
 \usepackage{afterpage}
+\usepackage[normalem]{ulem}
 
 \usepackage{rotating}
 
@@ -768,8 +769,8 @@ altough the actual amount is relative to the amount of data.
 
 In the same work, static extraction is also employed, where a binary maximum entropy classifier
 is used to decide if sentences are one of four categories \emph{food}, \emph{decor}, \emph{service}, \emph{value},
-or possibly \emph{other}(to prune sentence).
-Their results are promising, altough one category \emph{decor} is somewhat weaker than the othes.
+or otherwise \emph{other}.
+Their results are promising, altough one category \emph{decor} is somewhat weaker than the other.
 
 \section{Grouping methodologies}
 \subsection{Lexical graph search}
@@ -853,12 +854,47 @@ would be selected.
   \label{fig:baklava_lex}
 \end{figure}
 
-\subsection{Machine learning classifiers}
-
-\todo
-warranted bias study
-
 \clearpage
+\subsection{Machine learning classifiers}
+To provide comparison for the novel algorithm, another classifier was introduced.
+This classifier was built as an ensamble composition of several other classifiers;
+8 classifier implementations available in scikit-learn\cite{scikit-learn} were individually evaluated using down-sampled data, and based on their performance  %todo which?
+were included in the ensamble. See table \ref{tab:individual_classifier_accuracy} for the full results of this initial evaluation.
+
+This ensamble was made to select one class using a voting scheme;
+the class selected as most probable by each classifier had a probability sum incremented
+by the probability assigned by the voting classifier, or by a constant 0.8 for non-probability based classifiers such as support vector classifiers. Once each classifier had voted, the class with the highest normalized probability sum was selected.
+
+In these initial evaluations, it was noticed that 
+
+The classifier was made to work with both unigrams and bigrams as features (formally introduced in section \ref{subsec:ngrams}).
+
+
+
+This was to expose effects of skewed data on different features.
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{| c | c |}
+    \hline
+    \textbf{Model} & \textbf{Accuracy (unigram/bigram)}\\ \hline
+    Gaussian Naive Bayes & todo/todo \\
+    Multinomial Naive Bayes & todo \\
+    Bernoulli Naive Bayes & todo \\
+    Logistic regression & todo \\
+    SGDClassifier & todo \\
+    \sout{SVC} & todo \\
+    LinearSVC  & todo \\
+    \sout{NuSVC} & todo \\
+    \hline
+%    \textbf{Ensamble} & 0.563 \\ %todo OMG
+%    \hline
+  \end{tabular}
+  \caption{Out-of-the-box unigram/bigram performance of classifiers included in Scikit-learn. Striked classifiers were excluded due to their performance in this test.}
+  \label{tab:individual_classifier_accuracy}
+\end{table}
+
+
 
 
 \section{Evaluation}
@@ -1201,6 +1237,7 @@ Instead readers will be introduced to a more dynamic statistical method.
 \section{Language modeling}
 
 \subsection{\ngram s}
+\label{subsec:ngrams}
 \ngram~modeling is a versatile, robust and widely used method of modeling languages. Typically the model consists of, for some $n$, all $n$-length sub-sequences of a longer sequence (i.e. one or many documents). Each unique sub-sequence is then referred to as a \ngram, and \ngram s of length \emph{1,2,3} are referred to as \emph{unigrams, bigrams} and \emph{trigrams}, respectively\cite{ngrams}.
 
 Frequencies, counts and occurrences of \ngram s have been used in language modeling\cite{chen_goodman}, text categorization\cite{ngrams}, \todo
@@ -1211,9 +1248,9 @@ As an example, the word-\emph{bigrams} for the sentence \emph{``Languages are fu
   \centering
 \emph{``\texttt{<BOS>} Languages''}, \emph{``Languages are''}, \emph{``are fun''}, and \emph{``fun \texttt{<EOS>}''}
 \end{quote}
-where \emph{\texttt{<BOS>}} and \emph{\texttt{<EOS>}} are a tokens representing the starts and ends of sentences.
+where \emph{\texttt{<BOS>}} and \emph{\texttt{<EOS>}} are a tokens representing the start and end of sentences.
 
-Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer exclusively to \ngram s consisting of words.
+Although \ngram~modeling can be applied to virtually any kind of sequence, this report henceforth will refer to \ngram s of words unless otherwise specified.
 
 \subsection{\ngram~language modeling}
 If the probability of a word's occurrence in a sentence $P$ is known (e.g. estimated using a corpus), then the probability of a sentence $s$ can be modeled the following way with \emph{unigrams}:
@@ -1555,25 +1592,6 @@ Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the posi
     \hline
   \end{tabular}
   \caption{Number of unique \ngram s for different \ngram~lengths}
-  \label{tab:found_ngrams}
-\end{table}
-
-\begin{table}[t]
-  \centering
-  \begin{tabular}{| c | c |}
-    \hline
-    \textbf{Model} & \textbf{Avg. Accuracy}\\ \hline
-    Gaussian Naive Bayes & todo\\
-    Multinomial Naive Bayes & todo \\
-    Bernoulli Naive Bayes & todo \\
-    Logistic regression & todo \\
-    SGDClassifier & todo \\
-    SVC & todo \\
-    LinearSVC  & todo \\
-    NuSVC & todo \\
-    \hline
-  \end{tabular}
-  \caption{Performance of other classifiers at full recall.}
   \label{tab:found_ngrams}
 \end{table}
 
