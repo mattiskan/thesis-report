@@ -1,3 +1,4 @@
+
 \documentclass[a4paper,11pt]{kth-mag}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
@@ -961,7 +962,7 @@ This simple web-interface was served by a local web server.
     \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
   \end{axis}
   \end{tikzpicture}
-  \caption{Number of annotated sentences per category}
+  \caption{Number of annotated sentences per category out of 1000 sentences.}
   \label{fig:cat_count}
 \end{figure}
 
@@ -1069,7 +1070,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \legend{Down-sampled unigram, Unmodified unigram, Down-sampled bigram, Unmodified bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment: recall was 1.}
+  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment.}
   \label{fig:per_cat}
 \end{figure}
 
@@ -1666,7 +1667,17 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 
 
 
-\chapter{Project conclusions}
+\chapter{Conclusions}
+The following is a summary of conclusions from the individual chapters in this report. Where applicable conclusions are put into a more general context and implications on the entire system are discussed.
+
+\section{Aspect extraction}
+
+
+
+\section{Aspect grouping}
+
+\section{Sentiment classification}
+
 
 %\chapter{Lessons learned}
 %\subsection{Data annotation}
