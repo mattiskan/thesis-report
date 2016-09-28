@@ -58,6 +58,8 @@
 
 \newcommand{\ysc}{Modified Kneser-Ney classifier}
 
+\newcommand{\numValueAspects}{XX}
+
 \newif\ifhasStudiedFailures
 \hasStudiedFailuresfalse
 
@@ -203,9 +205,8 @@ In this work, the reviews used enable a few simplifying assumptions:
 
 %todo discuss assumption consequences?
 Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutral)sentiment.
-\vspace{4cm}
 
-\pagebreak
+
 
 \section{Introduction of tasks}
 Solutions to the following three tasks will be the basis for our system.
@@ -576,6 +577,8 @@ patterns after glancing over the additional aspects, but without a quality measu
 it is hard to definitely tell. 
 
 \subsection{Aspect quantity}
+
+
 On average, around 2.7 aspects per review are found, which may not sound like a lot 
 but for entities with lots of reviews it is enough:
 
@@ -587,12 +590,14 @@ Glancing at future results, confidence thresholds with $recall\approx 0.7$
 appears reasonable for both sentiment classification and aspect grouping.
 
 An estimate for the number of value aspects found for a business with 300 reviews
-using the numbers from this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.16 = $ aspects. %todo equation
+using the numbers from this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.16 =
+\numValueAspects $ aspects. %todo equation
 Around 40 aspects should be enough to give a statistically significant indication.
 This is especially true when review comparisons are done for
 business chains which can have 10'000 reviews or more.
 
 \subsection{Evaluation of aspect extraction}
+\label{subsec:aspect_eval}
 To examine what portion of retrieved aspects are relevant, a definition of relevant
 is required. This definition turned out to be somewhat of a challenge, as it is sensitive
 to other definitions such as the division of responsibilities between tasks
@@ -616,25 +621,24 @@ and 86.67\% were permissively relevant.
 
 
 \subsection{Mitigating author bias}
-76 reviews out of 10'000 had more than 13 aspects, with one review having as much as 23 aspects.
-If we simply included each aspect from reviews like that one the opinions of
-those sole authors would be represented 23 times more than the opinions from reviews
-with one extracted aspect each.
+76 reviews out of 10'000 had more than 13 aspects, with one review having as  as 23 aspects.
+If we simply included each found aspect, opinions stated in that one review could have up to
+23 times as much influence as reviews with only one found opinion.
 
 A really simple way to make conclusions more impartial is to only allow one
 opinion per aspect group from each review.
 I.e. each review contributes with \emph{at most} one opinion on product, one on service, etc.
-The opinion should be picked so that it represents the majority of
-sentiments expressed towards that aspect group.
+The opinion should ideally be picked so that it represents the majority of
+all sentiments expressed in the review towards that aspect group.
 
 The results in this section do not have the aspect groups associated with them,
-but an absolute lower bound to how many aspects can be kept in the worst case
+but an absolute lower bound to how many aspects can be kept
 is found by simply discounting all but one aspect from each review. This is the same
 as summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
 exact sum is 7851, or equally 7.85\% of reviews.
 
 That being said, it is probably OK and even preferred to allow a few more opinions per review,
-but an upper limit can make sure that a one or a few rigged reviews will not compromise results.
+but some upper limit should be introduced to avoid a few rigged reviews being able to compromise results.
 
 
 \section{Further work}
@@ -1664,19 +1668,26 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 
 
 
+\chapter{General Discussion}
+
+\section{Conclusions}
+\subsection{Aspect extraction}
+Using pattern based extraction methodologies;
+\begin{itemize}
+\item At least one aspect was found in 78.5 of reviews, with an average of 2.7 aspects per review.
+\item It is estimated that between 62.86\% and 86.67\% of all extracted aspects were relevant(highly dependent on definition of relevant; see section \ref{subsec:aspect_eval}).
+
+\item An estimate calculation finds that for a typical business with around 300 reviwes,
+approximately \numValueAspects~can be expected for the least common aspect group, which should be enough to make conclusions about that group.
+\end{itemize}
+
+\subsection{Aspect grouping}
 
 
+\subsection{Sentiment classification}
 
-\chapter{Conclusions}
-The following is a summary of conclusions from the individual chapters in this report. Where applicable conclusions are put into a more general context and implications on the entire system are discussed.
+\section{Discussion}
 
-\section{Aspect extraction}
-
-
-
-\section{Aspect grouping}
-
-\section{Sentiment classification}
 
 
 %\chapter{Lessons learned}
