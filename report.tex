@@ -733,6 +733,34 @@ basic text classification methods can be employed, and the task is to be conside
 simpler than its dynamic counterpart.
 
 
+\section{Evaluation}  %todo fix
+\label{sec:precision_recall}
+A common way to evaluate information retrieval tasks is \emph{precision}
+and \emph{recall}. Together they evaluate a systems ability to retrieve results,
+by evaluating the capacity to exclude irrelevant results,
+and include relevant results, respectively.
+
+\subsection{Precision}
+% todo: accuracy
+Precision is a measure of what fraction of retrieved results are considered relevant or correct.
+
+It is defined as follows:
+\begin{equation} \label{eq:precision}
+Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
+\end{equation}
+
+\subsection{Recall}
+In this work, confidence thresholds are used to examine whether better results can be achieved by
+allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
+the precision denominator, as they are not considered to be classified.
+Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
+
+\begin{equation} \label{eq:recall}
+Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
+\end{equation}
+
+
+
 \section{Related Work}
 
 \subsubsection{Hu, Liu (2004)}
@@ -838,7 +866,7 @@ $d_A(w_1)=4$, $d_A(w_2)=6$ and $d_B(w_3)=3$,
 the categories will receive the scores $A=3+1+0$ and $B=0+0+4$, and the highest scoring category $A$
 would be selected.
 
-\begin{table}[t]
+\begin{table}[b]
   \centering
   \begin{tabular}{| c | c |}
     \hline
@@ -861,18 +889,20 @@ would be selected.
 
 \clearpage
 \subsection{Machine learning classifiers}
-To provide comparison for the novel algorithm, another classifier was introduced.
-This classifier was built as an ensamble composition of several other classifiers;
-8 classifier implementations available in scikit-learn\cite{scikit-learn} were individually evaluated using down-sampled data, and based on their performance  %todo which?
-were included in the ensamble. See table \ref{tab:individual_classifier_accuracy} for the full results of this initial evaluation.
+To provide comparison for the novel algorithm, a macine learning classifier was introduced.
 
-This ensamble was made to select one class using a voting scheme;
-the class selected as most probable by each classifier had a probability sum incremented
-by the probability assigned by the voting classifier, or by a constant 0.8 for non-probability based classifiers such as support vector classifiers. Once each classifier had voted, the class with the highest normalized probability sum was selected.
+Scikit-learn\ref{scikit-learn} is an open source machine learning toolkit which provides various
+classifier implementations ready to use.
+The precision of these classifiers were evaluated individually to make a decision on which classifier to use.
 
-In these initial evaluations, it was noticed that 
+Early sentiment classification experiments combining these classifiers in ensamble compositions
+where the mayority vote was chosen for classification showed promise, so an ensamble of the top performing
+classifier of each kind (Stochastic Gradient Descent, Linear Support Vector, and Multinomial Naive Bayes)
+was constructed and evaluated as well. The classifiers were made to work with both unigrams and bigrams
+as features (formally introduced in section \ref{subsec:ngrams}).
+Results from this initial experiment can be seen in table
+\ref{tab:individual_unigram_accuracy} and \ref{tab:individual_bigram_accuracy}
 
-The classifier was made to work with both unigrams and bigrams as features (formally introduced in section \ref{subsec:ngrams}).
 
 
 
@@ -880,53 +910,53 @@ This was to expose effects of skewed data on different features.
 
 \begin{table}[h]
   \centering
-  \begin{tabular}{| c | c |}
+  \begin{tabular}{| c | c | c | c | c || c |}
     \hline
-    \textbf{Model} & \textbf{Accuracy (unigram/bigram)}\\ \hline
-    Gaussian Naive Bayes & todo/todo \\
-    Multinomial Naive Bayes & todo \\
-    Bernoulli Naive Bayes & todo \\
-    Logistic regression & todo \\
-    SGDClassifier & todo \\
-    \sout{SVC} & todo \\
-    LinearSVC  & todo \\
-    \sout{NuSVC} & todo \\
+    \textbf{Model} & Product & Value & Service & Establishment & \emph{Avg.} \\ \hline
+    NaiveBayesClassifier& 0.611 & 0.509 & 0.589 & 0.636 & 0.586 \\
+    LogisticRegression  & 0.648 & 0.545 & 0.607 & 0.436 & 0.559 \\
+    SGDClassifier       & 0.611 & \textbf{0.655} & 0.554 & 0.455 & 0.568 \\
+    SVC                 & 0.327 & 0.382 & 0.418 & \textbf{0.764} & 0.473 \\
+    LinearSVC           & \textbf{0.759} & 0.582 & \textbf{0.679} & 0.582 & \textbf{0.650} \\
+    MultinomialNB       & \textbf{0.759} & 0.600 & 0.661 & 0.473 & 0.623 \\
+    BernoulliNB         & 0.400 & 0.455 & 0.582 & 0.509 & 0.486 \\
+    \hline
+    \emph{Ensamble}            & 0.648 & 0.582 & 0.571 & 0.582 & 0.595 \\ 
     \hline
 %    \textbf{Ensamble} & 0.563 \\ %todo OMG
 %    \hline
   \end{tabular}
-  \caption{Out-of-the-box unigram/bigram performance of classifiers included in Scikit-learn. Striked classifiers were excluded due to their performance in this test.}
-  \label{tab:individual_classifier_accuracy}
+  \caption{Out-of-the-box \textbf{unigram} precision of classifiers included in Scikit-learn.}
+  \label{tab:individual_unigram_accuracy}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{| c | c | c | c | c || c |}
+    \hline
+    \textbf{Model} & Product & Value & Service & Establishment & \emph{Avg.} \\ \hline
+    NaiveBayesClassifier& 0.127 & 0.255 & 0.255 & 0.800 & 0.359 \\
+    LogisticRegression  & 0.218 & 0.255 & 0.200 & 0.709 & 0.345 \\
+    SGDClassifier       & \textbf{0.855} & 0.255 & 0.236 & 0.164 & 0.377 \\
+    SVC                 & 0.109 & 0.145 & 0.109 & \textbf{0.891} & 0.314 \\
+    LinearSVC           & 0.291 & \textbf{0.273} & 0.236 & 0.836 & \textbf{0.409} \\
+    MultinomialNB       & 0.255 & 0.236 & 0.255 & 0.727 & 0.368 \\
+    BernoulliNB         & 0.093 & 0.255 & \textbf{0.268} & 0.800 & 0.355 \\
+    \hline
+    \emph{Ensamble}     & 0.182 & 0.200 & 0.291 & 0.818 & 0.373 \\
+    \hline
+%    \hline
+  \end{tabular}
+  \caption{Out-of-the-box \textbf{bigram} precision of classifiers included in Scikit-learn.
+    Precision for individual classes varied greatly between measurements,
+    a lot more than using unigram features,
+    but the average had a standard deviation of less than 5\%
+    between runs, so the preformance of the classifiers is to be considered stable.
+  } % todo, discuss this further
+  \label{tab:individual_bigram_accuracy}
 \end{table}
 
 
-
-
-\section{Evaluation}
-\label{sec:precision_recall}
-A common way to evaluate information retrieval tasks is \emph{precision}
-and \emph{recall}. Together they evaluate a systems ability to retrieve results,
-by evaluating the capacity to exclude irrelevant results,
-and include relevant results, respectively.
-
-\subsection{Precision}
-% todo: accuracy
-Precision is a measure of what fraction of retrieved results are considered relevant or correct.
-
-It is defined as follows:
-\begin{equation} \label{eq:precision}
-Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
-\end{equation}
-
-\subsection{Recall}
-In this work, confidence thresholds are used to examine whether better results can be achieved by
-allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
-the precision denominator, as they are not considered to be classified.
-Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
-
-\begin{equation} \label{eq:recall}
-Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
-\end{equation}
 
 
 \newpage
