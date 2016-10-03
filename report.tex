@@ -891,68 +891,66 @@ would be selected.
 \subsection{Machine learning classifiers}
 To provide comparison for the novel algorithm, a macine learning classifier was introduced.
 
-Scikit-learn\ref{scikit-learn} is an open source machine learning toolkit which provides various
-classifier implementations ready to use.
-The precision of these classifiers were evaluated individually to make a decision on which classifier to use.
+Scikit-learn\cite{scikit-learn} is an open source machine learning toolkit which provides various
+classifier implementations.
+The precision of these classifiers were evaluated individually to decide which classifier to use.
 
 Early sentiment classification experiments combining these classifiers in ensamble compositions
-where the mayority vote was chosen for classification showed promise, so an ensamble of the top performing
+showed promise, so an ensamble of the top performing
 classifier of each kind (Stochastic Gradient Descent, Linear Support Vector, and Multinomial Naive Bayes)
 was constructed and evaluated as well. The classifiers were made to work with both unigrams and bigrams
 as features (formally introduced in section \ref{subsec:ngrams}).
-Results from this initial experiment can be seen in table
-\ref{tab:individual_unigram_accuracy} and \ref{tab:individual_bigram_accuracy}
 
+Results for these classifiers can be seen in tables
+\ref{tab:individual_unigram_accuracy} and \ref{tab:individual_bigram_accuracy}.
+Based on these results only Unigram LinearSVC was studied further.
 
-
-
-This was to expose effects of skewed data on different features.
 
 \begin{table}[h]
   \centering
   \begin{tabular}{| c | c | c | c | c || c |}
     \hline
-    \textbf{Model} & Product & Value & Service & Establishment & \emph{Avg.} \\ \hline
-    NaiveBayesClassifier& 0.611 & 0.509 & 0.589 & 0.636 & 0.586 \\
-    LogisticRegression  & 0.648 & 0.545 & 0.607 & 0.436 & 0.559 \\
-    SGDClassifier       & 0.611 & \textbf{0.655} & 0.554 & 0.455 & 0.568 \\
-    SVC                 & 0.327 & 0.382 & 0.418 & \textbf{0.764} & 0.473 \\
-    LinearSVC           & \textbf{0.759} & 0.582 & \textbf{0.679} & 0.582 & \textbf{0.650} \\
-    MultinomialNB       & \textbf{0.759} & 0.600 & 0.661 & 0.473 & 0.623 \\
-    BernoulliNB         & 0.400 & 0.455 & 0.582 & 0.509 & 0.486 \\
+    \multicolumn{6}{|c|}{Unigram} \\
     \hline
-    \emph{Ensamble}            & 0.648 & 0.582 & 0.571 & 0.582 & 0.595 \\ 
+    \textbf{Model} & Product & Value & Service & Establishment & \emph{Avg.} \\ \hline
+    NaiveBayesClassifier& 0.566 & 0.555 & 0.622 & 0.564 & 0.577 \\
+    LogisticRegression  & 0.650 & 0.563 & 0.526 & 0.537 & 0.569 \\
+    SGDClassifier       & 0.638 & 0.618 & 0.511 & 0.528 & 0.574 \\
+    SVC                 & 0.291 & 0.425 & 0.364 & \textbf{0.760} & 0.460 \\
+    LinearSVC           & \textbf{0.658} & 0.612 & 0.606 & 0.576 & \textbf{0.613} \\
+    MultinomialNB       & 0.657 & \textbf{0.624} & \textbf{0.641} & 0.478 & 0.600 \\
+    BernoulliNB         & 0.496 & 0.470 & 0.585 & 0.616 & 0.542 \\
+    \hline
+    ensamble            & 0.605 & 0.556 & 0.573 & 0.578 & 0.578 \\
     \hline
 %    \textbf{Ensamble} & 0.563 \\ %todo OMG
 %    \hline
   \end{tabular}
-  \caption{Out-of-the-box \textbf{unigram} precision of classifiers included in Scikit-learn.}
+  \caption{Out-of-the-box \textbf{unigram} precision of classifiers included in Scikit-learn.
+    Best result for each class is highlighted.
+  }
   \label{tab:individual_unigram_accuracy}
-\end{table}
 
-\begin{table}[h]
-  \centering
   \begin{tabular}{| c | c | c | c | c || c |}
     \hline
-    \textbf{Model} & Product & Value & Service & Establishment & \emph{Avg.} \\ \hline
-    NaiveBayesClassifier& 0.127 & 0.255 & 0.255 & 0.800 & 0.359 \\
-    LogisticRegression  & 0.218 & 0.255 & 0.200 & 0.709 & 0.345 \\
-    SGDClassifier       & \textbf{0.855} & 0.255 & 0.236 & 0.164 & 0.377 \\
-    SVC                 & 0.109 & 0.145 & 0.109 & \textbf{0.891} & 0.314 \\
-    LinearSVC           & 0.291 & \textbf{0.273} & 0.236 & 0.836 & \textbf{0.409} \\
-    MultinomialNB       & 0.255 & 0.236 & 0.255 & 0.727 & 0.368 \\
-    BernoulliNB         & 0.093 & 0.255 & \textbf{0.268} & 0.800 & 0.355 \\
+    \multicolumn{6}{|c|}{Bigram} \\
     \hline
-    \emph{Ensamble}     & 0.182 & 0.200 & 0.291 & 0.818 & 0.373 \\
+    \textbf{Model} & Product & Value & Service & Establishment & \emph{Avg.} \\ \hline
+    NaiveBayesClassifier& 0.149 & 0.229 & \textbf{0.437} & 0.654 & 0.367 \\
+    LogisticRegression  & 0.316 & 0.230 & 0.308 & 0.593 & 0.362 \\
+    SGDClassifier       & \textbf{0.329} & \textbf{0.350} & 0.406 & 0.357 & 0.361 \\
+    SVC                 & 0.203 & 0.154 & 0.278 & 0.670 & 0.326 \\
+    LinearSVC           & 0.323 & 0.223 & 0.306 & 0.620 & 0.368 \\
+    MultinomialNB       & 0.201 & 0.230 & 0.288 & 0.771 & 0.373 \\
+    BernoulliNB         & 0.121 & 0.202 & 0.299 & \textbf{0.802} & 0.356 \\
+    \hline
+    ensamble            & 0.243 & 0.228 & 0.334 & 0.694 & \textbf{0.375}\\
     \hline
 %    \hline
   \end{tabular}
   \caption{Out-of-the-box \textbf{bigram} precision of classifiers included in Scikit-learn.
-    Precision for individual classes varied greatly between measurements,
-    a lot more than using unigram features,
-    but the average had a standard deviation of less than 5\%
-    between runs, so the preformance of the classifiers is to be considered stable.
-  } % todo, discuss this further
+    Best result for each class is highlighted.
+  }
   \label{tab:individual_bigram_accuracy}
 \end{table}
 
@@ -1698,9 +1696,10 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 
 
 
-\chapter{General Discussion}
+\chapter{Summary}
 
-\section{Conclusions}
+\section{Results}
+
 \subsection{Aspect extraction}
 Using pattern based extraction methodologies;
 \begin{itemize}
@@ -1711,10 +1710,19 @@ Using pattern based extraction methodologies;
 approximately \numValueAspects~can be expected for the least common aspect group, which should be enough to make conclusions about that group.
 \end{itemize}
 
+
 \subsection{Aspect grouping}
 
 
 \subsection{Sentiment classification}
+In this chapter;
+
+\begin{itemize}
+\item interpolated smoothing techinques are shown to unconditionally improve accuracy,
+\item interpolating three models is found more effective than just two,
+\end{itemize}
+
+
 
 \section{Discussion}
 
