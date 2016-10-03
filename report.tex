@@ -1342,7 +1342,7 @@ It can mitigate the problem of unseen data,
 but also makes for better estimations of rare entities, or even combine multiple models.
 
 The rest of this section will introduce a few smoothing methods in a somewhat simplified way.
-Methods that combine multiple \ngram~orders will be described only using bigrams and
+vvMethods that combine multiple \ngram~orders will be described only using bigrams and
 unigrams for enhanced readability,
 but are all generalizable to higher order \ngram~models as well.
 For this and a more comprehensible introduction to smoothing,
@@ -1718,14 +1718,22 @@ approximately \numValueAspects~can be expected for the least common aspect group
 In this chapter;
 
 \begin{itemize}
-\item interpolated smoothing techinques are shown to unconditionally improve accuracy,
-\item interpolating three models is found more effective than just two,
+\item sentiment is accurately classified with XX\% accuracy, or YY\% at ZZ\% recall.
+\item sentiment classifiaction is shown to be almost (XX vs YY) impartial.
+
 \end{itemize}
 
 
 
-\section{Discussion}
+\section{Conclusions}
+\subsection{Sentiment classification}
+In this chapter;
 
+\begin{itemize}
+\item interpolated smoothing techinques are found to give unconditionally better accuracy than additive smoothing,
+\item interpolating three models is found more effective than two interpolated models,
+\item and lower order n-gram models are shown to generalize slightly better but have lower confidence than higher order models.
+\end{itemize}
 
 
 %\chapter{Lessons learned}
