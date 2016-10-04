@@ -1750,7 +1750,20 @@ I ended up reannotating data several times. The idea of \emph{``I'm gonna get it
 
 
 \subsection{Classifier store}
-Although an implementation detail, I think it is worth mentioning because it worked really well and saved some time.
+Although an implementation detail, I think it is something worth mentioning because it worked well and
+saved time over the course of the project, is the classifier store. Through out the code base, classifiers were
+not instantiated like regular objects, but instead requested in what I call the classifier store.
+Upon request, the store would inspect the module containing the source code that trains
+the requested classifier and make a hash value based on this inspection.
+Once the classifier has been trained, a binary dump of that classifier is be made in a file with a name
+corresponding to that hash.
+
+This way, the same classifier will automatically be reused until a change is made to 
+its source code, which reduces the training time (about 2 minutes) to the time to
+read the binary dump (about a second).
+
+This turned out especially useful when composing classifiers out of several other classifiers.
+
 
 %\subsection{Know your data?}
 

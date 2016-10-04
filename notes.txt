@@ -63,3 +63,8 @@ mention yelp.
 
 
 lower text quality -- wordnet less effective.
+
+
+
+Composition:
+   memory footprint
