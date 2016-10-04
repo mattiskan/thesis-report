@@ -868,13 +868,13 @@ would be selected.
 
 \begin{table}[b]
   \centering
-  \begin{tabular}{| c | c |}
+  \begin{tabular}{| r | l |}
     \hline
     \textbf{Category} & \textbf{Predefined keywords}\\ \hline
-    Establishment & \emph{Furniture, view, music, loud, appearance, clean, location}\\ \hline
+    Establishment & \emph{furniture, view, music, loud, appearance, clean, location}\\ \hline
     Product & \emph{food, drink, taste, edible}\\ \hline
-    Value & \emph{Cheap, price, dollar, buck, lots, bargain}\\ \hline
-    Service & \emph{Service, quick, attentive, wait}\\ \hline
+    Value & \emph{cheap, price, dollar, buck, lots, bargain}\\ \hline
+    Service & \emph{service, quick, attentive, wait}\\ \hline
   \end{tabular}
   \caption{Categories with their pre-associated key words.}
   \label{tab:cat_words}
@@ -1201,7 +1201,7 @@ these words are labeled solely using the $X$ predefined words from table \ref{ta
 
   \vspace{0.4cm}\caption{Result summary}
   \label{general_asp}
-p\end{table}
+\end{table}
 
 
 \section{Discussion}
@@ -1712,45 +1712,66 @@ approximately \numValueAspects~can be expected for the least common aspect group
 
 
 \subsection{Aspect grouping}
-
-
-\subsection{Sentiment classification}
-In this chapter;
-
 \begin{itemize}
-\item sentiment is accurately classified with XX\% accuracy, or YY\% at ZZ\% recall.
-\item sentiment classifiaction is shown to be almost (XX vs YY) impartial.
+\item From selection of classifiers in scikit-learn LinearSVC, with 61.3\% accuracy, was found the most effective classifier,
+\item using bigrams as features did not work well --- in fact only marginally better than randomly guessing,
+\item 
 
 \end{itemize}
 
 
-
-\section{Conclusions}
 \subsection{Sentiment classification}
 In this chapter;
 
 \begin{itemize}
-\item interpolated smoothing techinques are found to give unconditionally better accuracy than additive smoothing,
+\item sentiment is accurately classified with XX\% accuracy, or YY\% at ZZ\% recall,
+\item and sentiment classifiaction is shown to be almost (XX vs YY) impartial
+\end{itemize}
+which led to conclude that;
+\begin{itemize}
+\item interpolated smoothing techinques were found to give unconditionally better accuracy than additive smoothing,
 \item interpolating three models is found more effective than two interpolated models,
 \item and lower order n-gram models are shown to generalize slightly better but have lower confidence than higher order models.
 \end{itemize}
 
+\section{Obstacles and lessons learned}
 
-%\chapter{Lessons learned}
+\subsection{Data annotation}
+I ended up reannotating data several times. The idea of \emph{``I'm gonna get it right the first time, so I don't have to do over''} led me to initially annotate in a too complicated fashion.
+\todo
+
 %\subsection{Data annotation}
 %A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected.
 %
 %First of all, deciding to do it on the on the aspect level introduced some confusion as to how annotation should be done. As an example, in the sentence \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence annotated as both \emph{service} and \emph{product}?
-%
+
 %After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
 %
-%However, this process of finding out how to annotate sentences took a few tries before a somewhat consistent way was found, and thanks to down-sampling the efforts required for each made this time consuming.
-%
-%\subsection{Know your data}
-%
-%\subsection{It is not all about feature selection}
-%
-%% todo: what I learned
+
+
+\subsection{Classifier store}
+Although an implementation detail, I think it is worth mentioning because it worked really well and saved some time.
+
+%\subsection{Know your data?}
+
+%\subsection{The General aspect}
+
+%\subsection{Splitting tasks}
+
+%\subsection{Focus on things unique for a place}
+
+
+\section{Final words}
+My initial hope for this report was to only cover one of the three tasks introduced in more depth. Because of the project being hosted abroad, I did background studies and preparation on my own and most of these preparations turned out to overlap with already existing solutions at my host company. Although unfortunate, it was still a great learning experience; after studying a problem and creating my own solution, getting to compare it to a production system as well as getting professional feedback on my own experiments.
+
+In search for a less explored task, I read up on aspect extraction and grouping as well, and also got to familiarize myself with the workings of existing solutions to these problems at Yelp, with the goal of being able to reuse and possibly improve one of these existing systems.
+
+I did manage to get these systems to running and produce results comparable to my own, however, halfway through my internship, I decided to abandon this path for two reasons; most importantly, I was running out of time. These systems were designed to run on Yelp's infrastructure, which I would not be able to access after my internship with them. Seccondly, because these were production systems, they were made to handle data at large scale and had a bunch of added complexity to address this. This added complexity would slow down my experiments as well.
+
+Instead, I decided to put some of my learnings from this project in writing, along with some experiments designed to illustrate these findings, and the result is what you are now reading. It is my hope that this document could prove as an introduction and help someone unacquainted focus on the right things.
+
+%One final word of advice to take away from this project is, if you are about to build a production system, seeing from these production systems, is to try and separate 
+
 
 
 \bibliographystyle{plain}
