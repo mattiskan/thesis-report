@@ -97,16 +97,12 @@
 \maketitle
 \selectlanguage{english}
 \begin{abstract}
-%line are becoming one of the most important resources when comparing businesses, services and products.
-%for more reliable conclusions as more opinions can be taken into account, but it also poses a problem,
-%ers can process.
-%
-%apable to handle big quantities of data, which suggests potential for using computers as aid when
-%
-%
-%escribes on a technical level how to develop a system that
-%mmaries, and prodives detailed studies of a few key concepts required
-%
+  The internet has created a seemingly endress source of information;
+  information which is of much greater value if interpreted.
+
+  
+
+  
 \end{abstract}
 
 
@@ -204,7 +200,7 @@ In this work, the reviews used enable a few simplifying assumptions:
 \end{itemize}
 
 %todo discuss assumption consequences?
-Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple; or in plain words, an aspect with associated (non-neutral)sentiment.
+Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple, or in plain words; an aspect with associated (non-neutral)sentiment.
 
 
 
@@ -400,7 +396,8 @@ from either words or word-classes to those aspect tokens.
 
 \section{Extracting aspects}
 \subsection{Candidate Identification}
-A simple aspect extractor was developed. Given a review, much like Turney's pattern extraction,
+A simple aspect extractor was developed. Given a review, much like Turney's pattern
+extraction\cite{turney2002thumbs},
 the extractor uses the POS-tagger in nltk\cite{nltk} and
 compares text to a series of predefined grammatical patterns.
 
@@ -733,33 +730,6 @@ basic text classification methods can be employed, and the task is to be conside
 simpler than its dynamic counterpart.
 
 
-\section{Evaluation}  %todo fix
-\label{sec:precision_recall}
-A common way to evaluate information retrieval tasks is \emph{precision}
-and \emph{recall}. Together they evaluate a systems ability to retrieve results,
-by evaluating the capacity to exclude irrelevant results,
-and include relevant results, respectively.
-
-\subsection{Precision}
-% todo: accuracy
-Precision is a measure of what fraction of retrieved results are considered relevant or correct.
-
-It is defined as follows:
-\begin{equation} \label{eq:precision}
-Precision = \frac{\text {correctly classified}}{\text{correctly classified} + \text{incorrectly classified}}
-\end{equation}
-
-\subsection{Recall}
-In this work, confidence thresholds are used to examine whether better results can be achieved by
-allowing the classifiers answer \texttt{UNKNOWN} for difficult cases. These answers are not included in
-the precision denominator, as they are not considered to be classified.
-Instead \emph{recall} is introduced to mean the fraction of results that classifiers gave an answer for:
-
-\begin{equation} \label{eq:recall}
-Recall = \frac{\text {classified}}{\text{classified} + \texttt{UNKNOWN}\text{s}}
-\end{equation}
-
-
 
 \section{Related Work}
 
@@ -791,7 +761,7 @@ Aspects found using their \emph{association rule mining}\cite{ma1998integrating}
 and grouped using \emph{synonym grouping} only. %todo conservative: uses wordesense synonyms only
 
 \subsubsection{Blair-Goldensohn et al. (2008)}
-In ``Building a Sentiment Summarizer for Local Service Reviews'', aspect grouping is
+In ``Building a Sentiment Summarizer for Local Service Reviews''\cite{blair2008building}, aspect grouping is
 conducted in conjunction with aspect extraction as one task.
 Two methods are used; one dynamic method largely comparing to synonym grouping,
 and one static which more compares to the methods in this work.
@@ -805,6 +775,152 @@ is used to decide if sentences are one of four categories \emph{food}, \emph{dec
 or otherwise \emph{other}.
 Their results are promising, altough one category \emph{decor} is somewhat weaker than the other.
 
+
+
+\section{Evaluation}  %todo fix
+\label{sec:precision_recall}
+Common ways to evaluate information retrieval tasks are \emph{accuracy},
+\emph{precision}, and \emph{recall}.
+Together they evaluate a systems over all effectiveness,
+its ability to exclude irrelevant results and 
+and its ability to include relevant results.
+
+For these metrics to apply In classification tasks, particularly when there are more
+than two classes, \emph{precision} and \emph{recall} need to be extended. Common practice
+is to use the average \emph{per class} of the same metric.
+
+
+\subsection{Confusion matrix}
+Confusion matricies are used to illustrate the possible outcomes of classification.
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{| c | c | c |}
+
+    \hline
+    Real class & Classified as \emph{pos} & Classified as \emph{neg} \\ \hline
+    \emph{pos} & true positive (\emph{tp}) & false positive (\emph{fp}) \\\hline
+    \emph{neg} & true negative (\emph{tn}) & false negative (\emph{fn}) \\\hline
+  \end{tabular}
+  \caption{Confusion matrix for binary classification.}
+  \label{todo}
+\end{table}
+
+
+
+\subsection{Accuracy}
+Accuracy aims to describe the over all effectiveness of a system.
+In words, it is a measure of \emph{fraction of correctly classified}.
+
+In the binary case, it it is defined as\cite{sokolova2009systematic}:
+\begin{equation} \label{eq:accuracy}
+  Accuracy = \frac{\text{no. correctly classified}}{\text{no. samples to classify}} =
+  \frac{tp + tn}{tp+tn+fp+fn}
+\end{equation}
+
+%The average accuracy is the multiclass extension of accuracy, simply defined as the average of
+%all classes:
+%\begin{equation} \label{eq:avgaccuracy}
+%  AvgAccuracy = \frac{\sum All Accuracies}{no. classes} =
+%  \frac{\sum_{i \in C}\frac{tp_i + tn_i}{tp_i+tn_i+fp_i+fn_i}}{|C|}
+%\end{equation}
+
+
+
+\subsection{Precision}
+In information retrieval, precision is a measure of what fraction of retrieved
+results are considered relevant or correct, and is defined as\cite{rijsbergen1979v}:
+
+\begin{equation} \label{eq:precision}
+Precision_{\;binary} =  \frac{tp}{tp + fp}
+\end{equation}
+
+In classification, particularly when classifying with multiple classes,
+it is similarly a measure of agreement between assigned and actual labels,
+or in words:
+
+\emph{Out of the times a class is predicted, what fraction of predictions are correct?}
+
+
+The multiclass definition used in this report is \emph{macro-averaging precision}\cite{sokolova2009systematic}:
+\begin{equation} \label{eq:multiprecision}
+Precision_{\;multiclass} =  \frac{\sum_{i \in C} \frac{ tp_i}{(tp_i + fp_i)}}{|C|}
+\end{equation}
+
+
+\subsection{Recall}
+In information retrieval, recall is a measure of a systems capability of including
+relevant instances in results\cite{rijsbergen1979v}:
+
+\begin{equation} \label{eq:recall}
+Recall_{\;binary} = \frac{tp}{tp + fn}
+\end{equation}
+And is extendend to multiclass in a similar fashion to precision\cite{sokolova2009systemati}:
+\begin{equation} \label{eq:multirecall}
+Recall_{\;multiclass} =  \frac{\sum_{i \in C} \frac{ tp_i}{(tp_i + fn_i)}}{|C|}
+\end{equation}
+
+\subsection{Confidence thresholds}
+In chapter \ref{chapter:sentiment-classifiction}, confidence thresholds are used to
+allow classifiers answer \texttt{UNKNOWN} for difficult cases.
+This is done so that particular instance is excluded from the result set
+(and thus the precision measure), and makes recall an important measure
+because instances are included in the $fn$-count, and still impact recall negatively.
+
+The \emph{confidence threshold} is a parameter which determines how low the probability
+must be for classifiers to return \texttt{UNKNOWN}.
+
+
+\clearpage
+
+\section{Getting data}
+\label{subsec:getting_data}
+
+All introduced evaluations are dependent on labeled data. Public datasets for products exist and were examined,
+but as it has been shown that sentiment classification performs poorly cross domains\cite{aue2005customizing}
+this was deemed likely to apply for aspect grouping as well. Thus it was decided to annotate new data.
+
+Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
+according to their group and sentiment. This simple web-interface was served by a local web server,
+and for each submited annotation a JSON-line was written to a log file.
+
+Using this interface, 1000 sentences were annotated.
+Figure \ref{fig:cat_count} shows the distribution of classes found in this annotation.
+
+
+\begin{figure}[h]
+  \centering
+  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
+  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
+  \label{fig:annotate_aspect}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+
+  \begin{axis}[
+      %title={Classifier performance per category},
+      %xlabel={Categories},
+      ylabel={Number of aspects},
+      ybar, ymin=0,
+      %bar width=20pt,
+      xtick=data,
+      x tick label style={rotate=45,anchor=east},
+      xticklabels from table={data/category_distribution.csv}{category},
+      xticklabel style={text height=1.5ex},
+      ymajorgrids=true,
+      grid style=dashed,
+      legend pos=north east,
+    ]
+    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Number of aspects of each category found when annotating 1000 sentences.}
+  \label{fig:cat_count}
+\end{figure}
+
+\clearpage
 \section{Grouping methodologies}
 \subsection{Lexical graph search}
 The origins of this method are largely narrated by the introductory section of this chapter;
@@ -822,7 +938,7 @@ and that it is closer to \emph{product} than \emph{establishment}.
 
 \subsubsection{The algorithm}
 A breadth first search is conducted from the initial category word senses,
-as defined in table \ref{cat_words}.
+as defined in table \ref{tab:cat_words}.
 For each word, neighboring word senses are acquired using word relations
 defined in WordNet. Each time a previously undiscovered word sense is seen, it is mapped
 to the nearest category, or equally the category from which it was found.
@@ -926,7 +1042,7 @@ Based on these results only Unigram LinearSVC was studied further.
 %    \textbf{Ensamble} & 0.563 \\ %todo OMG
 %    \hline
   \end{tabular}
-  \caption{Out-of-the-box \textbf{unigram} precision of classifiers included in Scikit-learn.
+  \caption{Out-of-the-box \textbf{unigram} per class precision of classifiers included in Scikit-learn.
     Best result for each class is highlighted.
   }
   \label{tab:individual_unigram_accuracy}
@@ -948,55 +1064,12 @@ Based on these results only Unigram LinearSVC was studied further.
     \hline
 %    \hline
   \end{tabular}
-  \caption{Out-of-the-box \textbf{bigram} precision of classifiers included in Scikit-learn.
-    Best result for each class is highlighted.
+  \caption{Out-of-the-box \textbf{bigram} per class precision of classifiers
+    included in Scikit-learn. Best result for each class is highlighted.
   }
   \label{tab:individual_bigram_accuracy}
 \end{table}
 
-
-
-
-\newpage
-\subsection{Getting data}
-\label{subsec:getting_data}
-
-\begin{figure}[h]
-  \centering
-  \fbox{\includegraphics[width=10cm]{annotate_aspect.png}}
-  \caption{Aspect level annotation interface. Allows selection of aspects by marking a series of words(dark green). Since a sentence can hold more than one aspect, once an aspect has been submitted, the same sentence is kept and another aspect can be selected(a green border is left to indicate a previous submission).}
-  \label{fig:annotate_aspect}
-\end{figure}
-
-Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
-according to their group and sentiment.
-
-This simple web-interface was served by a local web server.
-
-\begin{figure}[t]
-  \centering
-  \begin{tikzpicture}
-
-  \begin{axis}[
-      %title={Classifier performance per category},
-      %xlabel={Categories},
-      ylabel={Number of aspects},
-      ybar, ymin=0,
-      %bar width=20pt,
-      xtick=data,
-      x tick label style={rotate=45,anchor=east},
-      xticklabels from table={data/category_distribution.csv}{category},
-      xticklabel style={text height=1.5ex},
-      ymajorgrids=true,
-      grid style=dashed,
-      legend pos=north east,
-    ]
-    \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
-  \end{axis}
-  \end{tikzpicture}
-  \caption{Number of annotated sentences per category out of 1000 sentences.}
-  \label{fig:cat_count}
-\end{figure}
 
 \clearpage
 
@@ -1143,40 +1216,40 @@ Comparison between the balanced/unbalanced versions of the classifier models sho
 
 It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
 
-\newpage
-
-\subsection{Introducing confidence thresholds}
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-        %title={Classifier performance based on data size},
-        xlabel={Recall},
-        ylabel={Precision},
-        %xmin=0.5, xmax=1,
-        %ymin=0.4, ymax=1,
-        %xtick={0,20,40,60,80,100},
-        %ytick={0,20,40,60,80,100,120},
-        legend pos=south west,
-        ymajorgrids=true,
-        grid style=dashed,
-      ]
-      \addplot table [x=r, y=p]{data/pr_unigram.csv};
-      \addplot table [x=r, y=p]{data/pr_bigram.csv};
-      \legend{
-        unigram,
-        bigram
-      }
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Precision vs. recall created varying a confidence threshold}
-  \label{fig:pr_curve}
-\end{figure}
-
-
-Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
-
-\newpage
+%\newpage
+%
+%\subsection{Introducing confidence thresholds}
+%\begin{figure}[h]
+%  \centering
+%  \begin{tikzpicture}
+%    \begin{axis}[
+%        %title={Classifier performance based on data size},
+%        xlabel={Recall},
+%        ylabel={Precision},
+%        %xmin=0.5, xmax=1,
+%        %ymin=0.4, ymax=1,
+%        %xtick={0,20,40,60,80,100},
+%        %ytick={0,20,40,60,80,100,120},
+%        legend pos=south west,
+%        ymajorgrids=true,
+%        grid style=dashed,
+%      ]
+%      \addplot table [x=r, y=p]{data/pr_unigram.csv};
+%      \addplot table [x=r, y=p]{data/pr_bigram.csv};
+%      \legend{
+%        unigram,
+%        bigram
+%      }
+%    \end{axis}
+%  \end{tikzpicture}
+%  \caption{Precision vs. recall created varying a confidence threshold}
+%  \label{fig:pr_curve}
+%\end{figure}
+%
+%
+%Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
+%
+%\newpage
 
 \section{Graph-search classifier}
 %todo NUM X
@@ -1243,6 +1316,7 @@ I believe that some aspects of my data make this heuristic perform better than i
 
 
 \chapter{Sentiment Classification}
+\label{chapter:sentiment-classifiction}
 Sentiment classification is the task of deciding whether sentiment in a sentence
 is positive, negative or neutral\cite{nlp_book}.
 
@@ -1465,7 +1539,7 @@ smoothing methods to date.
 
 
 \subsubsection{Turney (2002)}
-In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
+In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}\cite{turney2002thumbs}.
 
 \subsubsection{Hu, Liu (2004)}
 In ``Mining Opinion Features in Customer Reviews'', reviews are POS-tagged and common data mining methods are used to on to find patterns that extract features(aspects). Sentiment classification is mentioned, but results are presented in a subsequent paper.
@@ -1589,7 +1663,7 @@ Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the posi
       %title={Classifier performance per category},
       %xlabel={Categories},
       ylabel={Fraction of correctly classified},
-      ybar, ymin=0.5, ymax=1,
+      ybar, ymin=0, ymax=1,
       %bar width=20pt,
       xtick=data,
       x tick label style={rotate=45,anchor=east},
@@ -1654,10 +1728,10 @@ I believe this is due to positive reviews being more expressive of sentiment. It
 
 \subsection{Further improving results}
 I am convinced that exploring smoothing further, and in particular Modified Kneser-Ney,
-is a reliable way of further improving sentiment classification results. I did not included the
-mathematical representations of this smoothing because there are open sourced implementations
-that are probably worthwhile looking into. However, readers who are interested will not
-be disappointed reading \emph{(Chen \& Goodman, 1996)}.
+is a reliable way of further improving sentiment classification results. I did not includ the
+mathematical representations of this smoothing because open sourced implementations exist
+that are probably worthwhile looking into, such as \emph{KenLM}\cite{kenlm}. However, interested readers will not
+be disappointed reading \emph{Chen \& Goodman(1996)}\cite{chen_goodman}.
 
 
 %todo test various feature counts ??
@@ -1734,6 +1808,16 @@ which led to conclude that;
 \item and lower order n-gram models are shown to generalize slightly better but have lower confidence than higher order models.
 \end{itemize}
 
+\section{Conclusions}
+
+Of the most important conclusions in this report is the effectiveness language modeling.
+A well developed language model and good understanding of it can be used to solve all three
+tasks covered in this report, and is thus worth an investment of time.
+
+Another conclusion the importance of balancing training data: \todo
+
+
+
 \section{Obstacles and lessons learned}
 
 \subsection{Data annotation}
@@ -1750,9 +1834,10 @@ I ended up reannotating data several times. The idea of \emph{``I'm gonna get it
 
 
 \subsection{Classifier store}
-Although an implementation detail, I think it is something worth mentioning because it worked well and
-saved time over the course of the project, is the classifier store. Through out the code base, classifiers were
-not instantiated like regular objects, but instead requested in what I call the classifier store.
+Although it is an implementation detail, I think something worth mentioning is the classifier store,
+because it worked well and saved time over the course of the project. Through out the code base,
+classifiers were not instantiated like regular objects, but instead requested in what I call the
+classifier store.
 Upon request, the store would inspect the module containing the source code that trains
 the requested classifier and make a hash value based on this inspection.
 Once the classifier has been trained, a binary dump of that classifier is be made in a file with a name

@@ -42,7 +42,7 @@ originated from simple noun-canonicalization
 # Sentiment classification
 calculate pruning values
 
-
+Perplexity!!
 
 
 # general:
