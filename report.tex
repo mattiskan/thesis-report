@@ -1,4 +1,3 @@
-
 \documentclass[a4paper,11pt]{kth-mag}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
@@ -82,7 +81,7 @@
 
 \title{Mining opinions from local business reviews:\\ A technical walk-through.}
 
-\subtitle{Getting that degree would be nice1 before I go work full time}
+\subtitle{An introduction of language modeling techniques in a practical context.}
 \foreigntitle{This is the Swedish title}
 \author{Mattis Kancans Envall}
 \date{June 2016}
@@ -97,12 +96,13 @@
 \maketitle
 \selectlanguage{english}
 \begin{abstract}
-  The internet has created a seemingly endress source of information;
-  information which is of much greater value if interpreted.
+  The internet has become a seemingly endress source of information;
+  information which is of much greater value if interpreted. This report
+  introduces statistical language modeling and walks through its implementation applied
+  for sentiment extraction, classification and aggregation in techincal detail.
 
-  
+  Results show 
 
-  
 \end{abstract}
 
 
@@ -120,21 +120,30 @@
 \mainmatter
 \pagestyle{newchap}
 \chapter{Introduction}
-Imagine being in charge of making improvements to a big business chain.
-How would you know what changes to make? Customer feedback could certainly
-help inform decisions; but traditional methods of gathering such feedback,
+Imagine being in charge of making improvements at a big business chain.
+How would you know what changes to make? How would you know the impact your of changes?
+Customer feedback could certainly help inform decisions; but traditional methods of gathering such feedback,
 such as surveys or interviews, require planning and resources.
 With todays extensive internet usage, it is likely that the answers you need already
-are available online, however, for big business chains there could easily be tens of thousands of reviews ---
-far more than a human reader can reasonably process.
-Thus there is incentive to use computers as aid to organize,
-and visualize
-large quantities of opinions.
+already exist online. For big business chains, where there could easily be tens of thousands of reviews ---
+far more than a human reader can reasonably process, a new problem is instead introduced: How can opinions in that
+volume of information be managed and taken advantage of?
+
+Thus there is incentive to use computers as aid to organize, and visualize large quantities of opinions in text.
 
 \begin{figure}[t]
   \centering
   \fbox{\includegraphics[width=12cm]{review_example.png}}
-  \caption{Sample review with clearly expressed opinions.}
+  \caption{Sample review with clear language.}
+  \label{fig:review_example}
+
+  \fbox{\includegraphics[width=12cm]{review_example_highlighted.png}}
+  \caption{The same review with an example of how opinions could be highlighted according to their \emph{sentiment}.
+    In this review, it happens that each paragraph holds opinions about one \emph{aspect}
+    of the restaurant each; in the first paragraph the highlighted opinion is about the service,
+    opinions in the second paragraph are about the establishment, all opinions in the third paragraph are about the products at the restaurant, and in the final paragraph opinions are again about service.
+  }
+  \label{fig:review_highlight}
 \end{figure}
 
 This report introduces required theory, describes on a technical level accessible to computer scientists
@@ -163,45 +172,46 @@ This report introduces a system, which given a set of opinion-rich documents pro
 opinions, grouped by their \emph{opinion target} (the subject of the opinion)
 and their \emph{semantic orientation} (positive or negative).
 
-The goal for the produced summary is to contain everything required to draw conclusions about opinions
-and to enable future work to create interactive visualizations.
+The goal for the produced summary is to contain everything required to draw conclusions about opinions in
+unstructured text and to enable future work to create interactive visualizations.
 
-To accomplish this, three tasks are introduced. This chapter will make a few definitions, and then go on to
-describe each task briefly. Finally some shared theory will be introduced.
+To accomplish this, three tasks are presented. This chapter will first introduce a few definitions,
+and then go on to describe each task briefly.
 
 
-
+\clearpage
 \section{Important definitions}
 
 \subsubsection{Entity and its Aspects}
-In this work, and often in sentiment analysis, \emph{entity} is used to mean the entity under review. But reviews are typically more detailed
-and describe \emph{what} about an entity causes sentiment. An aspect of an entity, is used to mean \emph{what} about an entity is referenced.
+\emph{Entity} is used to mean the entity under review; in this report examples are for restaurants, but all methods
+are general and should be applicable to other business domains.
 
-E.g. in the sentence \emph{``my camera is very reliable''} the reviewed entity is \emph{camera} and the reviewed aspect is its \emph{reliability}.
+Since reviews are generally detailed in their description of an entity,
+an \emph{aspect}\footnote{
+  Older literature may refer to aspects as \emph{features}, which was changed to
+  avoid confusion with \emph{features} in machine learning contexts.}
+is defined to be \emph{what} about an entity that is referenced. This can be a dish that is served, a particularly nice painting or the friendlyness of a server, etc.
 
-Readers should be aware that older literature may refer to aspects as \emph{features}, which was changed with increased application of machine learning methods in sentiment analysis, to avoid confusion with \emph{features} in machine learning contexts.
+For example; in the sentence \emph{``The spagetti carbonara at Luigi's is to die for''} the reviewed entity is \emph{Luigi's} and the reviewed aspect is their \emph{Spagetti Carbonara}.
 
-\vspace{1cm}
 
 \subsubsection{Opinion}
 \emph{Liu} (2012) introduces \emph{opinion} as $(e_i,a_{ij},s_{ijkl},h_k,t_l)$-quintuples\footnote{Subscripts are
   used to indicate dependencies between tuple elements.},
-where $e_i$ is the entity the opinion is referencing,
+where $e_i$ is the entity the opinion is referring to,
 $a_{ij}$ is the aspect of $e_i$ that is being referenced (e.g. for a restaurant its ambiance),
 $s_{ijkl}$ is the sentiment of the opinion,
 $h_k$ is the opinion holder and
-$t_l$ is the time of the experience the opinion is based on\cite[Chapter~2.1]{liu2012sentiment}.
+$t_l$ is the time of the experience the opinion based on\cite[Chapter~2.1]{liu2012sentiment}.
 
-In this work, the reviews used enable a few simplifying assumptions:
+In this work, the reviews that are used enable a few simplifying assumptions:
 \begin{itemize}
 \item The opinion holder $h_k$ is the logged in user posting the review.
 \item The time $t_l$ is the time the review was posted.
 \item The entity $e_i$ is the one for which the review is being posted.
 \end{itemize}
 
-%todo discuss assumption consequences?
 Thus in this report, an opinion can generally be thought of as a $(a,s)$-tuple, or in plain words; an aspect with associated (non-neutral)sentiment.
-
 
 
 \section{Introduction of tasks}
@@ -217,45 +227,44 @@ Before anything else can be done, opinions need to be found and extracted from d
 This is studied in chapter \ref{sec:aspect_extraction}, where the task is described in more detail,
 and a simple solution is introduced.
 
-The introduced solution is shown to achieve somewhat mediocre results, but estimates indicate
-that results may be sufficient for big data sets.
+The introduced solution is shown to achieve seemingly mediocre results, but estimates indicate
+that results are contextually sufficient for big data sets.
 
-Finally consequences of using a simple method are discussed, and a few improvements suggested in literature
-to use in case data is limited are introduced.
+Then consequences of using a simple method and what to prioritize when further improving results is discussed,
+and a few improvements from literature in case data is limited are suggested.
+
+\subsection{Aspect grouping}
+In this work, the aspects found in the previous task are grouped. This is done to enable comparisons between
+businesses that may not have exactly the same aspects and to ensure enough aspects in each group for reliable conclusions --- for example this makes it perfectly reasonable to compare a taco restaurant with a burger joint using the aspect group \emph{food}
+
+Chapter \ref{sec:aspect_grouping} introduces and compares two methods of grouping aspects into predefined groups;
+one supervised learning method and one algorithmic method.
+This chapter also studies consequences of skewed data more carefully: Results confirm that machine learning classifiers are susceptible to bias by skewed data distributions, and that this can has impact on the system as a whole.
+
+Results also show that the algorithmic classifier outperforms standard machine learning methods on my
+limited dataset, and that more data would not suffice to improve the machine learning methods,
+but despite worse results traditional machine learning methods are recommended after shortcomings of the
+algorithmic method are discussed.
 
 
 \subsection{Sentiment classification}
 Sentiment classification is the task of deciding whether sentiment in text is positive, negative or neutral.
+In this work sentiment classification is applied to opinions of aspects extracted in the aspect extraction task.
 
 Chapter \ref{sec:sentiment_classification} introduces \ngram~language models and how they can be used
-to classify sentiment. \emph{Smoothing} is also introduced studied in depth in this section.
+to classify sentiment. \emph{Smoothing} is also introduced and studied in depth in this section, and are shown
+to greatly improve results when feature selection has limited effect.
 
-Good results are achieved, and it is shown that smoothing can significantly increase language
-model performance.
-
-\subsection{Aspect grouping}
-In this work, aspects are grouped to enable comparisons between businesses that may not have exactly the same aspects ---
-for example it is perfectly reasonable to compare a taco restaurant with a burger joint using the aspect group \emph{food}
-if opinions on various tacos and burgers are assigned that group.
-
-Chapter \ref{sec:aspect_grouping} introduces and compares two methods of grouping aspects into predefined groups;
-one supervised and one algorithmic. This chapter also studies data bias and its consequences more carefully,
-and results confirm that machine learning classifiers are indeed susceptible to data bias.
-
-Results also show that the algorithmic classifier outperforms machine learning methods,
-but also that machine learning methods are very likely to benefit from more training data,
-and several concerns about the algorithmic method are raised.
-Based on that the supervised machine learning method is recommended over the algorithmic one.
-
+One state of the art smoothing techinque in particular is introduced and suggested as a starting point
+for further improving results.
 
 \begin{figure}[t]
   \centering
   \fbox{\includegraphics[width=12cm]{overview.png}}
-  \caption{High level system overview. Unprocessed review texts processed by the system
-    get turned into Grouped opinions; which are partial }
+  \caption{High level system overview. Unprocessed review texts get processed by aspect extraction and turned into
+    aspects with unknown sentiments. In sentiment classification each aspect is assigned a sentiment, and aspect grouping assigns each aspect a group. The output is a sequence of opinion groups with associated sentiments which should be easy to summarize.}
   \label{fig:overview}
 \end{figure}
-
 
 
 \clearpage
@@ -292,13 +301,11 @@ which may seem as an intrusive simplification, which is why it is
 further discussed and motivated in section \ref{subsec:sentence_contradictions}.
 
 
-
 %\subsection{Perplexity}
 
 
-
-
 \chapter{Aspect extraction}
+\label{sec:aspect_extraction}
 
 Aspect extraction is the task of finding and outputting sentiment carrying expressions
 with identified \emph{targets}. A target is either some aspect of the entity that is
@@ -317,46 +324,47 @@ In general, there are four approaches to aspect extraction\cite[chapter 5.3]{liu
 \item Extraction using supervised learning
 \item Extraction using topic modeling
 \end{enumerate}
-This work mainly employs the first kind, with some of pruning methods defered to
-later tasks using supervised learning (further details in section
-\ref{subsec:pruning}).
+This work employs the first kind, with no \emph{pruning} other than as a side effect of
+confidence thresholds in subsequent tasks (further details in section \ref{subsec:pruning}).
 
-Results will show it sufficiently effective to not examine other methods in
-this work.
 
 \subsection{A data dependent task}
-Like other data extraction tasks, aspect extraction is largely dependent on the data
-aspects are being extracted from; meaning techniques may vary in effectiveness depending
-on what domain they are applied to, demographics of review authors,
-contextual expectations of the reviewed entity and countless other factors.
+Like other data extraction tasks, aspect extraction is intimitely dependent on the data
+aspects are being extracted from; this means that techniques may vary in effectiveness
+depending on the domain they are applied to, demographics of text authors, 
+contextual expectations on the reviewed entity and countless other factors.
 
-Furthermore, even within the same data set, there may be hidden properties on a
-per-entity basis. E.g. one could imagine that even on the same review site, there would still
-be systematic differences between reviews written for a surgeon's instrument
-compared to reviews for a toy car.
+For example, techinques working well for specialist litterature may work poorly when applied
+to online forums, where lack of structure and use of abbreviations may require models to be specifically
+trained for that task.
+
+Even within the same data set, there may be hidden biases introduced because there may be correlations
+between how different demographics write and how well methods are able to extract from that writing style;
+correlations, which get translated into biases towards opinions that these demographics express.
 
 It is therefore crucial that in the process of aspect extraction, like in other extraction tasks,
-to think about what correlations may exist and what bias they may introduce in the extracted data.
+to think about what correlations may exist and what biases they may introduce in the extracted data.
 
 
 \subsection{Candidate extraction vs. pruning}
-There are two important definitions in this section,
-which together make up the method used in this work:
+Aspect extraction is made up out of two sub-tasks, which together make up the method used in this section:
 
-\emph{Candidate identification} is the task of finding potential aspects in unstructured text.
+\begin{itemize}
+\item \emph{Candidate identification} is the task of finding potential aspects in unstructured text.
 
-\emph{Pruning} is the task of excluding irrelevant candidates that from the candidate
+\item \emph{Pruning} is the task of excluding irrelevant candidates from the candidate
 identification result set.
 
-The reason why these usually are done separately in sequence is that many common pruning
-techniques require the full candidate set when deciding whether to prune.
-(Examples include \emph{idf}-scores or plain occurrence counts.)
+\end{itemize}
+
+These substasks are often defined and implemented separately. This is because many common pruning
+techniques require knowledge about the full candidate set when deciding whether to prune; examples include \emph{idf}-scores or pruning based on frequence of occurrence.
 
 
 \section{Related Work}
 
 \subsubsection{Turney (2002)}
-In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations} with accuracies ranging from 66-84\%, by extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}.
+In early work, Peter Turney classified sentiment of reviews for \emph{automobiles}, \emph{banks}, \emph{movies} and \emph{travel destinations}. By extracting aspects using predefined POS-patterns, and querying search engines for the co-occurrence between found patterns and the words \emph{``excellent''} and \emph{``poor''}, accuracies ranging from 66-84\% were achieved.
 
 \subsubsection{Hu, Liu (2004)}
 In ``Mining Opinion Features in Customer Reviews'' aspects are unsupervisedly
@@ -392,62 +400,61 @@ from either words or word-classes to those aspect tokens.
 %would increase confidence in rules like \{\emph{easy}, \texttt{<VB>}\} $\rightarrow$ <aspect> amongst others.
 
 
-
-
 \section{Extracting aspects}
 \subsection{Candidate Identification}
-A simple aspect extractor was developed. Given a review, much like Turney's pattern
-extraction\cite{turney2002thumbs},
-the extractor uses the POS-tagger in nltk\cite{nltk} and
-compares text to a series of predefined grammatical patterns.
+A basic aspect extractor is developed. Much like Turney's pattern
+extraction\cite{turney2002thumbs}, the extractor uses the POS-tagger provided in nltk\cite{nltk} and
+compares text to a sequence of predefined grammatical patterns.
 
 These patterns were acquired during the annotation described in section \ref{subsec:getting_data},
-where each annotated aspect also included its POS-pattern. As happens to be, all patterns match noun-phrases.
+where each annotated aspect also included its POS-pattern. A total of 511 unique patterns were found this way,
+and out of those the 33 that occurred more than once were examined.
+Out of those, 6 patterns were removed since they were only one or two words long and visual inspection
+indicated that they were likely to produce significantly more false positives.
 
-A total of 511 unique patterns were found, but out of those, the 33 that occurred more than
-once were examined. Out of those, 6 patterns were removed since they were two words or shorter
-and visual inspection of results indicated they produce significantly more false positives.
+As happens to be, all patterns matched this way were noun-phrases. They are listed along with an example in table \ref{tab:used_pos}.
 
-The remaining patterns which were used are listed in table \ref{tab:used_pos}.
+For any given part of inputted text, the extractor uses the first pattern that matches, which then ``consumes'' that input.
+This is why patterns are ordered by length; it ensures that the longest possible pattern
+matches first, and for patterns of the same length the order is determined by
+the number of times each pattern has occurred in the annotated data.
 
-The extractor uses the first pattern that matches, which then ``consumes'' that part of the text.
-Therefore, patterns were ordered by length to make sure that the longest possible pattern
-matches, and within the same length the order was determined by
-the number of times the pattern occurred in the annotated data.
-
-One more observation was made: Several patterns have (some version of) the same word-class,
+One more observation is made: Several patterns have (some version of) the same word-class,
 examples include the \texttt{<PRP><VBZ><JJ><JJ>} and \texttt{<JJ><NN><NN>} patterns.
-This also aligns well with understanding of the English language, where several nouns in sequence,
-like ``tooth brush'', usually still represent only one entity, and thus does not change
+This also aligns well with intuition about the English language, where several nouns in sequence,
+like ``tooth brush'', usually represent only one entity and thus do not change
 the meaning of the pattern itself.
 
-With this in mind, an experiment was set up where patterns were extended to allow
+With this in mind, an experiment is set up where patterns are extended to allow
 multiple words of same word-class in sequence wherever a noun(\texttt{<NN>+})
-or adjective(\texttt{<JJ>+}) occurred.
-This experiment is called \texttt{Modified patterns} in the results, as opposed to
+or adjective(\texttt{<JJ>+}) occurs.
+This experiment is henceforth referred to as \texttt{Modified patterns}, as opposed to
 the original \texttt{Unmodified patterns}.
 
 
 \subsection{Pruning}
 \label{subsec:pruning}
-The only pruning applied in this work comes as side effects of the methods introduced
-in the two subsequent chapters, sentiment classification and aspect grouping.
+There is no direct pruning introduced in this work, however, the subsequent tasks that consume
+the aspects produced by the extractor in this step will effectively be pruning results when
+a confidence threshold is set.
 
 Both chapters introduce confidence thresholds as a means of increasing
-\emph{precision} at the cost of \emph{recall}(introduced in section \ref{sec:precision_recall}),
-where the aspects that are deemed under the confidence threshold are effectively being pruned.
-Please note that results in this chapter are presented
-before any pruning has been done, as the pruning process is intimitely related
-to the other two tasks.
+\emph{precision}\footnote{precision and recall are introduced in section \ref{sec:precision_recall}}
+at the cost of \emph{recall}\footnote{},
+where the aspects that are deemed under the confidence threshold are excluded.
+
+This is effectively the same as explicitly pruning aspects with those requirements in mind, and therefore
+the results from the future chapters will be borrowed in the discussion section of this chapter.
 
 
 \subsection{Extraction priorities}
 % todo
 The way tasks are divided in this work, with further pruning subsequently done in
 the later tasks, the most important question in this chapter is
-\emph{Will it find enough candidates to for a reasonable summary?}
-To ensure quality of the extracted aspects, some concern has to be kept towards \emph{How many
-  of extracted aspect are deemed relevant?}
+\emph{Will enough candidates to for a reasonable summary be found (recall)?}
+
+And despite not being the primary concern of this chapter, some estimate has to be made about
+\emph{How many of extracted aspect are deemed relevant (precision)?}
 
 %Information retrieval tasks are often evaluated with two capabilities in particular
 %in mind, namely the capabilities of excluding irrelevant results and including relevant ones.
@@ -536,11 +543,9 @@ To ensure quality of the extracted aspects, some concern has to be kept towards 
     }
   \end{axis}
   \end{tikzpicture}
-  \caption{Distribution of how many aspects were found in  reviews.
-    The height of each bar represents in how many out of 10'000 reviews exactly $n$
-    aspects were found, where $n$ is the column of the bar. Thus, each bar represents
-    $n$ times as many aspects as its height. E.g. the second column, with just over 1,600
-    reviews, represents twice as many aspects.
+  \caption{Distribution of aspects in reviews.
+    The height of each bar represents in how many out of the 10,000 reviews exactly that many aspects were found.
+    That means that the sum of heights equals 10,000.
   }
   \label{fig:extr_count}
 \end{sidewaysfigure}
@@ -549,15 +554,25 @@ To ensure quality of the extracted aspects, some concern has to be kept towards 
 
 \section{Results}
 
+\subsection{Aspect quantity}
 Out of 10'000 reviews, a total of 27'656 aspects were found using the modified patterns
 and 26'766 using the original patterns.
 Figure \ref{fig:extr_count} shows the distribution of reviews and the number of
-found aspects. The figure has been cut at 21 reviews, but two reviews had as many
-as 22 and 23 aspects found in them, respectively.
+found aspects. The figure has been cut at 21 reviews, but two reviews had also 22 and 23 reviews, respectively.
 
-Note that the graph does not show how many aspects were found,
-but in how many reviews a certain number of were found, which means that for the
-total sum each count has to be multiplied with the number of aspects it corresponds to.
+
+\subsection{Aspect quality}
+To estimate the efficiency of this method, 10 aspects extracted using each pattern were randomly sampled
+(totalling 270 aspects) and evaluated as either \emph{incorrect}, \emph{permissively correct},
+or \emph{strictly correct}.
+
+For an aspect to be considered strictly correct, its opinions were required to have \emph{explicitly}
+positive or negative sentiment about an aspect that could be \emph{irrefutably} assigned one of the
+four aspect groups introduced in chapter \ref{chap:aspect_grouping},
+whereas to be permissively correct, sentiment was ignored and the opinion was considered
+relevant as long as it held information which could be implicitly derived to any of the same aspect groups.
+
+It was found that 62.86\% of aspects were strictly relevant and 86.67\% were permissively relevant.
 
 
 \section{Discussion}
@@ -568,13 +583,15 @@ at the distribution in figure \ref{fig:extr_count} the additional aspects more o
 appear to be found in reviews where aspects were already found, or in other words;
 the modified patterns appear to further favor the writing styles of already included authors.
 
-In fact, out of the 110 new aspects found, only 5 aspects came from new reviews.
+In fact, out of the 110 new aspects found, only 5 aspects came from reviews which had previously
+no aspects previously found in them.
+
 On the other hand, I believe there is marginal downside to keeping these modified
-patterns after glancing over the additional aspects, but without a quality measure
-it is hard to definitely tell. 
+patterns after glancing over the additional aspects, but without a better quality measure
+it is hard to tell definitely.
+
 
 \subsection{Aspect quantity}
-
 
 On average, around 2.7 aspects per review are found, which may not sound like a lot 
 but for entities with lots of reviews it is enough:
@@ -604,17 +621,6 @@ During the course of this project this definition was subject to change more tha
 Further, because this definition is used to calculate the result, it can be the cause of
 various values of efficiency for the same method, which is of great concern
 since the method alone should be the cause of the results and not the way it is evaluated.
-
-Still, to give readers an idea about the efficiency of this method two definitions
-were introduced; one strict definition, where opinions were required to have
-\emph{explicitly} positive or negative sentiment about an aspect that could be
-\emph{irrefutably} assigned one of the four aspect groups introduced in chapter \ref{chap:aspect_grouping},
-and one permissive definition, where sentiment was ignored and any opinion was considered
-relevant as long as it held the information to implicitly derive any one of the same aspect groups.
-
-Using these definitions, 10 aspects extracted using each pattern were randomly sampled (totally 270)
-and evaluated using these definitions  and it was found that 62.86\% of aspects were strictly relevant
-and 86.67\% were permissively relevant.
 
 
 \subsection{Mitigating author bias}
@@ -674,6 +680,7 @@ with a token value which likely will improve performance of language models in f
 %%%%%%%%%% toss comparing opinions and NE
 
 \chapter{Aspect Grouping}
+\label{sec:aspect_grouping}
 Thus far this work has introduced methodology for extracting aspects from text.
 Recall from the last chapter that aspect extraction yields noun phrases that are likely
 to hold an opinion.
@@ -936,6 +943,20 @@ Figure~\ref{fig:baklava_lex} shows an example of this premise in action,
 where the word relations involved in finding the word ``baklava'' were used,
 and that it is closer to \emph{product} than \emph{establishment}.
 
+\begin{table}[b]
+  \centering
+  \begin{tabular}{| r | l |}
+    \hline
+    \textbf{Category} & \textbf{Predefined keywords}\\ \hline
+    Establishment & \emph{furniture, view, music, loud, appearance, clean, location}\\ \hline
+    Product & \emph{food, drink, taste, edible}\\ \hline
+    Value & \emph{cheap, price, dollar, buck, lots, bargain}\\ \hline
+    Service & \emph{service, quick, attentive, wait}\\ \hline
+  \end{tabular}
+  \caption{Categories with their pre-associated key words. The key words are used as starting points for the graph search in the algorithm, and were chosen by asking three independent people about words they associate with each category, out of which these words were selected by the author.}
+  \label{tab:cat_words}
+\end{table}
+
 \subsubsection{The algorithm}
 A breadth first search is conducted from the initial category word senses,
 as defined in table \ref{tab:cat_words}.
@@ -984,17 +1005,45 @@ would be selected.
 
 \begin{table}[b]
   \centering
-  \begin{tabular}{| r | l |}
+  \begin{tabular}{| l | l |}
     \hline
-    \textbf{Category} & \textbf{Predefined keywords}\\ \hline
-    Establishment & \emph{furniture, view, music, loud, appearance, clean, location}\\ \hline
-    Product & \emph{food, drink, taste, edible}\\ \hline
-    Value & \emph{cheap, price, dollar, buck, lots, bargain}\\ \hline
-    Service & \emph{service, quick, attentive, wait}\\ \hline
+    \textbf{Included} & \textbf{Excluded} \\ \hline
+    getHypernyms() & getTopicMembers() \\
+    getHyponyms() & getTopics() \\
+    getInstanceHypernyms() & getUsageMembers() \\
+    getInstanceHyponyms() & getUsages() \\
+    getMemberHolonyms() & \\
+    getMemberMeronyms() & \\
+    getPartHolonyms() & \\
+    getPartMeronyms() & \\
+    getRegionMembers() & \\
+    getRegions() & \\
+    getSubstanceHolonyms() & \\
+    getSubstanceMeronyms() & \\
+    getSimilar() & \\
+    getAttributes() & \\
+    getRelated() & \\
+    getEntailments() & \\
+    getOutcomes() & \\
+    getVerbGroup() & \\
+    \hline
   \end{tabular}
-  \caption{Categories with their pre-associated key words.}
-  \label{tab:cat_words}
+  \caption{WordNet\cite{wordnet} word sense relation methods: Each method returns a list of word senses with the
+    associated relation to the source word sense. Listed by whether or not included in the graph search algorithm.}
+  \label{tab:bfs_relations}
 \end{table}
+
+
+\subsubsection{Optimization method}
+The method has now been described on an abstract level, but there are still two more things that need to be tweaked for it to work: Which word senses to start the search from, and what relations can be used to find word senses for the next iteration.
+
+It is very important when selecting parameters that the data used for selecting the parameters is different from the data that is used to eventually evaluate the method itself. Parameters can not be tweaked unless new data that previously has not been used for evaluation is available. In this work, the data labeled with aspect groups in section \ref{} was randomly sampeled into three equal parts: Two parts were continuosly reshuffled and divided into training and testing sets, and the third part was only used \emph{exactly once} when the method was decided to be tuned.
+
+The predefined words listed in table \ref{tab:cat_words} were selected by manual trial and error and empirically found to work well in combination. A few more word senses were tried and discarded in this process.
+
+Table \ref{tab:bfs_relation} lists word relations that were either included or excluded in a similar fashion as the word senses.
+
+A brief attempt was made to automate selection of these parameters using a hillclimbing algorithm, but this was deemed superfluous and abandoned.
 
 \begin{figure}[t]
   \centering
@@ -1075,12 +1124,11 @@ Based on these results only Unigram LinearSVC was studied further.
 
 
 \subsection{Skewed data}
-\label{subsec:bias}
+\label{subsec:data_skew}
 When dealing with real world data, it is possible that some classes in classification tasks are more
 common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
 and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
 classes\cite{rennie2003bias, svm_bias}.
-
 
 %todo 1/n
 Not only classification methods, but also precision measures are affected by skewed data. In binary
@@ -1093,8 +1141,8 @@ If the evaluation data is also biased towards the same class, that classifier wi
 higher precision, which illustrates how important it is to examine classifier
 bias and data distribution.
 
-A commonly employed and simple way to solve problems with disproportionate data
-is to exclude all but an equal amount from each class to artificially balance the class distribution,
+A simple way to solve problems with disproportionate data is to exclude all but an equal amount
+from each class to artificially balance the class distribution,
 more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
 This could pose a problem if data is very skewed, as this means that the required
 amount of available data effectively is divided by the fraction of the least common class.
@@ -1106,11 +1154,14 @@ classifiers more comparable, it also reduces the amount of entries used in evalu
 Therefore this report will evaluate using unscaled data once classifiers have been
 verified to be reasonably unbiased in a per class comparison.
 
-
 \section{Results}
 
-This chapter is laid out as follows: First the individual results for each of the \numClassifierAproaches~classifier approaches are walked through. This gives the reader a chance to better understand section \ref{sec:comparison} where the classifiers are compared.
+\section{Graph-search classifier}
+The graph search found and categorized a total of 78'844 word senses, and as a reminder,
+these words are derived from the 21 predefined words in table \ref{tab:cat_words}.
 
+The algorithm was optimized up to 90.2\% precsion at full recall, which was the run on the evaluation data
+and resulted in 72.8\% precision at 98.5\% recall.
 
 \subsection{Machine learning classifiers}
 
@@ -1175,88 +1226,18 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \legend{Down-sampled unigram, Unmodified unigram, Down-sampled bigram, Unmodified bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment.}
+  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment. Each bar should be compared with its corresponding graphs in the other categories. As an example, the second leftmost (red) bar in each category can be seen to have more bias towards common categories than the leftmost (blue) bar in each category, which is the down-sampled version of the same classifier. Comparison with figure \ref{fig:cat_count} will confirm that this bias correlates with the distribution of classes in the dataset.}
   \label{fig:per_cat}
 \end{figure}
 
 
-%\begin{figure}[h]
-%  \centering
-%  \begin{tikzpicture}
-%
-%  \begin{axis}[
-%      %title={Classifier performance per category},
-%      %xlabel={Categories},
-%      ylabel={Fraction of correctly classified},
-%      ybar, ymin=0,
-%      %bar width=20pt,
-%      xtick=data,
-%      x tick label style={rotate=45,anchor=east},
-%      xticklabels from table={data/per_category_unigram.csv}{n},
-%      xticklabel style={text height=1.5ex},
-%      ymajorgrids=true,
-%      grid style=dashed,
-%      legend pos=north east,
-%    ]
-%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_unigram.csv};
-%    \addplot table [x expr=\coordindex, y=p]{data/per_category2_bigram.csv};
-%    \legend{balanced unigram, unbalanced unigram, balanced bigram, unbalanced bigram}
-%  \end{axis}
-%  \end{tikzpicture}
-%  \caption{Percat2}
-%  \label{fig:per_cat}
-%\end{figure}
-
-Section \ref{subsec:bias} introduced bias in data, along with some of its
-consequences which motivated a more detailed study of classifier results on
-a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
-down-sampled training data perform much more consistent between classes.
+Section \ref{subsec:data_skew} introduced skewed data and some potential consequences, which motivated more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
+down-sampled training data perform notably more consistent between classes, and that the biased classifier has inflated average precision (accuracy) because of this bias.
 
 Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
-It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but the reader is urged to note that this is a consistency between the balanced and unbalanced version of the model.
+It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but it should be noted that this is consistent between the balanced and unbalanced version of the model.
 
-%\newpage
-%
-%\subsection{Introducing confidence thresholds}
-%\begin{figure}[h]
-%  \centering
-%  \begin{tikzpicture}
-%    \begin{axis}[
-%        %title={Classifier performance based on data size},
-%        xlabel={Recall},
-%        ylabel={Precision},
-%        %xmin=0.5, xmax=1,
-%        %ymin=0.4, ymax=1,
-%        %xtick={0,20,40,60,80,100},
-%        %ytick={0,20,40,60,80,100,120},
-%        legend pos=south west,
-%        ymajorgrids=true,
-%        grid style=dashed,
-%      ]
-%      \addplot table [x=r, y=p]{data/pr_unigram.csv};
-%      \addplot table [x=r, y=p]{data/pr_bigram.csv};
-%      \legend{
-%        unigram,
-%        bigram
-%      }
-%    \end{axis}
-%  \end{tikzpicture}
-%  \caption{Precision vs. recall created varying a confidence threshold}
-%  \label{fig:pr_curve}
-%\end{figure}
-%
-%
-%Figure \ref{fig:pr_curve} shows the expected precision/recall trade-off for the aspect cluster classifiers. Readers should be reminded that each measurement was done on differently balanced training data, which likely accounts for inconsistencies in the curves.
-%
-%\newpage
-
-\section{Graph-search classifier}
-%todo NUM X
-The graph search found and categorized a total of 78'844 word senses, and as a reminder,
-these words are labeled solely using the $X$ predefined words from table \ref{tab:cat_words}.
-
-%todo notable failures?
 
 \section{Comparison of classifiers}
 \label{sec:comparison}
@@ -1278,16 +1259,21 @@ these words are labeled solely using the $X$ predefined words from table \ref{ta
 
 
 \section{Discussion}
-\subsection{Graph search classifier}
-As the results show, it is in fact possible to categorize aspects using a lexical database.
-What is particularly interesting about this result is that, although the method is evaluated in a supervised
-manner, the heuristic is in itself unsupervised. %todo retrofit for hillclibming?
 
+\subsection{Graph search classifier}
+As results show, it is possible to categorize aspects using a lexical database.
+
+What is particularly interesting about this result is that, although the method is evaluated in a supervised
+manner, the heuristic is in itself unsupervised, and could be used with in a unsupervised manner, althugh it would impossible to know know how the method is performing without labeled evaluation data.
 
 
 \subsection{Machine learning classifier}
 
 \subsection{Comparision}
+The fact that the graph search comparison achieves higher results than the machine learning classifiers is
+surprising, as the method is rather static and there was genuine worry that it was overfitted to the data it
+was tweaked on.
+
 
 \subsection{Conclusion}
 
@@ -1316,7 +1302,7 @@ I believe that some aspects of my data make this heuristic perform better than i
 
 
 \chapter{Sentiment Classification}
-\label{chapter:sentiment-classifiction}
+\label{sec:sentiment_classification}
 Sentiment classification is the task of deciding whether sentiment in a sentence
 is positive, negative or neutral\cite{nlp_book}.
 
@@ -1820,20 +1806,21 @@ Another conclusion the importance of balancing training data: \todo
 
 \section{Obstacles and lessons learned}
 
+
+\subsection{Studying tasks individually}
+The decision to study each task individually helped with isolating concerns and understanding system behavior as a whole. But, it took a bit of back-and-fourth to figure out what my exact boundaries of the system should be. Updating one taks would change its requirements for the other tasks, which meant they needed to be updated as well.
+
+My processes was to first get a very simple prototype running with all the tasks included; and then move on to study each step in isoaltion in order to improve overall results. I do believe in defining the performance of the full system as the product of its task's performance, but I also found that it is easy to focus too much on individual tasks and stop thinking about the system as a whole. I think it would have helped my process to reevaluate the full system between each iteration on a subtask. Afterall, each improvement to a subtask should be done with an improvement of the full system in mind.
+
 \subsection{Data annotation}
-I ended up reannotating data several times. The idea of \emph{``I'm gonna get it right the first time, so I don't have to do over''} led me to initially annotate in a too complicated fashion.
-\todo
+I ended up reannotating data several times. The idea of \emph{``I'm gonna get it right the first time, so I don't have to do over''} led me to initially annotate in a too detailed and inconsistent fashion, which in turn made it complicated to extract conclusions. For example, in a sentence like \emph{``The servants were friendly''}, should the entire sentence be annotated as positive for \emph{service}, or just the word \emph{``servants''}? And if the forrmer method is used, how should cases with multiple aspects (\emph{``Both service and food was excellent''}) be handled?
 
-%\subsection{Data annotation}
-%A common saying when doing machine learning is that \emph{you are only as good as your data}. Aspect clustering turned out to be a more difficult task than expected.
-%
-%First of all, deciding to do it on the on the aspect level introduced some confusion as to how annotation should be done. As an example, in the sentence \emph{``servants were friendly and food was tasty''}, should the annotation be \emph{servants}, \emph{servants were friendly}, or the entire sentence annotated as both \emph{service} and \emph{product}?
+Especially hard was annotating for aspect clustering, as I didn't have a clear idea of what I wanted the outcome to be. Further, I was also inconsistent about wether or not to include classes for \emph{other} and \emph{neutral}, and how to handle sentences that didn't quite fit what I was annotating. I think a general lesson is to annotate exactly for the task you want to solve, and only consider adding complexities in the context of the purpose of the data, as added detail does come with a cost when using the data.
 
-%After a some confusion I ended up looking more closely what other studies had done, and decided to annotate it as \emph{servants were friendly}.
-%
+The data annotations interface itself didn't take long to develop and was helpful because clicking on a word is simpler than e.g. typing its position in the sencence, but it did serve as bit of a distraction as anything that wasn't originally supported, had to be tinkered with manually. This was fun, but not productive towards the end goal. A sufficient alternaltive would have been to simply use a digital spreadsheet.
 
 
-\subsection{Classifier store}
+\subsection{The Classifier Store}
 Although it is an implementation detail, I think something worth mentioning is the classifier store,
 because it worked well and saved time over the course of the project. Through out the code base,
 classifiers were not instantiated like regular objects, but instead requested in what I call the
@@ -1849,26 +1836,23 @@ read the binary dump (about a second).
 
 This turned out especially useful when composing classifiers out of several other classifiers.
 
-
 %\subsection{Know your data?}
 
 %\subsection{The General aspect}
 
-%\subsection{Splitting tasks}
 
 %\subsection{Focus on things unique for a place}
 
+\newpage
 
 \section{Final words}
-My initial hope for this report was to only cover one of the three tasks introduced in more depth. Because of the project being hosted abroad, I did background studies and preparation on my own and most of these preparations turned out to overlap with already existing solutions at my host company. Although unfortunate, it was still a great learning experience; after studying a problem and creating my own solution, getting to compare it to a production system as well as getting professional feedback on my own experiments.
+It was my initial hope that this report only would cover one of the three tasks introduced, but in more depth. Because of the project being hosted abroad, I began background studies and preparation on my own and most of these preparations turned out to overlap with already existing solutions at my host company. Although unfortunate, it was still a great learning experience; after studying a problem on my own, I got to compare the solutions I had come up with with existing production systems and got professional feedback on my own experiments.
 
 In search for a less explored task, I read up on aspect extraction and grouping as well, and also got to familiarize myself with the workings of existing solutions to these problems at Yelp, with the goal of being able to reuse and possibly improve one of these existing systems.
 
-I did manage to get these systems to running and produce results comparable to my own, however, halfway through my internship, I decided to abandon this path for two reasons; most importantly, I was running out of time. These systems were designed to run on Yelp's infrastructure, which I would not be able to access after my internship with them. Seccondly, because these were production systems, they were made to handle data at large scale and had a bunch of added complexity to address this. This added complexity would slow down my experiments as well.
+I got these systems to running in isolation and produced results that I could compare with my own, however, halfway through my internship, I decided to abandon this path for two reasons: Most importantly, I was running out of time. These systems were designed to run on Yelp's infrastructure, which I would lose access to as my internship finished. Secondly, because these were production systems, they were built to work reliably at much larger scale. So they had additional additional mechanisms for monitoring, graceful error handling, and working in a distributed context, which is all out of scope for this work and would have slowed down my experiments.
 
-Instead, I decided to put some of my learnings from this project in writing, along with some experiments designed to illustrate these findings, and the result is what you are now reading. It is my hope that this document could prove as an introduction and help someone unacquainted focus on the right things.
-
-%One final word of advice to take away from this project is, if you are about to build a production system, seeing from these production systems, is to try and separate 
+Instead, I decided to focus on putting my learnings from this project in writing, along with some experiments designed to illustrate these findings. The result is what you are now reading. It is my hope that this document could prove as an introduction and help someone unacquainted focus on the right things.
 
 
 
