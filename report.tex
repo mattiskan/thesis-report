@@ -370,7 +370,7 @@ In early work, Peter Turney classified sentiment of reviews for \emph{automobile
 In ``Mining Opinion Features in Customer Reviews'' aspects are unsupervisedly
 extracted by considering frequent noun phrases found in data using POS-tagging.
 
-This approach appears to return a lot of false positives, which is why two pruning
+This approach returns a lot of false positives, which is why two pruning
 methods are introduced to improve precision.
 
 Sentiment classification is also mentioned, but those results are presented in a subsequent paper:
@@ -596,7 +596,7 @@ it is hard to tell definitely.
 On average, around 2.7 aspects per review are found, which may not sound like a lot 
 but for entities with lots of reviews it is enough:
 
-Later in this work when aspect clustering is studied, figure \ref{fig:cat_count}
+Later in chapter \ref{sec:aspect_grouping}, when aspect grouping is studied, figure \ref{fig:cat_count}
 will show that the least common category, \emph{value}, represents around
 10\% of all aspects.
 
@@ -625,7 +625,7 @@ since the method alone should be the cause of the results and not the way it is 
 
 \subsection{Mitigating author bias}
 76 reviews out of 10'000 had more than 13 aspects, with one review having as  as 23 aspects.
-If we simply included each found aspect, opinions stated in that one review could have up to
+If we simply included each found sapect, opinions stated in that one review could have up to
 23 times as much influence as reviews with only one found opinion.
 
 A really simple way to make conclusions more impartial is to only allow one
@@ -636,40 +636,45 @@ all sentiments expressed in the review towards that aspect group.
 
 The results in this section do not have the aspect groups associated with them,
 but an absolute lower bound to how many aspects can be kept
-is found by simply discounting all but one aspect from each review. This is the same
-as summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
+is discounting all but one aspect from each review.
+This is the lower bound because if only one aspect is selected from a review, it is clearly impossible any
+group is represented more than once.
+
+This count can be found by summing the counts of all non zero bars in figure \ref{fig:extr_count}, and the
 exact sum is 7851, or equally 7.85\% of reviews.
 
-That being said, it is probably OK and even preferred to allow a few more opinions per review,
-but some upper limit should be introduced to avoid a few rigged reviews being able to compromise results.
+In reality however, it is probably desireable to at least allow one aspect per review or maybe even a few,
+but some upper limit is adviced to avoid a few reviews being able to compromise results.
 
 
 \section{Further work}
 \subsection{Further mitigating author bias}
 I believe it to be more important to reduce the number of reviews where no aspect was
-found at all. My current results where at least one aspect is found in approximately
-80\% of reviews are decent but could be improved.
+found at all. In my results at least one aspect is found in approximately
+80\% of reviews which means there is room for improvement. Ideally you would like 
 
-This is desired to mitigate bias towards or against authors writing with certain styles.
-However, in pursuit of this, I would advice to use more metrics; either annotated data
+It is desired to mitigate bias towards or against authors with certain writing styles.
+In pursuit of this, I would advice to use more metrics; data annotated in more detail
 or at least metrics normalized by review length. I suspect that some in some cases
-aspects are not found because reviews are really short and/or because there are no aspects
-to find.
+aspects are not found because some reviews are really short, or because not every review
+has an aspect to find.
+
 
 \subsection{Named Entity pruning}
 
 Something I have come across and which should be pruned is mentions of other businesses
 in reviews. A sentence like
 \emph{``I recommend this place over Alfredo's across the street, because their pizza tastes like rubber.''}
-, although perfectly reasonable in a review, will inaccurately discredit
-the evaluated business for its neighbour's rubber-like pizza.
+, although perfectly reasonable in a review, can inaccurately discredit
+the entity (the evaluated business) for their neighbor's rubber-like pizza.
 
-Pruning these mentions should be reasonably simple using \emph{named entity extraction}, where named
-entities found could be compared to the name of the business under review and if not matching,
-the sentence along can be then be pruned.
+Pruning these mentions could be solved using a task called \emph{named entity extraction}.
+The found entities could be compared to the name of the entity under review and if found to be a different business,
+the sentence and its opionions could be pruned.
 
-As a bonus, named entities that are found to refer to the business can be replaced
-with a token value which likely will improve performance of language models in future chapters.
+As a bonus, the references to the the entity can be replaced with a token value, which would likely improve
+performance of n-gram models in future chapters as business references would generate the same n-grams despite being originally using different words.
+
 
 %patterns by reinforcement learning?
 
@@ -698,25 +703,26 @@ or one may find aspects with disagreeing oppinions
 --- either discovery is likely to be highly useful!
 
 \subsection{Why group aspects?}
-Identifying aspects is not enough. Finding that the
+Identifying aspects may not be enough. Finding that the
 most appreciated aspects of a restaurant are \emph{french fries},
 \emph{fried potatoes}, and \emph{fries} is superfluous as they are
-clearly referring to the same thing.
+probably referring to the same thing.
 This could potentially be a problem for aspects that are very diversely described;
 to ensure reliability and counteract subjectivity, aspects with few opinions are
-likely to be ignored, so there is a risk valuable opinions are disregarded unless
-mulitple descriptions of the same aspect are grouped as one. This is known as \emph{synonym grouping}.
+likely to be ignored by human interpreters, so there is a risk valuable opinions are disregarded unless
+mulitple descriptions of the same aspect are grouped as one. This is known as \emph{synonym grouping}\cite{}.
+Most authors do this one way or another.
 
 %todo group tree figure
 
 It may be beneficial to take this grouping even further;
 if there after the grouping still are too few opinions about \emph{fries},
 it might be possible to further group with opinions about \emph{mashed potatoes}
-and \emph{baked potatoes} under the shared hyopnym. Iteratively \emph{potatoes} can
-be grouped with \emph{salads} as \emph{sides} and so forth with each iteration aggregating
-more opinions under the same label.
+and \emph{baked potatoes} under the shared hyopnym: \emph{Potatoes}.
+Iteratively \emph{potatoes} can be grouped with \emph{salads} as \emph{sides}
+and so forth with each iteration aggregating more opinions under the same label.
 
-This has another important side effect; it enables comparisons that would otherwise
+This has another benefitial side effect: It enables comparisons that would otherwise
 be impossible, becasue to compare two entities they need shared aspects.
 E.g. when comparing an italian restaurant and an asian restaurant, sufficient aspects may
 have been found for \emph{pasta carbonara} and \emph{noodle wok}, but neither of
@@ -732,10 +738,8 @@ In this work aspects are categorized into one of four groups:
 This way all the benefits introduced in the previous section of having the opinions
 aggregated are reaped; restaurants of all types can be compared and confidence in conclusions
 is furthered thanks to larger groups of opinions.
-Additionally, since groups are predefined and static,
-basic text classification methods can be employed, and the task is to be considered
-simpler than its dynamic counterpart.
-
+Additionally, since groups are predefined and static, basic text classification methods can be employed,
+and this task is considered simpler than its dynamic counterpart.
 
 
 \section{Related Work}
@@ -806,24 +810,28 @@ Confusion matricies are used to illustrate the possible outcomes of classificati
 
     \hline
     Real class & Classified as \emph{pos} & Classified as \emph{neg} \\ \hline
-    \emph{pos} & true positive (\emph{tp}) & false positive (\emph{fp}) \\\hline
-    \emph{neg} & true negative (\emph{tn}) & false negative (\emph{fn}) \\\hline
+    \emph{pos} & true positive (\emph{tp}) & false negative (\emph{fn}) \\\hline
+    \emph{neg} & false positive (\emph{fp}) & true negative (\emph{tn}) \\\hline
   \end{tabular}
   \caption{Confusion matrix for binary classification.}
   \label{todo}
 \end{table}
 
 
+%The confusion matrix can easily be extended to multi class classification; 
 
 \subsection{Accuracy}
 Accuracy aims to describe the over all effectiveness of a system.
-In words, it is a measure of \emph{fraction of correctly classified}.
+In other words, it is a measure of \emph{fraction of correctly classified}.
 
 In the binary case, it it is defined as\cite{sokolova2009systematic}:
 \begin{equation} \label{eq:accuracy}
   Accuracy = \frac{\text{no. correctly classified}}{\text{no. samples to classify}} =
   \frac{tp + tn}{tp+tn+fp+fn}
 \end{equation}
+
+It should be noted that accuracy is not an accurate measure; accuracy is 
+
 
 %The average accuracy is the multiclass extension of accuracy, simply defined as the average of
 %all classes:
@@ -842,7 +850,7 @@ results are considered relevant or correct, and is defined as\cite{rijsbergen197
 Precision_{\;binary} =  \frac{tp}{tp + fp}
 \end{equation}
 
-In classification, particularly when classifying with multiple classes,
+In classification tasks, particularly when classifying with multiple classes,
 it is similarly a measure of agreement between assigned and actual labels,
 or in words:
 
@@ -862,37 +870,36 @@ relevant instances in results\cite{rijsbergen1979v}:
 \begin{equation} \label{eq:recall}
 Recall_{\;binary} = \frac{tp}{tp + fn}
 \end{equation}
-And is extendend to multiclass in a similar fashion to precision\cite{sokolova2009systemati}:
+And is extendend to multiclass in a similar fashion as precision to \emph{macro-averaging recall}\cite{sokolova2009systematic}:
 \begin{equation} \label{eq:multirecall}
 Recall_{\;multiclass} =  \frac{\sum_{i \in C} \frac{ tp_i}{(tp_i + fn_i)}}{|C|}
 \end{equation}
 
 \subsection{Confidence thresholds}
-In chapter \ref{chapter:sentiment-classifiction}, confidence thresholds are used to
-allow classifiers answer \texttt{UNKNOWN} for difficult cases.
-This is done so that particular instance is excluded from the result set
-(and thus the precision measure), and makes recall an important measure
-because instances are included in the $fn$-count, and still impact recall negatively.
+In this work, and in particular in \ref{chapter:sentiment-classification}, \emph{confidence thresholds} are
+introduced and used to allow classifiers answer \texttt{UNKNOWN} for difficult cases.
+This is done so that a data point can be excluded from the result set, and thus the denominator of precision.
+It is not, however, excluded from the $fn$-count, and thus recall is still impacted negatively and effectively
+becomes a metric of how often this happens.
 
-The \emph{confidence threshold} is a parameter which determines how low the probability
+The \emph{confidence threshold} then, is a parameter which determines how low the probability
 must be for classifiers to return \texttt{UNKNOWN}.
-
 
 \clearpage
 
 \section{Getting data}
 \label{subsec:getting_data}
 
-All introduced evaluations are dependent on labeled data. Public datasets for products exist and were examined,
+All the introduced evaluations are dependent on labeled data. Public datasets for products exist and were examined,
 but as it has been shown that sentiment classification performs poorly cross domains\cite{aue2005customizing}
-this was deemed likely to apply for aspect grouping as well. Thus it was decided to annotate new data.
+this was deemed likely to apply for aspect grouping as well. Thus new data was annotated.
 
-Figure \ref{fig:annotate_aspect} show the interface that was developed to annotate aspects
+Figure \ref{fig:annotate_aspect} show the interface that was created to annotate aspects
 according to their group and sentiment. This simple web-interface was served by a local web server,
 and for each submited annotation a JSON-line was written to a log file.
 
 Using this interface, 1000 sentences were annotated.
-Figure \ref{fig:cat_count} shows the distribution of classes found in this annotation.
+Figure \ref{fig:cat_count} shows the distribution of aspect groups found in this annotation.
 
 
 \begin{figure}[h]
@@ -923,7 +930,7 @@ Figure \ref{fig:cat_count} shows the distribution of classes found in this annot
     \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
   \end{axis}
   \end{tikzpicture}
-  \caption{Number of aspects of each category found when annotating 1000 sentences.}
+  \caption{Number of aspects of each aspect group found when annotating 1000 sentences.}
   \label{fig:cat_count}
 \end{figure}
 
@@ -934,10 +941,10 @@ The origins of this method are largely narrated by the introductory section of t
 starting out from bare noun matching and evolving into this algorithm.
 
 Based on the observation that there are usually keywords in a sentence with lexicographical
-connection to the desired category, an alternative approach to traditional classification is proposed.
+connection to the desired group, an alternative approach to traditional classification is proposed.
 This is motivated since classification models generally need good training data to achieve good results.
 The idea is to use a lexicon of known word relations to find a path from a query word to one of
-few word senses each with predefined category labels, and assign the query word the same label.
+few word senses each with predefined group labels, and assign the query word the same label.
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action,
 where the word relations involved in finding the word ``baklava'' were used,
@@ -947,13 +954,13 @@ and that it is closer to \emph{product} than \emph{establishment}.
   \centering
   \begin{tabular}{| r | l |}
     \hline
-    \textbf{Category} & \textbf{Predefined keywords}\\ \hline
+    \textbf{Aspect group} & \textbf{Predefined keywords}\\ \hline
     Establishment & \emph{furniture, view, music, loud, appearance, clean, location}\\ \hline
     Product & \emph{food, drink, taste, edible}\\ \hline
     Value & \emph{cheap, price, dollar, buck, lots, bargain}\\ \hline
     Service & \emph{service, quick, attentive, wait}\\ \hline
   \end{tabular}
-  \caption{Categories with their pre-associated key words. The key words are used as starting points for the graph search in the algorithm, and were chosen by asking three independent people about words they associate with each category, out of which these words were selected by the author.}
+  \caption{Aspect groups with pre-associated key words. The key words are used as starting points for the graph search in the algorithm, and were chosen by asking three independent people about words they associate with each category, out of which these words were selected by the author.}
   \label{tab:cat_words}
 \end{table}
 
@@ -1234,7 +1241,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 Section \ref{subsec:data_skew} introduced skewed data and some potential consequences, which motivated more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
 down-sampled training data perform notably more consistent between classes, and that the biased classifier has inflated average precision (accuracy) because of this bias.
 
-Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
+Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more s0frequent $product$-class and respectively against the infrequent $value$-class.
 
 It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but it should be noted that this is consistent between the balanced and unbalanced version of the model.
 
@@ -1815,7 +1822,7 @@ My processes was to first get a very simple prototype running with all the tasks
 \subsection{Data annotation}
 I ended up reannotating data several times. The idea of \emph{``I'm gonna get it right the first time, so I don't have to do over''} led me to initially annotate in a too detailed and inconsistent fashion, which in turn made it complicated to extract conclusions. For example, in a sentence like \emph{``The servants were friendly''}, should the entire sentence be annotated as positive for \emph{service}, or just the word \emph{``servants''}? And if the forrmer method is used, how should cases with multiple aspects (\emph{``Both service and food was excellent''}) be handled?
 
-Especially hard was annotating for aspect clustering, as I didn't have a clear idea of what I wanted the outcome to be. Further, I was also inconsistent about wether or not to include classes for \emph{other} and \emph{neutral}, and how to handle sentences that didn't quite fit what I was annotating. I think a general lesson is to annotate exactly for the task you want to solve, and only consider adding complexities in the context of the purpose of the data, as added detail does come with a cost when using the data.
+Especially hard was annotating for aspect grouping, as I didn't have a clear idea of what I wanted the outcome to be. Further, I was also inconsistent about wether or not to include classes for \emph{other} and \emph{neutral}, and how to handle sentences that didn't quite fit what I was annotating. I think a general lesson is to annotate exactly for the task you want to solve, and only consider adding complexities in the context of the purpose of the data, as added detail does come with a cost when using the data.
 
 The data annotations interface itself didn't take long to develop and was helpful because clicking on a word is simpler than e.g. typing its position in the sencence, but it did serve as bit of a distraction as anything that wasn't originally supported, had to be tinkered with manually. This was fun, but not productive towards the end goal. A sufficient alternaltive would have been to simply use a digital spreadsheet.
 
@@ -1835,6 +1842,10 @@ its source code, which reduces the training time (about 2 minutes) to the time t
 read the binary dump (about a second).
 
 This turned out especially useful when composing classifiers out of several other classifiers.
+
+
+%\subsection{Reinforcement learning}
+%Something that hasn't been covered but I find very interesting is the idea of incorporating reinforcement learning for the system as a whole. This could be done by preseting users with the end results and asking them whether they are correct. I believe this could be effective for a few reasons: For starters, I belive it to be more interesting to 
 
 %\subsection{Know your data?}
 
