@@ -1,0 +1,7 @@
+# classifier performance per category
+n	p	sdev
+service	0.0	0.0
+product	1.0	0.0
+establishment	0.1	0.0
+value	1.0	0.0
+all	0.21818181818181817	0.0

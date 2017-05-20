@@ -57,7 +57,7 @@
 
 \newcommand{\ysc}{Modified Kneser-Ney classifier}
 
-\newcommand{\numValueAspects}{XX}
+\newcommand{\numValueAspects}{60}
 
 \newif\ifhasStudiedFailures
 \hasStudiedFailuresfalse
@@ -594,21 +594,21 @@ it is hard to tell definitely.
 \subsection{Aspect quantity}
 
 On average, around 2.7 aspects per review are found, which may not sound like a lot 
-but for entities with lots of reviews it is enough:
+but for entities with lots of reviews it can be enough to find a general consensus:
 
 Later in chapter \ref{sec:aspect_grouping}, when aspect grouping is studied, figure \ref{fig:cat_count}
 will show that the least common category, \emph{value}, represents around
-10\% of all aspects.
-
-Glancing at future results, confidence thresholds with $recall\approx 0.7$
+16\% of found aspects, and glancing at future results, confidence thresholds with $recall\approx 0.7$
 appears reasonable for both sentiment classification and aspect grouping.
 
-An estimate for the number of value aspects found for a business with 300 reviews
-using the numbers from this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.16 =
-\numValueAspects $ aspects. %todo equation
-Around 40 aspects should be enough to give a statistically significant indication.
-This is especially true when review comparisons are done for
-business chains which can have 10'000 reviews or more.
+Using these results, an estimate for the number aspects in the value group found for a business
+with 300 reviews using the numbers from this section is $300 \cdot 2.7 \cdot 0.7^2 \cdot 0.15 =
+\numValueAspects $ aspects.
+These should be enough to draw a believable conclusion for even the lest common group\footnote{With sentiment considered to have three possible outcomes (\emph{posivite/negative/neutral}), the upper bound of the standard deviation is limited, and thus even small sample sizes are likely going to be enough for statistically significant results.}.
+
+This is especially true when comparisons are applied to business chains, which can have
+tens of thousands of reviews or more.
+
 
 \subsection{Evaluation of aspect extraction}
 \label{subsec:aspect_eval}
@@ -930,9 +930,41 @@ Figure \ref{fig:cat_count} shows the distribution of aspect groups found in this
     \addplot table [x expr=\coordindex, y=count]{data/category_distribution.csv};
   \end{axis}
   \end{tikzpicture}
-  \caption{Number of aspects of each aspect group found when annotating 1000 sentences.}
+  \caption{Number of aspects found for each group when annotating 1,000 sentences.}
   \label{fig:cat_count}
 \end{figure}
+
+\subsection{Skewed data}
+\label{subsec:data_skew}
+When dealing with real world data, it is possible that some classes in classification tasks are more
+common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
+and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
+classes.
+
+%todo 1/n
+Not only classification methods, but also precision measures are affected by skewed data. In binary
+classification with evenly distributed classes, a classifier that favors one class to the extreme that it
+always chooses the same class, still achieves around 0.5 precision since the number of true positives
+would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
+in the binary case, since any classifier performing consistently worse could be modified to return the
+opposite and thus have the inverse precision which would be better.}.
+If the evaluation data is also biased towards the same class, that classifier will get even
+higher precision, which illustrates how important it is to examine classifier
+bias and data distribution.
+
+A simple way to solve problems with disproportionate data is to exclude all but an equal amount
+from each class to artificially balance the class distribution,
+more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
+This could pose a problem if data is very skewed, as this means that the required
+amount of available data effectively is divided by the fraction of the least common class.
+However, in this work the data was not skewed enough to motivate studies of more
+complicated approaches.
+
+Although down-sampling eliminates bias in evaluations, which makes evaluations between
+classifiers more comparable, it also reduces the amount of entries used in evaluations.
+Therefore this report will evaluate using unscaled data once classifiers have been
+verified to be reasonably unbiased in a per class comparison.
+
 
 \clearpage
 \section{Grouping methodologies}
@@ -965,22 +997,22 @@ and that it is closer to \emph{product} than \emph{establishment}.
 \end{table}
 
 \subsubsection{The algorithm}
-A breadth first search is conducted from the initial category word senses,
-as defined in table \ref{tab:cat_words}.
-For each word, neighboring word senses are acquired using word relations
-defined in WordNet. Each time a previously undiscovered word sense is seen, it is mapped
-to the nearest category, or equally the category from which it was found.
-This is done to allow for quick look-ups later.
+Using WordNet's \cite{wordnet} word sense relations, a  breadth first search is conducted
+starting at the word senses as predefined in table \ref{tab:cat_words}.
 
-This method to categorize individual word senses can then be extended to categorize full
-sentences using a voting heuristic.
+For each word sense, neighboring word senses are acquired, and each time a previously undiscovered word sense
+is found, it is assigned to the group of the word sense that led the search to it. In other words, the algorithm
+is effectively building a mapping from words to groups, which also allows for quick look-ups later.
+
+This method to categorize individual word senses is then extended to categorize full sentences using
+a voting heuristic.
 
 \subsubsection{Voting heuristic}
 The heuristic is what classifies sentences into groups.
-To do this, it can use the above described group to query for the group of an
-individual word sense. Since word senses can consist of more than one word,
+At its availability is the above mentioned mapping for each word sense in the sentence to a group.
+Since word senses can consist of more than one word,
 e.g. ``happy hour'', the heuristic iteratively searches for multiple word word-senses,
-decreasing in length, starting with the assumption that the full sentence is one word.
+decreasing in length, starting with the full sentence as one word sense.
 
 Next, a map is built using enabling constant time lookup of not only which group is nearest,
 but also the distance $d$ from the word sense to the category.
@@ -1037,18 +1069,18 @@ would be selected.
   \end{tabular}
   \caption{WordNet\cite{wordnet} word sense relation methods: Each method returns a list of word senses with the
     associated relation to the source word sense. Listed by whether or not included in the graph search algorithm.}
-  \label{tab:bfs_relations}
+  \label{tab:bfs_relation}
 \end{table}
 
 
 \subsubsection{Optimization method}
 The method has now been described on an abstract level, but there are still two more things that need to be tweaked for it to work: Which word senses to start the search from, and what relations can be used to find word senses for the next iteration.
 
-It is very important when selecting parameters that the data used for selecting the parameters is different from the data that is used to eventually evaluate the method itself. Parameters can not be tweaked unless new data that previously has not been used for evaluation is available. In this work, the data labeled with aspect groups in section \ref{} was randomly sampeled into three equal parts: Two parts were continuosly reshuffled and divided into training and testing sets, and the third part was only used \emph{exactly once} when the method was decided to be tuned.
+It is very important when selecting parameters that the data used for selecting the parameters is different from the data that is used to eventually evaluate the method itself. Parameters can not be tweaked unless new data that previously has not been used for evaluation is available. In this work, the data labeled with aspect groups in section \ref{subsec:getting_data} was randomly sampeled into three equal parts: Two parts were continuosly reshuffled and divided into training and testing sets, and the third part was only used \emph{exactly once} when the method was decided to be tuned.
 
 The predefined words listed in table \ref{tab:cat_words} were selected by manual trial and error and empirically found to work well in combination. A few more word senses were tried and discarded in this process.
 
-Table \ref{tab:bfs_relation} lists word relations that were either included or excluded in a similar fashion as the word senses.
+Table \ref{tab:bfs_relation} lists avaliable word relations in WordNet and wheter they were included or excluded in the final algortighm. This selection was made in a similar fashion as word senses.
 
 A brief attempt was made to automate selection of these parameters using a hillclimbing algorithm, but this was deemed superfluous and abandoned.
 
@@ -1130,45 +1162,14 @@ Based on these results only Unigram LinearSVC was studied further.
 \clearpage
 
 
-\subsection{Skewed data}
-\label{subsec:data_skew}
-When dealing with real world data, it is possible that some classes in classification tasks are more
-common than others. This has been shown to have consequences both in Bayesian classifiers\cite{rennie2003bias}
-and Support Vector Machines\cite{svm_bias}, where both have been shown to favor majority
-classes\cite{rennie2003bias, svm_bias}.
-
-%todo 1/n
-Not only classification methods, but also precision measures are affected by skewed data. In binary
-classification with evenly distributed classes, a classifier that favors one class to the extreme that it
-always chooses the same class, still achieves around 0.5 precision since the number of true positives
-would equal the proportion of the favored class\footnote{This is in fact be the worst possible result
-in the binary case, since any classifier performing consistently worse could be modified to return the
-opposite and thus have the inverse precision which would be better.}.
-If the evaluation data is also biased towards the same class, that classifier will get even
-higher precision, which illustrates how important it is to examine classifier
-bias and data distribution.
-
-A simple way to solve problems with disproportionate data is to exclude all but an equal amount
-from each class to artificially balance the class distribution,
-more commonly referred to as \emph{down-sampling}\cite{provost2000machine}.
-This could pose a problem if data is very skewed, as this means that the required
-amount of available data effectively is divided by the fraction of the least common class.
-However, in this work the data was not skewed enough to motivate studies of more
-complicated approaches.
-
-Although down-sampling eliminates bias in evaluations, which makes evaluations between
-classifiers more comparable, it also reduces the amount of entries used in evaluations.
-Therefore this report will evaluate using unscaled data once classifiers have been
-verified to be reasonably unbiased in a per class comparison.
-
 \section{Results}
 
-\section{Graph-search classifier}
+\subsection{Graph-search classifier}
 The graph search found and categorized a total of 78'844 word senses, and as a reminder,
 these words are derived from the 21 predefined words in table \ref{tab:cat_words}.
 
-The algorithm was optimized up to 90.2\% precsion at full recall, which was the run on the evaluation data
-and resulted in 72.8\% precision at 98.5\% recall.
+On testing data, the algorithm was optimized up to 83.0\% precsion at full recall,
+which resulted in 71.8\% precision at 98.5\% recall on the final evaluation data.
 
 \subsection{Machine learning classifiers}
 
@@ -1179,7 +1180,7 @@ and resulted in 72.8\% precision at 98.5\% recall.
     \begin{axis}[
         %title={Classifier performance based on data size},
         xlabel={Training data-set size},
-        ylabel={Fraction of correctly classified},
+        ylabel={Accuracy (Fraction of correctly classified)},
         %xmin=0.3, xmax=0.7,
         %ymin=0.25, ymax=0.75,
         %xtick={0,20,40,60,80,100},
@@ -1198,16 +1199,21 @@ and resulted in 72.8\% precision at 98.5\% recall.
       }
     \end{axis}
   \end{tikzpicture}
-  \caption{Sentence classification performance based on training data size}
+  \caption{Sentence classification performance based on training data size. Each data point represents a new
+    sampling of data into training and evaluation sets, where the x axis represents how many sentences from the
+    training set are made available to the classifier. The full testing sample set was used in each data point and
+    each datapoint had to be classified(recall=1).
+  }
   \label{fig:data_size}
 \end{figure}
 
 
-As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment appears approximately linear, up to some point where it is expected to converge. Interesting is how the simpler unigram method quickly outperforms the bigram model, but that the bigram model sees very steady increment.
+As expected, figure \ref {fig:data_size} shows that increased quantities of training data quickly yield improved results. This increment starts out approximately linear and eventually converges towards constant as the classifier becomes ``saturated'' with training data. %todo
 
 \pagebreak
 
 \subsection{Per class classification}
+\label{sec:per_cat}
 \begin{figure}[h]
   \centering
   \begin{tikzpicture}
@@ -1215,7 +1221,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
   \begin{axis}[
       %title={Classifier performance per category},
       %xlabel={Categories},
-      ylabel={Fraction of correctly classified},
+      ylabel={Per class recall},
       ybar, ymin=0,
       %bar width=20pt,
       xtick=data,
@@ -1233,7 +1239,8 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
     \legend{Down-sampled unigram, Unmodified unigram, Down-sampled bigram, Unmodified bigram}
   \end{axis}
   \end{tikzpicture}
-  \caption{Down-sampled vs. not down-sampled classifier comparison. No confidence threshold was set in this experiment. Each bar should be compared with its corresponding graphs in the other categories. As an example, the second leftmost (red) bar in each category can be seen to have more bias towards common categories than the leftmost (blue) bar in each category, which is the down-sampled version of the same classifier. Comparison with figure \ref{fig:cat_count} will confirm that this bias correlates with the distribution of classes in the dataset.}
+  \caption{Down-sampled vs. not down-sampled classifier comparison. Each column on the X-axis represents evaluation sentences with that true class, and the Y-axis shows the fraction of those sentences that were correctly classified.
+    Each bar should be compared with its corresponding bars in the other columns. As an example, the second leftmost (red) bar in each column can be seen to have more bias towards common classes than the leftmost (blue) bar in each column, which is the down-sampled version of the same classifier. Comparison with figure \ref{fig:cat_count} will confirm that this bias correlates with the distribution of classes in the dataset. No confidence threshold was set in this experiment.}
   \label{fig:per_cat}
 \end{figure}
 
@@ -1245,9 +1252,6 @@ Comparison between the balanced/unbalanced versions of the classifier models sho
 
 It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but it should be noted that this is consistent between the balanced and unbalanced version of the model.
 
-
-\section{Comparison of classifiers}
-\label{sec:comparison}
 
 \begin{table}[h]
   \centering
@@ -1264,47 +1268,54 @@ It can also be seen that the bigram model is performing poorly for all labels ex
   \label{general_asp}
 \end{table}
 
-
+\clearpage
 \section{Discussion}
-
-\subsection{Graph search classifier}
+\subsection{Algorithic graph search classifier}
 As results show, it is possible to categorize aspects using a lexical database.
 
 What is particularly interesting about this result is that, although the method is evaluated in a supervised
 manner, the heuristic is in itself unsupervised, and could be used with in a unsupervised manner, althugh it would impossible to know know how the method is performing without labeled evaluation data.
 
+\subsection{Machine Learning classifiers}
 
-\subsection{Machine learning classifier}
+Figure \ref{fig:data_size} surprises me in that bigram features appear ``saturated'' at as little as 500 sentences.
+It would have been my expectation that bigrams would eventually achieve better performance than unigrams, but
+with a learning curve that increases slower with more training data.
 
-\subsection{Comparision}
-The fact that the graph search comparison achieves higher results than the machine learning classifiers is
-surprising, as the method is rather static and there was genuine worry that it was overfitted to the data it
-was tweaked on.
+A possible explanaintion could be that in the classified sentences a only few words are key for the assigned class,
+so when bigrams are used and that important word only is evaluated in bigrams with its immediate neighoring words,
+the cases where neither of those bigrams are found are hurting results more than the added context from the neighboring words.
+
+For example; in the sentence ``I really like their prices'', the entire word is classified based on the word ``prices'', and replacing that word with something else, like ``soups'' would directly change the outcome for the entire sentence. Even if a bigram classifier has seen a sentence like ``This place has great prices'' when training it would be of no help as there the sentences share no bigrams, whereas the unigram classifier may have picked up that the presence of the word ``prices'' correlates with the value group.
+
+If this is the reason why the bigram classifier is performing poorly, it may be that the classifier will need orders
+of magnitude more data before it starts performing.
 
 
-\subsection{Conclusion}
+\subsection{Comparison}
+Despite better performance, there are a few reasons why I would caution against using the graph search algorithm:
 
-There are however a few reasons why the results should be interpreted with caution:
+The main reason is that this work includes no study for this method on a per category basis.
+As section \ref{subsec:data_skew} describes, results are
+susceptible to favor classifiers that are biased towards the more common classes; my suspicion is that
+the product category is greatly favoured by the graph search method and that results are therefore inflated.
+This notion originates in my anectodal observations when using the full system.
 
-I believe my limited amount of data to have much influence over my results.
-As figure \ref{fig:data_size} illustrates, neither machine learning classifier
-appears ``saturated'', and would most likely have benefited from more annotated aspects.
+The machine learning classifier on the other hand, was shown to yield much less biased results
+when trained on down-sampled results (section \ref{sec:per_cat}), albeit at the cost of
+decrease in average performance.
 
-Another important thing to keep in mind about my results are that with such a small data-set,
-there is a risk of methods becoming too specific toward the training data.
-This is often discussed in statistical modeling as \emph{``overfitting'' },
-but the same phenomenon can also appear with heuristics.
-I believe that some aspects of my data make this heuristic perform better than it would in general.
+Something to keep in mind about my results is that with a small data-set,
+there is real risk of methods becoming too specific towards the training data.
+This is known in statistical modeling as \emph{overfitting},
+and the same phenomenon can very well appear when modeling with heuristics.
+Based on anecdotal observations using my full system, I think there is reason to believe that
+the graph search algorithm is suffering from overfitting.
 
-%todo reasons:
-% small data-set, might be overfitted?
-
-% becomes easier with aspect-word only?
-
-% indata probably works for you
-
-% ``place is really small and seemed kinda dirty''
-
+Another important consideration when choosing between these methods is the time invested in their development.
+The machine learning classifiers were introduced to give provide a known baseline to compare the graph algorithm,
+so no real time was invested in them, and yet they perform similarly. The graph search algorithm on the other hand
+required a bit of tinkering to get to the state where it was eventually evaluated.
 
 
 
@@ -1655,7 +1666,7 @@ Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the posi
   \begin{axis}[
       %title={Classifier performance per category},
       %xlabel={Categories},
-      ylabel={Fraction of correctly classified},
+      ylabel={Per class recall},
       ybar, ymin=0, ymax=1,
       %bar width=20pt,
       xtick=data,
@@ -1691,7 +1702,7 @@ Figure \ref{fig:sent_bias} shows classifiers have a slight bias towards the posi
     Trigram&92569\\
     \hline
   \end{tabular}
-  \caption{Number of unique \ngram s for different \ngram~lengths}
+  \caption{Number of unique \ngram s found in the same dataset for different \ngram~lengths}
   \label{tab:found_ngrams}
 \end{table}
 
@@ -1735,11 +1746,17 @@ be disappointed reading \emph{Chen \& Goodman(1996)}\cite{chen_goodman}.
 
 
 \subsection{\ngram~model shortcomings}
-Although \ngram~language models clearly are powerful, they have some shortcomings
+\ngram~language models are popular because they are powerful despite their simplicity. They are however not
+perfect, and they do have some shortcomings which are worth mentioning.
+
+One is that they rely on semantically high locality in sentences to work. In the english language, meaning of words
+may be dependent or affected by other parts of a sentence or even a different sentence alltogether.
+
+For example, in the sentence \emph{``If their dishes were cheaper, I'd be the first in line to sing praise how they are redefining healthy eating.''} the beginning of the sentece tells us that what follows is a hypothetical. But because of the words between the beginning and the described hypothetical it would be nearly impossible to incorporate
+into a normal \ngram~model. Higher order \ngram s would not suffice because each added order greatly decreases the probablity that the ngram will exist in training data.
 
 
 
-\subsubsection{Further work}
 
 
 % ``I would've most likely ordered dessert if I had more time and if the waitress was not too busy''
@@ -1765,15 +1782,14 @@ Although \ngram~language models clearly are powerful, they have some shortcoming
 
 \chapter{Summary}
 
-\section{Results}
-
 \subsection{Aspect extraction}
 Using pattern based extraction methodologies;
 \begin{itemize}
-\item At least one aspect was found in 78.5 of reviews, with an average of 2.7 aspects per review.
-\item It is estimated that between 62.86\% and 86.67\% of all extracted aspects were relevant(highly dependent on definition of relevant; see section \ref{subsec:aspect_eval}).
+\item At least one aspect was found in 78.5\% of reviews, with an average of 2.7 aspects per review.
 
-\item An estimate calculation finds that for a typical business with around 300 reviwes,
+\item it is estimated that between 62.86\% and 86.67\% of all extracted aspects were relevant(depending on definition of relevant; see section \ref{subsec:aspect_eval}),
+
+\item an estimate calculation finds that for a typical business with around 300 reviwes,
 approximately \numValueAspects~can be expected for the least common aspect group, which should be enough to make conclusions about that group.
 \end{itemize}
 
@@ -1781,8 +1797,11 @@ approximately \numValueAspects~can be expected for the least common aspect group
 \subsection{Aspect grouping}
 \begin{itemize}
 \item From selection of classifiers in scikit-learn LinearSVC, with 61.3\% accuracy, was found the most effective classifier,
-\item using bigrams as features did not work well --- in fact only marginally better than randomly guessing,
-\item 
+\item bigrams are found to perform poorly as features,
+\item down-sampling majority classes reduces machine learning classifier's bias towards common classes and
+  singificantly improves recall for minority classes,
+\item and the graph search classifier is found to achieve 71.8\% accuracy, but is suspected to be biased towards
+  majority classes, required greater effort to implement and may be overfitted to the small dataset that was used.
 
 \end{itemize}
 
@@ -1791,8 +1810,8 @@ approximately \numValueAspects~can be expected for the least common aspect group
 In this chapter;
 
 \begin{itemize}
-\item sentiment is accurately classified with XX\% accuracy, or YY\% at ZZ\% recall,
-\item and sentiment classifiaction is shown to be almost (XX vs YY) impartial
+\item sentiment is accurately classified with 75.1\% accuracy, or 89.1\% at 69.6\% recall,
+\item and sentiment classifiaction is shown to be almost impartial (75.3\% vs 69.1\% per class recall)
 \end{itemize}
 which led to conclude that;
 \begin{itemize}
@@ -1803,23 +1822,28 @@ which led to conclude that;
 
 \section{Conclusions}
 
-Of the most important conclusions in this report is the effectiveness language modeling.
-A well developed language model and good understanding of it can be used to solve all three
-tasks covered in this report, and is thus worth an investment of time.
+There are three general conclusions in this report.
 
-Another conclusion the importance of balancing training data: \todo
+The first one is the effectiveness and versatility ngram language modeling.
+A good language model and understanding of it can be used to solve all three
+tasks covered in this report, should be considered a worth an investment of time.
+
+Another conclusion is the usefulness of evaluating results on a \emph{per class} basis;
+results can be inflated by bias which is hidden unless results are broken down for each class.
+
+Finally, I found it effective to break down the full system into smaller tasks which could be studied in more detail.
+Being able to measure success of each task enables further imporvement to the system in a measurable way.
 
 
+\subsection{Obstacles and lessons learned}
 
-\section{Obstacles and lessons learned}
 
+\subsubsection{Individual studies of tasks}
+The decision to study each task individually helped isolating concerns and understanding system behavior as a whole. But, it took a bit of back-and-fourth to figure out what my exact boundaries of the system should be. Updating one taks would change its requirements for the other tasks, which meant they needed to be updated as well.
 
-\subsection{Studying tasks individually}
-The decision to study each task individually helped with isolating concerns and understanding system behavior as a whole. But, it took a bit of back-and-fourth to figure out what my exact boundaries of the system should be. Updating one taks would change its requirements for the other tasks, which meant they needed to be updated as well.
+My processes was to first get a very simple prototype running with all the tasks included; and then move on to study each step in isoaltion in order to improve overall results. I do believe in defining the performance of the full system as the product of its task's performance, but I also found that it is easy to focus too much on individual tasks and forgetting about the system as a whole. I think it would have helped my process to reevaluate the full system between each iteration on a subtask. Afterall, each improvement to a subtask should be done with an improvement of the full system in mind.
 
-My processes was to first get a very simple prototype running with all the tasks included; and then move on to study each step in isoaltion in order to improve overall results. I do believe in defining the performance of the full system as the product of its task's performance, but I also found that it is easy to focus too much on individual tasks and stop thinking about the system as a whole. I think it would have helped my process to reevaluate the full system between each iteration on a subtask. Afterall, each improvement to a subtask should be done with an improvement of the full system in mind.
-
-\subsection{Data annotation}
+\subsubsection{Data annotation}
 I ended up reannotating data several times. The idea of \emph{``I'm gonna get it right the first time, so I don't have to do over''} led me to initially annotate in a too detailed and inconsistent fashion, which in turn made it complicated to extract conclusions. For example, in a sentence like \emph{``The servants were friendly''}, should the entire sentence be annotated as positive for \emph{service}, or just the word \emph{``servants''}? And if the forrmer method is used, how should cases with multiple aspects (\emph{``Both service and food was excellent''}) be handled?
 
 Especially hard was annotating for aspect grouping, as I didn't have a clear idea of what I wanted the outcome to be. Further, I was also inconsistent about wether or not to include classes for \emph{other} and \emph{neutral}, and how to handle sentences that didn't quite fit what I was annotating. I think a general lesson is to annotate exactly for the task you want to solve, and only consider adding complexities in the context of the purpose of the data, as added detail does come with a cost when using the data.
@@ -1827,7 +1851,7 @@ Especially hard was annotating for aspect grouping, as I didn't have a clear ide
 The data annotations interface itself didn't take long to develop and was helpful because clicking on a word is simpler than e.g. typing its position in the sencence, but it did serve as bit of a distraction as anything that wasn't originally supported, had to be tinkered with manually. This was fun, but not productive towards the end goal. A sufficient alternaltive would have been to simply use a digital spreadsheet.
 
 
-\subsection{The Classifier Store}
+\subsubsection{The Classifier Store}
 Although it is an implementation detail, I think something worth mentioning is the classifier store,
 because it worked well and saved time over the course of the project. Through out the code base,
 classifiers were not instantiated like regular objects, but instead requested in what I call the
@@ -1838,7 +1862,7 @@ Once the classifier has been trained, a binary dump of that classifier is be mad
 corresponding to that hash.
 
 This way, the same classifier will automatically be reused until a change is made to 
-its source code, which reduces the training time (about 2 minutes) to the time to
+its source code, which reduces the training time (about 3 minutes) to the time to
 read the binary dump (about a second).
 
 This turned out especially useful when composing classifiers out of several other classifiers.
@@ -1857,13 +1881,14 @@ This turned out especially useful when composing classifiers out of several othe
 \newpage
 
 \section{Final words}
-It was my initial hope that this report only would cover one of the three tasks introduced, but in more depth. Because of the project being hosted abroad, I began background studies and preparation on my own and most of these preparations turned out to overlap with already existing solutions at my host company. Although unfortunate, it was still a great learning experience; after studying a problem on my own, I got to compare the solutions I had come up with with existing production systems and got professional feedback on my own experiments.
+Initially my hope was that this report would cover only one of the three tasks introduced, but in more depth. Because of the project being hosted abroad, I began background studies and preparation on my own and most of these preparations turned out to overlap with already existing solutions at my host company. Although unfortunate, it was still a great learning experience; after studying a problem on my own, I got to compare the solutions I had come up with with existing production systems and got professional feedback on my own experiments.
 
 In search for a less explored task, I read up on aspect extraction and grouping as well, and also got to familiarize myself with the workings of existing solutions to these problems at Yelp, with the goal of being able to reuse and possibly improve one of these existing systems.
 
 I got these systems to running in isolation and produced results that I could compare with my own, however, halfway through my internship, I decided to abandon this path for two reasons: Most importantly, I was running out of time. These systems were designed to run on Yelp's infrastructure, which I would lose access to as my internship finished. Secondly, because these were production systems, they were built to work reliably at much larger scale. So they had additional additional mechanisms for monitoring, graceful error handling, and working in a distributed context, which is all out of scope for this work and would have slowed down my experiments.
 
-Instead, I decided to focus on putting my learnings from this project in writing, along with some experiments designed to illustrate these findings. The result is what you are now reading. It is my hope that this document could prove as an introduction and help someone unacquainted focus on the right things.
+Instead, I decided to focus on putting my learnings about the overarching problem from this project in writing, along with some experiments designed to illustrate these findings. The result is what you are now reading. It is my hope that this document could prove as an introduction and help someone unacquainted focus on the right things, and even though the results are humble,
+the introduced setup is well suited for further work to improve these results.
 
 
 
