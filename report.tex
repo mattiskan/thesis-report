@@ -79,10 +79,10 @@
 \newcommand{\gls}[1]{TODO(#1)}
 %\makeglossaries
 
-\title{Mining and summarizing opinions in business reviews}
+\title{Mining and summarizing opinions in business reviews: A techincal case study}
 
 \subtitle{An introduction of language modeling techniques in a practical context}
-\foreigntitle{Utvinning och summering av åsikter i företagsrecensioner}
+\foreigntitle{Utvinning och summering av åsikter i företagsrecensioner: En teknisk fallstudie}
 \author{Mattis Kancans Envall}
 \date{June 2016}
 \blurb{Master's Thesis at CSC\\Supervisor: Johan Boye\\Examiner: Viggo Kann}
@@ -132,8 +132,11 @@ I'd like to thank everyone in Yelp's Hamburg office for such a positive and supp
 Benoit Thiell and Grzegorz Smajdor for their investment and endless encouragement throughout the project.
 
 A special thanks goes out to my mentor at KTH, Johan Boye; No matter how lost I felt, or how inclined I was to
-``just write something'', I somehow left every meeting of ours with renewed passion for the project and motivation to
-``do it right''. Your guidance for methodology and evaluations was invaluable.
+take short cuts to finish quickly, I somehow left every meeting of ours with renewed passion for the project
+and motivation to ``do it right''. Your guidance when choosing methodology and evaluation methods was invaluable.
+
+Finally, I'd like to thank my mother, Monika Kancans, for raising me with a learning mindset,
+and for your truly measureless support in all parts of my life; not the least of which during this thesis project.
 
 
 \clearpage
@@ -151,9 +154,9 @@ How would you know what changes to make? How would you know the impact your of c
 Customer feedback could certainly help inform decisions; but traditional methods of gathering such feedback,
 such as surveys or interviews, require planning and resources.
 With today's extensive internet usage, it is likely that the answers you need already
-already exist online. For big business chains, where there could easily be tens of thousands of reviews ---
-far more than a human reader can reasonably process, a new problem is instead introduced: How can opinions in that
-volume of information be managed and taken advantage of?
+already exist online. However, for some businesses there could be tens of thousands of reviews, especially for big
+business chains --- far more than a human reader can reasonably process. Therefore a new problem is introduced:
+\emph{How can opinions in that volume of information be managed and taken advantage of?}
 
 Thus there is incentive to use computers as aid to organize, and visualize large quantities of opinions in text.
 
@@ -172,7 +175,7 @@ Thus there is incentive to use computers as aid to organize, and visualize large
   \label{fig:review_highlight}
 \end{figure}
 
-This report introduces required theory, describes on a technical level accessible to computer scientists
+This report introduces required theory and describes on a technical level accessible to computer scientists
 not directly familiar with natural language processing how to develop a system that
 mines opinions to produce comparable summaries. Included are also more detailed studies of a two concepts
 shown to directly improve results: \emph{Smoothing} and \emph{down-sampling}.
@@ -1004,8 +1007,8 @@ starting out from bare noun matching and evolving into this algorithm.
 Based on the observation that there are usually keywords in a sentence with lexicographical
 connection to the desired group, an alternative approach to traditional classification is proposed.
 This is motivated since classification models generally need good training data to achieve good results.
-The idea is to use a lexicon of known word relations to find a path from a query word to one of
-few word senses each with predefined group labels, and assign the query word the same label.
+The idea for this method is to instead use a lexicon of known word relations to find a path from a query
+word to one of few word senses each with predefined group labels, and assign the query word the same label.
 
 Figure~\ref{fig:baklava_lex} shows an example of this premise in action,
 where the word relations involved in finding the word ``baklava'' were used,
@@ -1122,21 +1125,22 @@ A brief attempt was made to automate selection of these parameters using a hill-
 
 \clearpage
 \subsection{Machine learning classifiers}
-To provide comparison for the novel algorithm, a machine learning classifier was introduced.
+To provide a relatable comparison for the novel algorithm, a series of well known machine learning
+classifiers were considered:
 
 Scikit-learn\cite{scikit-learn} is an open source machine learning toolkit which provides various
 classifier implementations.
-The precision of these classifiers were evaluated individually to decide which classifier to use.
+The precision of these classifiers were evaluated individually on my data to decide which classifier to use.
 
-Early sentiment classification experiments combining these classifiers in ensemble compositions
-showed promise, so an ensemble of the top performing
-classifier of each kind (Stochastic Gradient Descent, Linear Support Vector, and Multinomial Naive Bayes)
+When doing background research for this project, early experiments with ensemble compositions of these classifiers
+showed promise, so an ensemble of the top performing classifier for each distinct type of classifier
+(Stochastic Gradient Descent, Linear Support Vector, and Multinomial Naive Bayes)
 was constructed and evaluated as well. The classifiers were made to work with both unigrams and bigrams
-as features (formally introduced in section \ref{subsec:ngrams}).
+as features (introduced in section \ref{subsec:ngrams}).
 
 Results for these classifiers can be seen in tables
 \ref{tab:individual_unigram_accuracy} and \ref{tab:individual_bigram_accuracy}.
-Based on these results only uni gram LinearSVC was studied further.
+Based on these results it was decided to only further study unigram LinearSVC.
 
 
 \begin{table}[h]
@@ -1277,7 +1281,7 @@ As expected, figure \ref {fig:data_size} shows that increased quantities of trai
 Section \ref{sec:data_skew} introduced skewed data and some potential consequences, which motivated more detailed study of classifier results on a per class basis. Figure \ref{fig:per_cat} illustrates how classifiers trained on
 down-sampled training data perform notably more consistent between classes, and that the biased classifier has inflated average precision (accuracy) because of this bias.
 
-Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more s0frequent $product$-class and respectively against the infrequent $value$-class.
+Comparison between the balanced/unbalanced versions of the classifier models show that, as expected, there seems to be bias towards the more frequent $product$-class and respectively against the infrequent $value$-class.
 
 It can also be seen that the bigram model is performing poorly for all labels except the \emph{product} class, but it should be noted that this is consistent between the balanced and unbalanced version of the model.
 
@@ -1518,7 +1522,7 @@ Less than 2\% of sentences with multiple opinions had both positive and negative
 Furthermore, out of those sentences, X\% were pruned due to sentiment classification falling under the
 confidence threshold.
 
-Thus, sentence level was deemed appropriate for sentiment classification. TODO.
+Thus, sentence level was deemed appropriate for sentiment classification.% TODO.
 
 
 %\subsection{Scikit-learn and other classification methods}
